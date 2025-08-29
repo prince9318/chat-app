@@ -12,7 +12,7 @@ const App = () => {
   return (
     <div
       className="bg-no-repeat bg-cover min-h-screen"
-      style={{ backgroundImage: `url(${assets.bgImage1})` }}
+      style={{ backgroundImage: `url(${assets.bgImage})` }}
     >
       <Toaster />
       <Routes>
