@@ -37,10 +37,18 @@ io.on("connection", (socket) => {
 app.use(express.json({ limit: "4mb" }));
 app.use(cors());
 
+// demo route
+app.get("/", (req, res) => {
+  res.send("API is running...");
+});
+
 // Routes setup
 app.use("/api/status", (req, res) => res.send("Server is live"));
 app.use("/api/auth", userRouter);
 app.use("/api/messages", messageRouter);
+
+// Serve static files in production
+app.use(express.static("client/build"));
 
 // Connect to MongoDB
 await connectDB();
