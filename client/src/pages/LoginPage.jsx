@@ -39,7 +39,7 @@ const LoginPage = () => {
         onSubmit={onSubmitHandler}
         className="border-2 bg-white/8 text-white border-gray-500 p-6 flex flex-col gap-6 rounded-lg shadow-lg"
       >
-        <h2 className="font-medium text-2xl flex justify-between items-center text-black">
+        <h2 className="font-medium text-2xl flex justify-between items-center text-white">
           {currState}
           {isDataSubmitted && (
             <img
@@ -89,7 +89,7 @@ const LoginPage = () => {
             onChange={(e) => setBio(e.target.value)}
             value={bio}
             rows={4}
-            className="p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black"
+            className="p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white"
             placeholder="provide a short bio..."
             required
           ></textarea>

@@ -110,7 +110,7 @@ const ChatContainer = () => {
                 alt=""
                 className="w-7 rounded-full"
               />
-              <p className="text-gray-500">
+              <p className="text-white-500">
                 {formatMessageTime(msg.createdAt)}
               </p>
             </div>
