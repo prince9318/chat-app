@@ -42,11 +42,6 @@ app.use("/api/status", (req, res) => res.send("Server is live"));
 app.use("/api/auth", userRouter);
 app.use("/api/messages", messageRouter);
 
-// create a test route
-app.get("/api/test", (req, res) => {
-  res.json({ message: "Test route is working!" });
-});
-
 // Connect to MongoDB
 await connectDB();
 
