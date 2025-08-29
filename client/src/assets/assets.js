@@ -10,8 +10,6 @@ import menu_icon from "./menu_icon.png";
 import arrow_icon from "./arrow_icon.png";
 import code from "./code.svg";
 import bgImage from "./bgImage.svg";
-import bgImage1 from "./bgImage1.png";
-import bgImage2 from "./whatsapp.png";
 
 const assets = {
   avatar_icon,
@@ -26,8 +24,6 @@ const assets = {
   arrow_icon,
   code,
   bgImage,
-  bgImage1,
-  bgImage2,
 };
 
 export default assets;
