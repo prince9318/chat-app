@@ -16,7 +16,8 @@ const Sidebar = () => {
 
   const { logout, onlineUsers } = useContext(AuthContext);
 
-  const [input, setInput] = useState(false);
+  const [input, setInput] = useState("");
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // ✅ new state for menu toggle
 
   const navigate = useNavigate();
 
@@ -37,26 +38,41 @@ const Sidebar = () => {
       }`}
     >
       <div className="pb-5">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center relative">
           <img src={assets.logo} alt="logo" className="max-w-40" />
-          <div className="relative py-2 group">
+
+          {/* ✅ Toggle dropdown on click instead of hover */}
+          <div className="relative py-2">
             <img
               src={assets.menu_icon}
               alt="Menu"
               className="max-h-5 cursor-pointer"
+              onClick={() => setIsMenuOpen((prev) => !prev)} // toggle menu
             />
-            <div className="absolute top-full right-0 z-20 w-32 p-5 rounded-md bg-[#282142] border border-gray-600 text-gray-100 hidden group-hover:block">
-              <p
-                onClick={() => navigate("/profile")}
-                className="cursor-pointer text-sm"
-              >
-                Edit Profile
-              </p>
-              <hr className="my-2 border-t border-gray-500" />
-              <p onClick={() => logout()} className="cursor-pointer text-sm">
-                Logout
-              </p>
-            </div>
+
+            {isMenuOpen && (
+              <div className="absolute top-full right-0 z-20 w-32 p-5 rounded-md bg-[#282142] border border-gray-600 text-gray-100">
+                <p
+                  onClick={() => {
+                    navigate("/profile");
+                    setIsMenuOpen(false); // close after click
+                  }}
+                  className="cursor-pointer text-sm"
+                >
+                  Edit Profile
+                </p>
+                <hr className="my-2 border-t border-gray-500" />
+                <p
+                  onClick={() => {
+                    logout();
+                    setIsMenuOpen(false);
+                  }}
+                  className="cursor-pointer text-sm"
+                >
+                  Logout
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
