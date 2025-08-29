@@ -98,5 +98,3 @@ A full-stack chat application built using the MERN stack (MongoDB, Express.js, R
     cd ../client
     npm run dev
     ```
-
-The application should now be
