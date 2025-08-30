@@ -4,6 +4,7 @@ import { formatMessageTime } from "../lib/utils";
 import { ChatContext } from "../context/ChatContext";
 import { AuthContext } from "../context/AuthContext";
 import toast from "react-hot-toast";
+import EmojiPicker from "emoji-picker-react";
 
 const ChatContainer = () => {
   const { messages, selectedUser, setSelectedUser, sendMessage, getMessages } =
@@ -14,6 +15,8 @@ const ChatContainer = () => {
   const scrollEnd = useRef();
 
   const [input, setInput] = useState("");
+  // const [input, setInput] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   // Handle sending a message
   const handleSendMessage = async (e) => {
@@ -50,6 +53,11 @@ const ChatContainer = () => {
       scrollEnd.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
+
+  // Add emoji to input
+  const handleEmojiClick = (emojiData) => {
+    setInput((prev) => prev + emojiData.emoji);
+  };
 
   return selectedUser ? (
     <div className="h-full overflow-scroll relative backdrop-blur-lg">
@@ -122,12 +130,30 @@ const ChatContainer = () => {
       {/* ------- bottom area ------- */}
       <div className="absolute bottom-0 left-0 right-0 flex items-center gap-3 p-3">
         <div className="flex-1 flex items-center bg-gray-100/12 px-3 rounded-full">
+          {/* Emoji button */}
+          <img
+            src={assets.emoji_icon}
+            alt="emoji"
+            className="w-6 mr-2 cursor-pointer"
+            onClick={() => setShowEmojiPicker((prev) => !prev)}
+          />
+          {/* Emoji picker (absolute positioned above input) */}
+          {showEmojiPicker && (
+            <div className="absolute bottom-12 left-0 z-50">
+              <EmojiPicker
+                onEmojiClick={handleEmojiClick}
+                theme="dark"
+                width={300}
+                height={400}
+              />
+            </div>
+          )}
           <input
             onChange={(e) => setInput(e.target.value)}
             value={input}
             onKeyDown={(e) => (e.key === "Enter" ? handleSendMessage(e) : null)}
             type="text"
-            placeholder="Send a message"
+            placeholder="Type a message"
             className="flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400"
           />
           <input

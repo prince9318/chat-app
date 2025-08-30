@@ -10,6 +10,7 @@ import menu_icon from "./menu_icon.png";
 import arrow_icon from "./arrow_icon.png";
 import code from "./code.svg";
 import bgImage from "./bgImage.svg";
+import emoji_icon from "./emoji_icon.png";
 
 const assets = {
   avatar_icon,
@@ -24,6 +25,7 @@ const assets = {
   arrow_icon,
   code,
   bgImage,
+  emoji_icon,
 };
 
 export default assets;
