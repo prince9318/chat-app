@@ -14,8 +14,9 @@ const server = http.createServer(app);
 // Initialize socket.io server
 export const io = new Server(server, {
   cors: {
-    origin: "https://quickchat-zoip.vercel.app", // fixed typo
-    methods: ["GET", "POST"],
+    origin: "https://quickchat-zoip.vercel.app",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
   },
 });
 
@@ -31,14 +32,12 @@ io.on("connection", (socket) => {
   if (userId) {
     userSocketMap[userId] = socket.id;
     emitOnlineUsers();
-    // console.log(`✅ User connected: ${userId}`);
   }
 
   socket.on("disconnect", () => {
     if (userId) {
       delete userSocketMap[userId];
       emitOnlineUsers();
-      // console.log(`❌ User disconnected: ${userId}`);
     }
   });
 });
