@@ -15,6 +15,8 @@ const messageSchema = new mongoose.Schema(
     text: { type: String },
     image: { type: String },
     seen: { type: Boolean, default: false },
+    // 👇 Add soft delete field
+    isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
