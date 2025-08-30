@@ -14,7 +14,7 @@ const server = http.createServer(app);
 // Initialize socket.io server
 export const io = new Server(server, {
   cors: {
-    origin: "http://quickchat-zoip.vercel.app", // fixed typo
+    origin: "https://quickchat-zoip.vercel.app", // fixed typo
     methods: ["GET", "POST"],
   },
 });
