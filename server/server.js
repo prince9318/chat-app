@@ -31,14 +31,14 @@ io.on("connection", (socket) => {
   if (userId) {
     userSocketMap[userId] = socket.id;
     emitOnlineUsers();
-    console.log(`✅ User connected: ${userId}`);
+    // console.log(`✅ User connected: ${userId}`);
   }
 
   socket.on("disconnect", () => {
     if (userId) {
       delete userSocketMap[userId];
       emitOnlineUsers();
-      console.log(`❌ User disconnected: ${userId}`);
+      // console.log(`❌ User disconnected: ${userId}`);
     }
   });
 });
