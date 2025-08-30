@@ -14,6 +14,16 @@ export const AuthProvider = ({ children }) => {
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [socket, setSocket] = useState(null);
 
+  // ✅ helper to compare arrays (avoid unnecessary updates)
+  const arraysEqual = (a, b) => {
+    if (a.length !== b.length) return false;
+    const setA = new Set(a);
+    const setB = new Set(b);
+    if (setA.size !== setB.size) return false;
+    for (let val of setA) if (!setB.has(val)) return false;
+    return true;
+  };
+
   // Check if user is authenticated and if so, set the user data and connect the socket
   const checkAuth = async () => {
     try {
@@ -56,7 +66,10 @@ export const AuthProvider = ({ children }) => {
     setOnlineUsers([]);
     axios.defaults.headers.common["token"] = null;
     toast.success("Logged out successfully");
-    socket.disconnect();
+    if (socket) {
+      socket.disconnect();
+      setSocket(null);
+    }
   };
 
   // Update profile function to handle user profile updates
@@ -79,21 +92,35 @@ export const AuthProvider = ({ children }) => {
     const newSocket = io(backendUrl, {
       query: {
         userId: userData._id,
+        transports: ["websocket"], // force websocket, avoid polling flickers
       },
     });
-    newSocket.connect();
     setSocket(newSocket);
+    newSocket.on("connect", () => {
+      console.log("Socket connected:", newSocket.id);
+    });
 
     newSocket.on("getOnlineUsers", (userIds) => {
-      setOnlineUsers(userIds);
+      setOnlineUsers((prev) => {
+        if (arraysEqual(prev, userIds)) return prev; // ✅ don’t update if same
+        return userIds;
+      });
+    });
+    // ✅ cleanup on unmount
+    newSocket.on("disconnect", () => {
+      console.log("Socket disconnected");
     });
   };
 
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common["token"] = token;
+      checkAuth();
     }
-    checkAuth();
+    // cleanup socket on unmount
+    return () => {
+      if (socket) socket.disconnect();
+    };
   }, []);
 
   const value = {
