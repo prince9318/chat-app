@@ -13,23 +13,33 @@ const server = http.createServer(app);
 
 // Initialize socket.io server
 export const io = new Server(server, {
-  cors: { origin: "*" },
+  cors: {
+    origin: "http://quickchat-zoip.vercel.app", // fixed typo
+    methods: ["GET", "POST"],
+  },
 });
 
 // Store online users
 export const userSocketMap = {}; // { userId: socketId }
+const emitOnlineUsers = () => {
+  io.emit("getOnlineUsers", Object.keys(userSocketMap));
+};
 
 // Socket.io connection handler
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId;
-  if (userId) userSocketMap[userId] = socket.id;
-
-  // Emit online users to all connected clients
-  io.emit("getOnlineUsers", Object.keys(userSocketMap));
+  if (userId) {
+    userSocketMap[userId] = socket.id;
+    emitOnlineUsers();
+    console.log(`✅ User connected: ${userId}`);
+  }
 
   socket.on("disconnect", () => {
-    delete userSocketMap[userId];
-    io.emit("getOnlineUsers", Object.keys(userSocketMap));
+    if (userId) {
+      delete userSocketMap[userId];
+      emitOnlineUsers();
+      console.log(`❌ User disconnected: ${userId}`);
+    }
   });
 });
 
@@ -47,7 +57,7 @@ app.use("/api/status", (req, res) => res.send("Server is live"));
 app.use("/api/auth", userRouter);
 app.use("/api/messages", messageRouter);
 
-// Serve static files in production
+// Serve static files (if self-hosted, not Vercel)
 app.use(express.static("client/build"));
 
 // Connect to MongoDB
@@ -55,8 +65,10 @@ await connectDB();
 
 if (process.env.NODE_ENV !== "production") {
   const PORT = process.env.PORT || 5000;
-  server.listen(PORT, () => console.log("Server is running on PORT: " + PORT));
+  server.listen(PORT, () =>
+    console.log("🚀 Server is running on PORT: " + PORT)
+  );
 }
 
-// Export server for Vervel
+// Export server for Vercel
 export default server;
