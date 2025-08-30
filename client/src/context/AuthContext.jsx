@@ -12,10 +12,10 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [authUser, setAuthUser] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
-  const [socket, setSocket] = useState(null); // ✅ state for reactivity
+  const [socket, setSocket] = useState(null);
   const socketRef = useRef(null);
 
-  // ✅ helper to compare arrays (avoid unnecessary updates)
+  // helper to compare arrays (avoid unnecessary updates)
   const arraysEqual = (a, b) => {
     if (a.length !== b.length) return false;
     const setA = new Set(a);
@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
       const { data } = await axios.get("/api/auth/check");
       if (data.success) {
         setAuthUser(data.user);
-        connectSocket(data.user); // ✅ connect once
+        connectSocket(data.user);
       }
     } catch (error) {
       toast.error(error.message);
@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
         setToken(data.token);
         localStorage.setItem("token", data.token);
         toast.success(data.message);
-        connectSocket(data.userData); // ✅ safe socket init
+        connectSocket(data.userData);
       } else {
         toast.error(data.message);
       }
@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }) => {
     if (socketRef.current) {
       socketRef.current.disconnect();
       socketRef.current = null;
-      setSocket(null); // ✅ reset socket in state
+      setSocket(null);
     }
   };
 
@@ -87,12 +87,12 @@ export const AuthProvider = ({ children }) => {
 
     socketRef.current = io(backendUrl, {
       query: { userId: userData._id },
-      transports: ["websocket"], // avoid polling flickers
+      transports: ["websocket"],
     });
 
     socketRef.current.on("connect", () => {
       console.log("Socket connected:", socketRef.current.id);
-      setSocket(socketRef.current); // ✅ keep state in sync
+      setSocket(socketRef.current);
     });
 
     socketRef.current.on("getOnlineUsers", (userIds) => {
@@ -125,7 +125,7 @@ export const AuthProvider = ({ children }) => {
     axios,
     authUser,
     onlineUsers,
-    socket, // ✅ now reactive
+    socket,
     login,
     logout,
     updateProfile,
