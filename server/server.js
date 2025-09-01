@@ -6,6 +6,7 @@ import { connectDB } from "./lib/db.js";
 import userRouter from "./routes/userRoutes.js";
 import messageRouter from "./routes/messageRoutes.js";
 import { Server } from "socket.io";
+import path from "path";
 
 // Create Express app and HTTP server
 const app = express();
@@ -45,6 +46,7 @@ io.on("connection", (socket) => {
 // Middleware setup
 app.use(express.json({ limit: "4mb" }));
 app.use(cors());
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // demo route
 app.get("/", (req, res) => {

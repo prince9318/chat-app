@@ -12,11 +12,13 @@ const messageSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    audio: { type: String }, // ✅ new field for audio file URL
     text: { type: String },
     image: { type: String },
     seen: { type: Boolean, default: false },
     // 👇 Add soft delete field
     isDeleted: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
