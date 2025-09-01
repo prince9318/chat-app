@@ -256,11 +256,14 @@ const ChatContainer = () => {
             hidden
           />
           <label htmlFor="audio">
-            <img
-              src={assets.mic_icon} // add a mic icon to your assets
-              alt="audio"
-              className="w-5 mr-2 cursor-pointer"
-            />
+            <div className="w-7 h-7 flex items-center justify-center rounded-full bg-purple-600 hover:bg-purple-700 transition-colors duration-200 mr-2 cursor-pointer">
+              <img
+                src={assets.mic_icon}
+                alt="audio"
+                className="w-4 h-4"
+                style={{ filter: "brightness(0) invert(1)" }}
+              />
+            </div>
           </label>
         </div>
         <img
