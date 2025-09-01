@@ -11,6 +11,7 @@ import arrow_icon from "./arrow_icon.png";
 import code from "./code.svg";
 import bgImage from "./bgImage.svg";
 import emoji_icon from "./emoji_icon.png";
+import mic_icon from "./mic_icon.png";
 
 const assets = {
   avatar_icon,
@@ -26,6 +27,7 @@ const assets = {
   code,
   bgImage,
   emoji_icon,
+  mic_icon,
 };
 
 export default assets;

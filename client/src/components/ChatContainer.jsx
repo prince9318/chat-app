@@ -26,6 +26,23 @@ const ChatContainer = () => {
     setInput("");
   };
 
+  // Handle sending an audio file
+  const handleSendAudio = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !file.type.startsWith("audio/")) {
+      toast.error("Select a valid audio file");
+      return;
+    }
+    const reader = new FileReader();
+
+    reader.onloadend = async () => {
+      await sendMessage({ audio: reader.result });
+      e.target.value = "";
+    };
+
+    reader.readAsDataURL(file);
+  };
+
   // Handle sending an image
   const handleSendImage = async (e) => {
     const file = e.target.files[0];
@@ -94,9 +111,11 @@ const ChatContainer = () => {
             {msg.image ? (
               <img
                 src={msg.image}
-                alt=""
+                alt="img"
                 className="max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8"
               />
+            ) : msg.audio ? (
+              <audio controls src={msg.audio} className="mb-8 max-w-[230px]" />
             ) : (
               <p
                 className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${
@@ -118,7 +137,13 @@ const ChatContainer = () => {
                 alt=""
                 className="w-7 rounded-full"
               />
-              <p className="text-white-500">
+              <p
+                className={`${
+                  msg.senderId === authUser._id
+                    ? "text-green-400"
+                    : "text-white-500"
+                }`}
+              >
                 {formatMessageTime(msg.createdAt)}
               </p>
             </div>
@@ -167,6 +192,20 @@ const ChatContainer = () => {
             <img
               src={assets.gallery_icon}
               alt=""
+              className="w-5 mr-2 cursor-pointer"
+            />
+          </label>
+          <input
+            onChange={handleSendAudio}
+            type="file"
+            id="audio"
+            accept="audio/*"
+            hidden
+          />
+          <label htmlFor="audio">
+            <img
+              src={assets.mic_icon} // add a mic icon to your assets
+              alt="audio"
               className="w-5 mr-2 cursor-pointer"
             />
           </label>
