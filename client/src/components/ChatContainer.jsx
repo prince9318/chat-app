@@ -59,6 +59,33 @@ const ChatContainer = () => {
     reader.readAsDataURL(file);
   };
 
+  // Handle sending a video
+  const handleSendVideo = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !file.type.startsWith("video/")) {
+      toast.error("Select a valid video file");
+      return;
+    }
+
+    // Check file size (limit to 50MB)
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error("Video file is too large (max 50MB)");
+      return;
+    }
+
+    toast.loading("Uploading video...");
+    const reader = new FileReader();
+
+    reader.onloadend = async () => {
+      await sendMessage({ video: reader.result });
+      toast.dismiss();
+      toast.success("Video sent successfully");
+      e.target.value = "";
+    };
+
+    reader.readAsDataURL(file);
+  };
+
   useEffect(() => {
     if (selectedUser) {
       getMessages(selectedUser._id);
@@ -113,6 +140,13 @@ const ChatContainer = () => {
                 src={msg.image}
                 alt="img"
                 className="max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8"
+              />
+            ) : msg.video ? (
+              <video
+                controls
+                src={msg.video}
+                className="mb-8 max-w-[280px] rounded-lg border border-gray-700"
+                style={{ backgroundColor: "rgba(139, 92, 246, 0.1)" }}
               />
             ) : msg.audio ? (
               <audio
@@ -187,17 +221,31 @@ const ChatContainer = () => {
             className="flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400"
           />
           <input
-            onChange={handleSendImage}
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (file) {
+                if (file.type.startsWith("image/")) {
+                  handleSendImage(e);
+                } else if (file.type.startsWith("video/")) {
+                  handleSendVideo(e);
+                } else {
+                  toast.error("Please select an image or video file");
+                }
+              }
+            }}
             type="file"
-            id="image"
-            accept="image/png, image/jpeg"
+            id="media"
+            accept="image/png, image/jpeg, video/*"
             hidden
           />
-          <label htmlFor="image">
+          <label htmlFor="media">
             <img
               src={assets.gallery_icon}
-              alt=""
+              alt="Upload media"
               className="w-5 mr-2 cursor-pointer"
+              style={{
+                filter: "invert(0.5) sepia(1) saturate(5) hue-rotate(175deg)",
+              }}
             />
           </label>
           <input
