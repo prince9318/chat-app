@@ -6,6 +6,7 @@ import {
   getUsersForSidebar,
   markMessageAsSeen,
   sendMessage,
+  deleteMessage,
 } from "../controllers/messageController.js";
 import Message from "../models/Message.js";
 import { uploadAudio } from "../middlewares/uploadAudio.js";
@@ -17,6 +18,7 @@ messageRouter.get("/users", protectRoute, getUsersForSidebar);
 messageRouter.get("/:id", protectRoute, getMessages);
 messageRouter.put("/mark/:id", protectRoute, markMessageAsSeen);
 messageRouter.post("/send/:id", protectRoute, sendMessage);
+messageRouter.delete("/delete/:messageId", protectRoute, deleteMessage);
 
 // ✅ New: Send audio message
 messageRouter.post(

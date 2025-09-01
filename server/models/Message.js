@@ -19,6 +19,8 @@ const messageSchema = new mongoose.Schema(
     seen: { type: Boolean, default: false },
     // 👇 Add soft delete field
     isDeleted: { type: Boolean, default: false },
+    // Track which users have deleted the message for themselves
+    deletedFor: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     createdAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
