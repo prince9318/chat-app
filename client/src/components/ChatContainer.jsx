@@ -115,7 +115,12 @@ const ChatContainer = () => {
                 className="max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8"
               />
             ) : msg.audio ? (
-              <audio controls src={msg.audio} className="mb-8 max-w-[230px]" />
+              <audio
+                controls
+                src={msg.audio}
+                className="mb-8 max-w-[230px] rounded-lg"
+                style={{ backgroundColor: "rgba(139, 92, 246, 0.2)" }}
+              />
             ) : (
               <p
                 className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${
@@ -141,7 +146,7 @@ const ChatContainer = () => {
                 className={`${
                   msg.senderId === authUser._id
                     ? "text-green-400"
-                    : "text-white-500"
+                    : "text-blue-400"
                 }`}
               >
                 {formatMessageTime(msg.createdAt)}
