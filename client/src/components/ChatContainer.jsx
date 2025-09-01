@@ -5,6 +5,8 @@ import { ChatContext } from "../context/ChatContext";
 import { AuthContext } from "../context/AuthContext";
 import toast from "react-hot-toast";
 import EmojiPicker from "emoji-picker-react";
+import ProfileImageModal from "./ProfileImageModal";
+import MessageOptions from "./MessageOptions";
 
 const ChatContainer = () => {
   const { messages, selectedUser, setSelectedUser, sendMessage, getMessages } =
@@ -15,8 +17,17 @@ const ChatContainer = () => {
   const scrollEnd = useRef();
 
   const [input, setInput] = useState("");
-  // const [input, setInput] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [profileModal, setProfileModal] = useState({
+    isOpen: false,
+    imageUrl: "",
+    userName: "",
+  });
+  const [messageOptionsState, setMessageOptionsState] = useState({
+    isOpen: false,
+    messageId: null,
+    isOwnMessage: false,
+  });
 
   // Handle sending a message
   const handleSendMessage = async (e) => {
@@ -105,12 +116,28 @@ const ChatContainer = () => {
 
   return selectedUser ? (
     <div className="h-full overflow-scroll relative backdrop-blur-lg">
+      {/* Profile Image Modal */}
+      {profileModal.isOpen && (
+        <ProfileImageModal
+          imageUrl={profileModal.imageUrl}
+          userName={profileModal.userName}
+          onClose={() => setProfileModal({ ...profileModal, isOpen: false })}
+        />
+      )}
+
       {/* ------- header ------- */}
       <div className="flex items-center gap-3 py-3 mx-4 border-b border-stone-500">
         <img
           src={selectedUser.profilePic || assets.avatar_icon}
           alt=""
-          className="w-8 rounded-full"
+          className="w-8 rounded-full cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all"
+          onClick={() =>
+            setProfileModal({
+              isOpen: true,
+              imageUrl: selectedUser.profilePic || assets.avatar_icon,
+              userName: selectedUser.fullName,
+            })
+          }
         />
         <p className="flex-1 text-lg text-white flex items-center gap-2">
           {selectedUser.fullName}
@@ -135,37 +162,188 @@ const ChatContainer = () => {
               msg.senderId !== authUser._id && "flex-row-reverse"
             }`}
           >
-            {msg.image ? (
-              <img
-                src={msg.image}
-                alt="img"
-                className="max-w-[250px] shadow-lg rounded-xl overflow-hidden mb-8 border-2 border-purple-500/20"
-              />
-            ) : msg.video ? (
-              <video
-                controls
-                src={msg.video}
-                className="mb-8 max-w-[300px] rounded-xl shadow-lg border-2 border-purple-500/20"
-                style={{ backgroundColor: "rgba(30, 30, 40, 0.8)" }}
-              />
-            ) : msg.audio ? (
-              <audio
-                controls
-                src={msg.audio}
-                className="mb-8 max-w-[250px] rounded-xl shadow-md"
-                style={{ backgroundColor: "rgba(80, 70, 120, 0.4)" }}
-              />
-            ) : (
-              <p
-                className={`p-3 max-w-[250px] md:text-sm font-light rounded-xl mb-8 break-all shadow-md ${
-                  msg.senderId === authUser._id
-                    ? "rounded-br-none bg-gradient-to-r from-purple-600 to-purple-700 text-white"
-                    : "rounded-bl-none bg-gradient-to-r from-gray-700 to-gray-800 text-white"
-                }`}
-              >
-                {msg.text}
-              </p>
-            )}
+            {/* Message options button and menu */}
+            <div className="relative">
+              {messageOptionsState.isOpen &&
+                messageOptionsState.messageId === msg._id && (
+                  <MessageOptions
+                    messageId={msg._id}
+                    isOwnMessage={msg.senderId === authUser._id}
+                    position={msg.senderId !== authUser._id ? "left" : "right"}
+                    onClose={() =>
+                      setMessageOptionsState({
+                        isOpen: false,
+                        messageId: null,
+                        isOwnMessage: false,
+                      })
+                    }
+                  />
+                )}
+
+              {/* Only show content if message is not deleted or deleted but for other users */}
+              {!msg.isDeleted && !msg.deletedFor?.includes(authUser._id) ? (
+                <>
+                  {msg.image ? (
+                    <div className="relative mb-8 group">
+                      <img
+                        src={msg.image}
+                        alt="img"
+                        className="max-w-[250px] md:max-w-[300px] shadow-xl rounded-2xl overflow-hidden border-2 border-purple-500/30 transition-all hover:scale-[1.02] cursor-pointer"
+                        onClick={() => window.open(msg.image, "_blank")}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity flex items-end justify-center pb-2">
+                        <span className="text-white text-xs font-light">
+                          Click to view full image
+                        </span>
+                      </div>
+                      <button
+                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMessageOptionsState({
+                            isOpen: true,
+                            messageId: msg._id,
+                            isOwnMessage: msg.senderId === authUser._id,
+                          });
+                        }}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : msg.video ? (
+                    <div className="relative mb-8">
+                      <video
+                        controls
+                        src={msg.video}
+                        className="mb-8 max-w-[300px] rounded-xl shadow-lg border-2 border-purple-500/30"
+                        style={{ backgroundColor: "rgba(30, 30, 40, 0.8)" }}
+                      />
+                      <button
+                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center transition-colors"
+                        onClick={() =>
+                          setMessageOptionsState({
+                            isOpen: true,
+                            messageId: msg._id,
+                            isOwnMessage: msg.senderId === authUser._id,
+                          })
+                        }
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : msg.audio ? (
+                    <div className="relative mb-8">
+                      <audio
+                        controls
+                        src={msg.audio}
+                        className="mb-8 max-w-[250px] rounded-xl shadow-md"
+                        style={{ backgroundColor: "rgba(80, 70, 120, 0.4)" }}
+                      />
+                      <button
+                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center transition-colors"
+                        onClick={() =>
+                          setMessageOptionsState({
+                            isOpen: true,
+                            messageId: msg._id,
+                            isOwnMessage: msg.senderId === authUser._id,
+                          })
+                        }
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <p
+                        className={`p-3 max-w-[250px] md:text-sm font-light rounded-xl mb-8 break-all shadow-md group ${
+                          msg.senderId === authUser._id
+                            ? "rounded-br-none bg-gradient-to-r from-purple-600 to-purple-700 text-white"
+                            : "rounded-bl-none bg-gradient-to-r from-gray-700 to-gray-800 text-white"
+                        }`}
+                      >
+                        {msg.text}
+                        <button
+                          className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/20 hover:bg-black/40 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+                          onClick={() =>
+                            setMessageOptionsState({
+                              isOpen: true,
+                              messageId: msg._id,
+                              isOwnMessage: msg.senderId === authUser._id,
+                            })
+                          }
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-3 w-3 text-white"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                            />
+                          </svg>
+                        </button>
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p
+                  className={`p-3 max-w-[250px] md:text-sm font-light rounded-xl mb-8 break-all shadow-md ${
+                    msg.senderId === authUser._id
+                      ? "rounded-br-none bg-gray-700/50"
+                      : "rounded-bl-none bg-gray-700/50"
+                  } text-gray-400 italic`}
+                >
+                  {msg.isDeleted
+                    ? "This message was deleted"
+                    : "This message was deleted"}
+                </p>
+              )}
+            </div>
             <div className="text-center text-xs">
               <img
                 src={
@@ -174,7 +352,20 @@ const ChatContainer = () => {
                     : selectedUser?.profilePic || assets.avatar_icon
                 }
                 alt=""
-                className="w-7 rounded-full"
+                className="w-7 rounded-full cursor-pointer hover:ring-2 hover:ring-purple-400 transition-all"
+                onClick={() =>
+                  setProfileModal({
+                    isOpen: true,
+                    imageUrl:
+                      msg.senderId === authUser._id
+                        ? authUser?.profilePic || assets.avatar_icon
+                        : selectedUser?.profilePic || assets.avatar_icon,
+                    userName:
+                      msg.senderId === authUser._id
+                        ? authUser.fullName
+                        : selectedUser.fullName,
+                  })
+                }
               />
               <p
                 className={`${

@@ -2,11 +2,17 @@ import { useContext, useEffect, useState } from "react";
 import assets from "../assets/assets";
 import { ChatContext } from "../context/ChatContext";
 import { AuthContext } from "../context/AuthContext";
+import ProfileImageModal from "./ProfileImageModal";
 
 const RightSidebar = () => {
   const { selectedUser, messages } = useContext(ChatContext);
   const { logout, onlineUsers } = useContext(AuthContext);
   const [msgImages, setMsgImages] = useState([]);
+  const [profileModal, setProfileModal] = useState({
+    isOpen: false,
+    imageUrl: "",
+    userName: "",
+  });
 
   // Get all the images from the messages and set them to state
   useEffect(() => {
@@ -20,11 +26,27 @@ const RightSidebar = () => {
           selectedUser ? "max-md:hidden" : ""
         }`}
       >
+        {/* Profile Image Modal */}
+        {profileModal.isOpen && (
+          <ProfileImageModal
+            imageUrl={profileModal.imageUrl}
+            userName={profileModal.userName}
+            onClose={() => setProfileModal({ ...profileModal, isOpen: false })}
+          />
+        )}
+
         <div className="pt-16 flex flex-col items-center gap-2 text-xs font-light mx-auto">
           <img
             src={selectedUser?.profilePic || assets.avatar_icon}
             alt=""
-            className="w-20 aspect-[1/1] rounded-full"
+            className="w-20 aspect-[1/1] rounded-full cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all"
+            onClick={() =>
+              setProfileModal({
+                isOpen: true,
+                imageUrl: selectedUser?.profilePic || assets.avatar_icon,
+                userName: selectedUser.fullName,
+              })
+            }
           />
           <h1 className="px-10 text-xl font-medium mx-auto flex items-center gap-2">
             {onlineUsers.includes(selectedUser._id) && (

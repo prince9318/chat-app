@@ -1,8 +1,9 @@
 import { useContext, useEffect, useState } from "react";
 import assets from "../assets/assets";
-import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
 import { ChatContext } from "../context/ChatContext";
+import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import ProfileImageModal from "./ProfileImageModal";
 
 const Sidebar = () => {
   const {
@@ -18,6 +19,11 @@ const Sidebar = () => {
 
   const [input, setInput] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false); // ✅ new state for menu toggle
+  const [profileModal, setProfileModal] = useState({
+    isOpen: false,
+    imageUrl: "",
+    userName: "",
+  });
 
   const navigate = useNavigate();
 
@@ -37,6 +43,15 @@ const Sidebar = () => {
         selectedUser ? "max-md:hidden" : ""
       }`}
     >
+      {/* Profile Image Modal */}
+      {profileModal.isOpen && (
+        <ProfileImageModal
+          imageUrl={profileModal.imageUrl}
+          userName={profileModal.userName}
+          onClose={() => setProfileModal({ ...profileModal, isOpen: false })}
+        />
+      )}
+
       <div className="pb-5">
         <div className="flex justify-between items-center relative">
           <img src={assets.logo} alt="logo" className="max-w-40" />
@@ -102,7 +117,15 @@ const Sidebar = () => {
             <img
               src={user?.profilePic || assets.avatar_icon}
               alt=""
-              className="w-[35px] aspect-[1/1] rounded-full"
+              className="w-[35px] aspect-[1/1] rounded-full cursor-pointer hover:ring-2 hover:ring-purple-400 transition-all"
+              onClick={(e) => {
+                e.stopPropagation();
+                setProfileModal({
+                  isOpen: true,
+                  imageUrl: user?.profilePic || assets.avatar_icon,
+                  userName: user.fullName,
+                });
+              }}
             />
             <div className="flex flex-col leading-5">
               <p>{user.fullName}</p>

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { AuthContext } from "./AuthContext";
 import toast from "react-hot-toast";
 
+// Context for managing chat functionality
 export const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {
@@ -10,7 +11,7 @@ export const ChatProvider = ({ children }) => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [unseenMessages, setUnseenMessages] = useState({});
 
-  const { socket, axios } = useContext(AuthContext);
+  const { socket, axios, authUser } = useContext(AuthContext);
 
   // function to get all users for sidebar
   const getUsers = async () => {
@@ -84,6 +85,66 @@ export const ChatProvider = ({ children }) => {
     return () => unsubscribeFromMessages();
   }, [socket, selectedUser]);
 
+  // function to delete message
+  const deleteMessage = async (messageId, deleteFor) => {
+    try {
+      const { data } = await axios.delete(`/api/messages/delete/${messageId}`, {
+        data: { deleteFor },
+      });
+
+      if (data.success) {
+        const currentUserId = authUser?._id || null;
+
+        if (deleteFor === "everyone") {
+          // Mark as deleted for all users
+          setMessages((prevMessages) =>
+            prevMessages.map((msg) =>
+              msg._id === messageId ? { ...msg, isDeleted: true } : msg
+            )
+          );
+        } else {
+          // Delete only for current user — ensure deletedFor is an array
+          setMessages((prevMessages) =>
+            prevMessages.map((msg) => {
+              if (msg._id !== messageId) return msg;
+              const prevDeleted = Array.isArray(msg.deletedFor)
+                ? msg.deletedFor
+                : [];
+              // Prevent duplicates
+              const newDeleted = currentUserId
+                ? Array.from(new Set([...prevDeleted, currentUserId]))
+                : prevDeleted;
+              return { ...msg, deletedFor: newDeleted };
+            })
+          );
+        }
+
+        toast.success(data.message);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  // Listen for message deletion events
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("messageDeleted", ({ messageId }) => {
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg._id === messageId ? { ...msg, isDeleted: true } : msg
+        )
+      );
+    });
+
+    return () => {
+      if (socket) socket.off("messageDeleted");
+    };
+  }, [socket]);
+
   const value = {
     messages,
     users,
@@ -91,6 +152,7 @@ export const ChatProvider = ({ children }) => {
     getUsers,
     getMessages,
     sendMessage,
+    deleteMessage,
     setSelectedUser,
     unseenMessages,
     setUnseenMessages,
