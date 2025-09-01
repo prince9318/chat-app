@@ -139,28 +139,28 @@ const ChatContainer = () => {
               <img
                 src={msg.image}
                 alt="img"
-                className="max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8"
+                className="max-w-[250px] shadow-lg rounded-xl overflow-hidden mb-8 border-2 border-purple-500/20"
               />
             ) : msg.video ? (
               <video
                 controls
                 src={msg.video}
-                className="mb-8 max-w-[280px] rounded-lg border border-gray-700"
-                style={{ backgroundColor: "rgba(139, 92, 246, 0.1)" }}
+                className="mb-8 max-w-[300px] rounded-xl shadow-lg border-2 border-purple-500/20"
+                style={{ backgroundColor: "rgba(30, 30, 40, 0.8)" }}
               />
             ) : msg.audio ? (
               <audio
                 controls
                 src={msg.audio}
-                className="mb-8 max-w-[230px] rounded-lg"
-                style={{ backgroundColor: "rgba(139, 92, 246, 0.2)" }}
+                className="mb-8 max-w-[250px] rounded-xl shadow-md"
+                style={{ backgroundColor: "rgba(80, 70, 120, 0.4)" }}
               />
             ) : (
               <p
-                className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${
+                className={`p-3 max-w-[250px] md:text-sm font-light rounded-xl mb-8 break-all shadow-md ${
                   msg.senderId === authUser._id
-                    ? "rounded-br-none"
-                    : "rounded-bl-none"
+                    ? "rounded-br-none bg-gradient-to-r from-purple-600 to-purple-700 text-white"
+                    : "rounded-bl-none bg-gradient-to-r from-gray-700 to-gray-800 text-white"
                 }`}
               >
                 {msg.text}
@@ -192,18 +192,20 @@ const ChatContainer = () => {
       </div>
 
       {/* ------- bottom area ------- */}
-      <div className="absolute bottom-0 left-0 right-0 flex items-center gap-3 p-3">
-        <div className="flex-1 flex items-center bg-gray-100/12 px-3 rounded-full">
+      <div className="absolute bottom-0 left-0 right-0 flex items-center gap-3 p-4 backdrop-blur-md bg-black/20">
+        <div className="flex-1 flex items-center bg-gray-800/50 px-4 py-2 rounded-xl shadow-inner border border-purple-500/20">
           {/* Emoji button */}
-          <img
-            src={assets.emoji_icon}
-            alt="emoji"
-            className="w-6 mr-2 cursor-pointer"
-            onClick={() => setShowEmojiPicker((prev) => !prev)}
-          />
+          <div className="hover:bg-purple-500/20 p-2 rounded-full transition-colors">
+            <img
+              src={assets.emoji_icon}
+              alt="emoji"
+              className="w-6 cursor-pointer"
+              onClick={() => setShowEmojiPicker((prev) => !prev)}
+            />
+          </div>
           {/* Emoji picker (absolute positioned above input) */}
           {showEmojiPicker && (
-            <div className="absolute bottom-12 left-0 z-50">
+            <div className="absolute bottom-16 left-4 z-50 shadow-xl rounded-xl overflow-hidden">
               <EmojiPicker
                 onEmojiClick={handleEmojiClick}
                 theme="dark"
@@ -218,7 +220,7 @@ const ChatContainer = () => {
             onKeyDown={(e) => (e.key === "Enter" ? handleSendMessage(e) : null)}
             type="text"
             placeholder="Type a message"
-            className="flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400"
+            className="flex-1 text-sm p-3 mx-2 border-none rounded-lg outline-none bg-transparent text-white placeholder-gray-400"
           />
           <input
             onChange={(e) => {
@@ -239,14 +241,16 @@ const ChatContainer = () => {
             hidden
           />
           <label htmlFor="media">
-            <img
-              src={assets.gallery_icon}
-              alt="Upload media"
-              className="w-5 mr-2 cursor-pointer"
-              style={{
-                filter: "invert(0.5) sepia(1) saturate(5) hue-rotate(175deg)",
-              }}
-            />
+            <div className="hover:bg-purple-500/20 p-2 rounded-full transition-colors">
+              <img
+                src={assets.gallery_icon}
+                alt="Upload media"
+                className="w-5 cursor-pointer"
+                style={{
+                  filter: "invert(0.5) sepia(1) saturate(5) hue-rotate(175deg)",
+                }}
+              />
+            </div>
           </label>
           <input
             onChange={handleSendAudio}
@@ -256,7 +260,7 @@ const ChatContainer = () => {
             hidden
           />
           <label htmlFor="audio">
-            <div className="w-7 h-7 flex items-center justify-center rounded-full bg-purple-600 hover:bg-purple-700 transition-colors duration-200 mr-2 cursor-pointer">
+            <div className="w-9 h-9 flex items-center justify-center rounded-full bg-purple-600 hover:bg-purple-700 transition-colors duration-200 cursor-pointer">
               <img
                 src={assets.mic_icon}
                 alt="audio"
@@ -266,12 +270,12 @@ const ChatContainer = () => {
             </div>
           </label>
         </div>
-        <img
+        <div
           onClick={handleSendMessage}
-          src={assets.send_button}
-          alt=""
-          className="w-7 cursor-pointer"
-        />
+          className="w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 transition-all duration-200 cursor-pointer shadow-lg"
+        >
+          <img src={assets.send_button} alt="Send" className="w-5 h-5" />
+        </div>
       </div>
     </div>
   ) : (
