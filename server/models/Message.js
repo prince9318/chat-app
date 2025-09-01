@@ -15,6 +15,7 @@ const messageSchema = new mongoose.Schema(
     audio: { type: String }, // ✅ new field for audio file URL
     text: { type: String },
     image: { type: String },
+    video: { type: String }, // ✅ new field for video file URL
     seen: { type: Boolean, default: false },
     // 👇 Add soft delete field
     isDeleted: { type: Boolean, default: false },

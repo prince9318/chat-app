@@ -70,7 +70,7 @@ export const markMessageAsSeen = async (req, res) => {
 // Send message to selected user
 export const sendMessage = async (req, res) => {
   try {
-    const { text, image, audio } = req.body;
+    const { text, image, audio, video } = req.body;
     const receiverId = req.params.id;
     const senderId = req.user._id;
 
@@ -88,12 +88,22 @@ export const sendMessage = async (req, res) => {
       audioUrl = uploadResponse.secure_url;
     }
 
+    let videoUrl;
+    if (video) {
+      const uploadResponse = await cloudinary.uploader.upload(video, {
+        resource_type: "video",
+        chunk_size: 6000000, // 6MB chunks for better upload performance
+      });
+      videoUrl = uploadResponse.secure_url;
+    }
+
     const newMessage = await Message.create({
       senderId,
       receiverId,
       text,
       image: imageUrl,
       audio: audioUrl,
+      video: videoUrl,
     });
 
     // Emit the new message to the receiver's socket
