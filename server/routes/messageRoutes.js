@@ -30,7 +30,7 @@ messageRouter.post(
       const senderId = req.user._id; // comes from protectRoute middleware
       const receiverId = req.params.id; // target userId from URL
 
-      if (!req.file) {
+      if (!req.file || !req.file.path) {
         return res
           .status(400)
           .json({ success: false, message: "No audio file uploaded" });
@@ -39,7 +39,7 @@ messageRouter.post(
       const newMessage = new Message({
         senderId,
         receiverId,
-        audio: `/uploads/audio/${req.file.filename}`,
+        audio: req.file.path, // Cloudinary secure URL
       });
 
       await newMessage.save();

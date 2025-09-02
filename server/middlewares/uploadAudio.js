@@ -1,32 +1,26 @@
 import multer from "multer";
-import path from "path";
-import fs from "fs";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
-// Ensure uploads/audio directory exists
-const audioDir = "uploads/audio";
-if (!fs.existsSync(audioDir)) {
-  fs.mkdirSync(audioDir, { recursive: true });
-}
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-// Storage engine
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, audioDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const uniqueName = Date.now() + "-" + Math.round(Math.random() * 1e9) + ext;
-    cb(null, uniqueName);
+// Use Cloudinary storage
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "chat-app/audio", // all audio files will be stored here
+    resource_type: "auto", // supports audio, video, images
+    format: async (req, file) => {
+      if (file.mimetype.startsWith("audio/")) return "mp3"; // convert to mp3
+      return undefined;
+    },
+    public_id: (req, file) => `${Date.now()}-${file.originalname}`,
   },
 });
 
-// File filter (accept only audio)
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("audio/")) {
-    cb(null, true);
-  } else {
-    cb(new Error("Only audio files allowed"), false);
-  }
-};
-
-export const uploadAudio = multer({ storage, fileFilter });
+export const uploadAudio = multer({ storage });
