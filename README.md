@@ -1,22 +1,51 @@
-# Client-Side Application (React + Vite)
+# QuickChat 💬
 
-This is the client-side application for the Chat Application, built using React and Vite.
+A real-time chat application built with the **MERN stack** and **Socket.IO** that allows users to exchange text, images, audio, and video in real time.
 
-## Technologies Used
+---
 
-*   React
-*   Vite
-*   React Router
-*   Axios
-*   Socket.IO Client
-*   Tailwind CSS
+## 🚀 Features
+
+- 🔑 User Authentication (JWT-based login & signup)
+- 💬 Real-time messaging with Socket.IO
+- 👤 Online/Offline user status
+- 📸 Share multimedia (Images, Audio, Video) via **Cloudinary**
+- ✅ Message seen/unseen tracking
+- 🗑️ Delete messages (for me / for everyone)
+- 🎨 Responsive UI with React + Tailwind CSS
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend:
+
+- ReactJS
+- Context API / Hooks
+- Tailwind CSS
+
+### Backend:
+
+- Node.js
+- Express.js
+- MongoDB (Mongoose)
+- Socket.IO
+- JWT Authentication
+
+### Cloud Services:
+
+- Cloudinary (Media storage)
+- Vercel (Frontend hosting)
+- Render/Railway (Backend hosting with WebSocket support)
+
+---
 
 ## Getting Started
 
 ### Prerequisites
 
-*   Node.js and npm installed
-*   A running backend server (see the server's README for instructions)
+- Node.js and npm installed
+- A running backend server (see the server's README for instructions)
 
 ### Installation
 
@@ -41,7 +70,7 @@ This is the client-side application for the Chat Application, built using React 
     VITE_BACKEND_URL=http://localhost:5000 # Or your deployed backend URL
     ```
 
-    *   Replace `http://localhost:5000` with the actual URL of your running backend server.
+    - Replace `http://localhost:5000` with the actual URL of your running backend server.
 
 ### Running the Application
 

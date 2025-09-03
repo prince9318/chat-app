@@ -48,13 +48,13 @@ const RightSidebar = () => {
               })
             }
           />
-          <h1 className="px-10 text-xl font-medium mx-auto flex items-center gap-2">
+          <div className="flex items-center justify-center gap-2">
             {onlineUsers.includes(selectedUser._id) && (
-              <p className="w-2 h-2 rounded-full bg-green-500"></p>
+              <div className="w-2 h-2 rounded-full bg-green-500"></div>
             )}
-            {selectedUser.fullName}
-          </h1>
-          <p className="px-10 mx-auto">{selectedUser.bio}</p>
+            <h1 className="text-xl font-medium">{selectedUser.fullName}</h1>
+          </div>
+          <p className="px-10 mx-auto text-center">{selectedUser.bio}</p>
         </div>
 
         <hr className="border-[#ffffff50] my-4" />
