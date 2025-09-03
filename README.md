@@ -10,7 +10,7 @@ A real-time chat application built with the **MERN stack** and **Socket.IO** tha
 - 💬 Real-time messaging with Socket.IO
 - 👤 Online/Offline user status
 - 📸 Share multimedia (Images, Audio, Video) via **Cloudinary**
-- ✅ Message seen/unseen tracking
+- ✅ Message seen/unseen tracking in progress
 - 🗑️ Delete messages (for me / for everyone)
 - 🎨 Responsive UI with React + Tailwind CSS
 
