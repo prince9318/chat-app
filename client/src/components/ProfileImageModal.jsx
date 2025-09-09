@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 
 const ProfileImageModal = ({ imageUrl, onClose, userName }) => {
-  // Close modal when Escape key is pressed
+  /**
+   * Close the modal when the user presses the Escape key
+   */
   useEffect(() => {
     const handleEscKey = (e) => {
       if (e.key === "Escape") {
@@ -9,11 +11,15 @@ const ProfileImageModal = ({ imageUrl, onClose, userName }) => {
       }
     };
 
+    // Attach listener when modal is mounted
     window.addEventListener("keydown", handleEscKey);
+    // Clean up listener when modal is unmounted
     return () => window.removeEventListener("keydown", handleEscKey);
   }, [onClose]);
 
-  // Close modal when clicking outside the image
+  /**
+   * Close the modal when user clicks outside the image area
+   */
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) {
       onClose();
@@ -23,14 +29,16 @@ const ProfileImageModal = ({ imageUrl, onClose, userName }) => {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-      onClick={handleBackdropClick}
+      onClick={handleBackdropClick} // Detect backdrop click
     >
       <div className="relative max-w-[90%] max-h-[90%] rounded-xl overflow-hidden">
+        {/* Close button in top-right corner */}
         <div className="absolute top-4 right-4 z-10">
           <button
             onClick={onClose}
             className="bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
           >
+            {/* Close (X) icon */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-6 w-6"
@@ -48,12 +56,14 @@ const ProfileImageModal = ({ imageUrl, onClose, userName }) => {
           </button>
         </div>
 
+        {/* Profile image */}
         <img
           src={imageUrl}
           alt={`${userName}'s profile`}
           className="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl"
         />
 
+        {/* Optional username overlay at bottom */}
         {userName && (
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
             <h3 className="text-white text-lg font-medium">{userName}</h3>

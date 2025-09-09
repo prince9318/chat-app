@@ -2,18 +2,20 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { AuthContext } from "./AuthContext";
 import toast from "react-hot-toast";
 
-// Context for managing chat functionality
+// ✅ Context for managing chat-related state & actions globally
 export const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {
+  // State for messages, users list, selected chat, unseen messages count
   const [messages, setMessages] = useState([]);
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [unseenMessages, setUnseenMessages] = useState({});
 
+  // Get socket, axios, and authUser from AuthContext
   const { socket, axios, authUser } = useContext(AuthContext);
 
-  // function to get all users for sidebar
+  // ✅ Fetch all users for sidebar (with unseen messages count)
   const getUsers = async () => {
     try {
       const { data } = await axios.get("/api/messages/users");
@@ -26,7 +28,7 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
-  // function to get messages for selected user
+  // ✅ Fetch messages for the currently selected user
   const getMessages = async (userId) => {
     try {
       const { data } = await axios.get(`/api/messages/${userId}`);
@@ -38,7 +40,7 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
-  // function to send message to selected user
+  // ✅ Send a new message to the selected user
   const sendMessage = async (messageData) => {
     try {
       const { data } = await axios.post(
@@ -46,6 +48,7 @@ export const ChatProvider = ({ children }) => {
         messageData
       );
       if (data.success) {
+        // append new message to local state
         setMessages((prevMessages) => [...prevMessages, data.newMessage]);
       } else {
         toast.error(data.message);
@@ -55,37 +58,40 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
-  // function to subscribe to messages for selected user
-  const subscribeToMessages = async () => {
+  // ✅ Subscribe to new incoming messages (via socket)
+  const subscribeToMessages = () => {
     if (!socket) return;
 
     socket.on("newMessage", (newMessage) => {
       if (selectedUser && newMessage.senderId === selectedUser._id) {
+        // If user is chatting with sender, mark as seen immediately
         newMessage.seen = true;
         setMessages((prevMessages) => [...prevMessages, newMessage]);
-        axios.put(`/api/messages/mark/${newMessage._id}`);
+        axios.put(`/api/messages/mark/${newMessage._id}`); // mark as seen in DB
       } else {
-        setUnseenMessages((prevUnseenMessages) => ({
-          ...prevUnseenMessages,
-          [newMessage.senderId]: prevUnseenMessages[newMessage.senderId]
-            ? prevUnseenMessages[newMessage.senderId] + 1
+        // Otherwise increment unseen count for that sender
+        setUnseenMessages((prev) => ({
+          ...prev,
+          [newMessage.senderId]: prev[newMessage.senderId]
+            ? prev[newMessage.senderId] + 1
             : 1,
         }));
       }
     });
   };
 
-  // function to unsubscribe from messages
+  // ✅ Unsubscribe from socket events when cleanup is needed
   const unsubscribeFromMessages = () => {
     if (socket) socket.off("newMessage");
   };
 
+  // Re-subscribe whenever socket or selected user changes
   useEffect(() => {
     subscribeToMessages();
     return () => unsubscribeFromMessages();
   }, [socket, selectedUser]);
 
-  // function to delete message
+  // ✅ Delete message (for self or everyone)
   const deleteMessage = async (messageId, deleteFor) => {
     try {
       const { data } = await axios.delete(`/api/messages/delete/${messageId}`, {
@@ -97,20 +103,19 @@ export const ChatProvider = ({ children }) => {
 
         if (deleteFor === "everyone") {
           // Mark as deleted for all users
-          setMessages((prevMessages) =>
-            prevMessages.map((msg) =>
+          setMessages((prev) =>
+            prev.map((msg) =>
               msg._id === messageId ? { ...msg, isDeleted: true } : msg
             )
           );
         } else {
-          // Delete only for current user — ensure deletedFor is an array
-          setMessages((prevMessages) =>
-            prevMessages.map((msg) => {
+          // Delete only for current user (track in deletedFor array)
+          setMessages((prev) =>
+            prev.map((msg) => {
               if (msg._id !== messageId) return msg;
               const prevDeleted = Array.isArray(msg.deletedFor)
                 ? msg.deletedFor
                 : [];
-              // Prevent duplicates
               const newDeleted = currentUserId
                 ? Array.from(new Set([...prevDeleted, currentUserId]))
                 : prevDeleted;
@@ -128,13 +133,13 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
-  // Listen for message deletion events
+  // ✅ Listen for real-time message deletion events
   useEffect(() => {
     if (!socket) return;
 
     socket.on("messageDeleted", ({ messageId }) => {
-      setMessages((prevMessages) =>
-        prevMessages.map((msg) =>
+      setMessages((prev) =>
+        prev.map((msg) =>
           msg._id === messageId ? { ...msg, isDeleted: true } : msg
         )
       );
@@ -145,6 +150,7 @@ export const ChatProvider = ({ children }) => {
     };
   }, [socket]);
 
+  // ✅ Values shared across app
   const value = {
     messages,
     users,

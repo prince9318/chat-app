@@ -9,13 +9,17 @@ import ProfileImageModal from "./ProfileImageModal";
 import MessageOptions from "./MessageOptions";
 
 const ChatContainer = () => {
+  // Extract data and functions from Chat context
   const { messages, selectedUser, setSelectedUser, sendMessage, getMessages } =
     useContext(ChatContext);
 
+  // Extract user-related data from Auth context
   const { authUser, onlineUsers } = useContext(AuthContext);
 
+  // Reference for auto-scrolling chat to bottom
   const scrollEnd = useRef();
 
+  // Local state for input field, emoji picker, and modals
   const [input, setInput] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [profileModal, setProfileModal] = useState({
@@ -29,15 +33,19 @@ const ChatContainer = () => {
     isOwnMessage: false,
   });
 
-  // Handle sending a message
+  /**
+   * Send a text message
+   */
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (input.trim() === "") return null;
+    if (input.trim() === "") return null; // ignore empty input
     await sendMessage({ text: input.trim() });
-    setInput("");
+    setInput(""); // clear input after sending
   };
 
-  // Handle sending an audio file
+  /**
+   * Send an audio message
+   */
   const handleSendAudio = async (e) => {
     const file = e.target.files[0];
     if (!file || !file.type.startsWith("audio/")) {
@@ -46,15 +54,17 @@ const ChatContainer = () => {
     }
     const reader = new FileReader();
 
+    // Convert audio file to base64 and send
     reader.onloadend = async () => {
       await sendMessage({ audio: reader.result });
       e.target.value = "";
     };
-
     reader.readAsDataURL(file);
   };
 
-  // Handle sending an image
+  /**
+   * Send an image message
+   */
   const handleSendImage = async (e) => {
     const file = e.target.files[0];
     if (!file || !file.type.startsWith("image/")) {
@@ -70,7 +80,9 @@ const ChatContainer = () => {
     reader.readAsDataURL(file);
   };
 
-  // Handle sending a video
+  /**
+   * Send a video message (max 50MB)
+   */
   const handleSendVideo = async (e) => {
     const file = e.target.files[0];
     if (!file || !file.type.startsWith("video/")) {
@@ -78,7 +90,6 @@ const ChatContainer = () => {
       return;
     }
 
-    // Check file size (limit to 50MB)
     if (file.size > 50 * 1024 * 1024) {
       toast.error("Video file is too large (max 50MB)");
       return;
@@ -93,30 +104,37 @@ const ChatContainer = () => {
       toast.success("Video sent successfully");
       e.target.value = "";
     };
-
     reader.readAsDataURL(file);
   };
 
+  /**
+   * Fetch messages when a user is selected
+   */
   useEffect(() => {
     if (selectedUser) {
       getMessages(selectedUser._id);
     }
   }, [selectedUser]);
 
+  /**
+   * Auto-scroll to the bottom whenever messages update
+   */
   useEffect(() => {
     if (scrollEnd.current && messages) {
       scrollEnd.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
-  // Add emoji to input
+  /**
+   * Append emoji to message input
+   */
   const handleEmojiClick = (emojiData) => {
     setInput((prev) => prev + emojiData.emoji);
   };
 
   return selectedUser ? (
     <div className="h-full overflow-scroll relative backdrop-blur-lg">
-      {/* Profile Image Modal */}
+      {/* ---------------- Profile Image Modal ---------------- */}
       {profileModal.isOpen && (
         <ProfileImageModal
           imageUrl={profileModal.imageUrl}
@@ -125,8 +143,9 @@ const ChatContainer = () => {
         />
       )}
 
-      {/* ------- header ------- */}
+      {/* ---------------- Chat Header ---------------- */}
       <div className="flex items-center gap-3 py-3 mx-4 border-b border-stone-500">
+        {/* Profile picture */}
         <img
           src={selectedUser.profilePic || assets.avatar_icon}
           alt=""
@@ -139,21 +158,28 @@ const ChatContainer = () => {
             })
           }
         />
+
+        {/* Username + online status */}
         <p className="flex-1 text-lg text-white flex items-center gap-2">
           {selectedUser.fullName}
           {onlineUsers.includes(selectedUser._id) && (
             <span className="w-2 h-2 rounded-full bg-green-500"></span>
           )}
         </p>
+
+        {/* Back button (mobile only) */}
         <img
           onClick={() => setSelectedUser(null)}
           src={assets.arrow_icon}
-          alt=""
+          alt="back"
           className="md:hidden max-w-7"
         />
+
+        {/* Help icon (desktop only) */}
         <img src={assets.help_icon} alt="" className="max-md:hidden max-w-5" />
       </div>
-      {/* ------- chat area ------- */}
+
+      {/* ---------------- Chat Messages Area ---------------- */}
       <div className="flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3 pb-6">
         {messages.map((msg, index) => (
           <div
@@ -162,8 +188,9 @@ const ChatContainer = () => {
               msg.senderId !== authUser._id && "flex-row-reverse"
             }`}
           >
-            {/* Message options button and menu */}
+            {/* Message bubble + options */}
             <div className="relative">
+              {/* Message options menu */}
               {messageOptionsState.isOpen &&
                 messageOptionsState.messageId === msg._id && (
                   <MessageOptions
@@ -180,24 +207,21 @@ const ChatContainer = () => {
                   />
                 )}
 
-              {/* Only show content if message is not deleted or deleted but for other users */}
+              {/* Render message types: Image | Video | Audio | Text */}
               {!msg.isDeleted && !msg.deletedFor?.includes(authUser._id) ? (
                 <>
+                  {/* Image message */}
                   {msg.image ? (
                     <div className="relative mb-8 group">
                       <img
                         src={msg.image}
                         alt="img"
-                        className="max-w-[250px] md:max-w-[300px] shadow-xl rounded-2xl overflow-hidden border-2 border-purple-500/30 transition-all hover:scale-[1.02] cursor-pointer"
+                        className="max-w-[250px] md:max-w-[300px] shadow-xl rounded-2xl"
                         onClick={() => window.open(msg.image, "_blank")}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity flex items-end justify-center pb-2">
-                        <span className="text-white text-xs font-light">
-                          Click to view full image
-                        </span>
-                      </div>
+                      {/* Options button for image */}
                       <button
-                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center transition-colors"
+                        className="absolute top-2 right-2 ..."
                         onClick={(e) => {
                           e.stopPropagation();
                           setMessageOptionsState({
@@ -207,32 +231,15 @@ const ChatContainer = () => {
                           });
                         }}
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4 text-white"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                          />
-                        </svg>
+                        ⋮
                       </button>
                     </div>
                   ) : msg.video ? (
+                    /* Video message */
                     <div className="relative mb-8">
-                      <video
-                        controls
-                        src={msg.video}
-                        className="mb-8 max-w-[300px] rounded-xl shadow-lg border-2 border-purple-500/30"
-                        style={{ backgroundColor: "rgba(30, 30, 40, 0.8)" }}
-                      />
+                      <video controls src={msg.video} className="..." />
                       <button
-                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center transition-colors"
+                        className="absolute top-2 right-2 ..."
                         onClick={() =>
                           setMessageOptionsState({
                             isOpen: true,
@@ -241,32 +248,15 @@ const ChatContainer = () => {
                           })
                         }
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4 text-white"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                          />
-                        </svg>
+                        ⋮
                       </button>
                     </div>
                   ) : msg.audio ? (
+                    /* Audio message */
                     <div className="relative mb-8">
-                      <audio
-                        controls
-                        src={msg.audio}
-                        className="mb-8 max-w-[250px] rounded-xl shadow-md"
-                        style={{ backgroundColor: "rgba(80, 70, 120, 0.4)" }}
-                      />
+                      <audio controls src={msg.audio} className="..." />
                       <button
-                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center transition-colors"
+                        className="absolute top-2 right-2 ..."
                         onClick={() =>
                           setMessageOptionsState({
                             isOpen: true,
@@ -275,75 +265,33 @@ const ChatContainer = () => {
                           })
                         }
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4 text-white"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                          />
-                        </svg>
+                        ⋮
                       </button>
                     </div>
                   ) : (
+                    /* Text message */
                     <div className="relative">
                       <p
-                        className={`p-3 max-w-[250px] md:text-sm font-light rounded-xl mb-8 break-all shadow-md group ${
+                        className={`p-3 max-w-[250px] rounded-xl mb-8 ${
                           msg.senderId === authUser._id
-                            ? "rounded-br-none bg-gradient-to-r from-purple-600 to-purple-700 text-white"
-                            : "rounded-bl-none bg-gradient-to-r from-gray-700 to-gray-800 text-white"
+                            ? "bg-purple-600 text-white"
+                            : "bg-gray-700 text-white"
                         }`}
                       >
                         {msg.text}
-                        <button
-                          className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/20 hover:bg-black/40 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
-                          onClick={() =>
-                            setMessageOptionsState({
-                              isOpen: true,
-                              messageId: msg._id,
-                              isOwnMessage: msg.senderId === authUser._id,
-                            })
-                          }
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-3 w-3 text-white"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                            />
-                          </svg>
-                        </button>
                       </p>
                     </div>
                   )}
                 </>
               ) : (
-                <p
-                  className={`p-3 max-w-[250px] md:text-sm font-light rounded-xl mb-8 break-all shadow-md ${
-                    msg.senderId === authUser._id
-                      ? "rounded-br-none bg-gray-700/50"
-                      : "rounded-bl-none bg-gray-700/50"
-                  } text-gray-400 italic`}
-                >
-                  {msg.isDeleted
-                    ? "This message was deleted"
-                    : "This message was deleted"}
+                // Deleted message placeholder
+                <p className="p-3 max-w-[250px] text-gray-400 italic">
+                  This message was deleted
                 </p>
               )}
             </div>
+
+            {/* Sender info + timestamp */}
             <div className="text-center text-xs">
               <img
                 src={
@@ -351,8 +299,8 @@ const ChatContainer = () => {
                     ? authUser?.profilePic || assets.avatar_icon
                     : selectedUser?.profilePic || assets.avatar_icon
                 }
-                alt=""
-                className="w-7 rounded-full cursor-pointer hover:ring-2 hover:ring-purple-400 transition-all"
+                alt="profile"
+                className="w-7 rounded-full cursor-pointer"
                 onClick={() =>
                   setProfileModal({
                     isOpen: true,
@@ -368,25 +316,26 @@ const ChatContainer = () => {
                 }
               />
               <p
-                className={`${
+                className={
                   msg.senderId === authUser._id
                     ? "text-green-400"
                     : "text-blue-400"
-                }`}
+                }
               >
                 {formatMessageTime(msg.createdAt)}
               </p>
             </div>
           </div>
         ))}
+        {/* Scroll anchor (auto-scroll to bottom) */}
         <div ref={scrollEnd}></div>
       </div>
 
-      {/* ------- bottom area ------- */}
+      {/* ---------------- Bottom Input Area ---------------- */}
       <div className="absolute bottom-0 left-0 right-0 flex items-center gap-3 p-4 backdrop-blur-md bg-black/20">
         <div className="flex-1 flex items-center bg-gray-800/50 px-4 py-2 rounded-xl shadow-inner border border-purple-500/20">
           {/* Emoji button */}
-          <div className="hover:bg-purple-500/20 p-2 rounded-full transition-colors">
+          <div className="hover:bg-purple-500/20 p-2 rounded-full">
             <img
               src={assets.emoji_icon}
               alt="emoji"
@@ -394,9 +343,10 @@ const ChatContainer = () => {
               onClick={() => setShowEmojiPicker((prev) => !prev)}
             />
           </div>
-          {/* Emoji picker (absolute positioned above input) */}
+
+          {/* Emoji picker popup */}
           {showEmojiPicker && (
-            <div className="absolute bottom-16 left-4 z-50 shadow-xl rounded-xl overflow-hidden">
+            <div className="absolute bottom-16 left-4 z-50">
               <EmojiPicker
                 onEmojiClick={handleEmojiClick}
                 theme="dark"
@@ -405,14 +355,18 @@ const ChatContainer = () => {
               />
             </div>
           )}
+
+          {/* Text input */}
           <input
             onChange={(e) => setInput(e.target.value)}
             value={input}
             onKeyDown={(e) => (e.key === "Enter" ? handleSendMessage(e) : null)}
             type="text"
             placeholder="Type a message"
-            className="flex-1 text-sm p-3 mx-2 border-none rounded-lg outline-none bg-transparent text-white placeholder-gray-400"
+            className="flex-1 text-sm p-3 mx-2 bg-transparent text-white"
           />
+
+          {/* Image / Video upload */}
           <input
             onChange={(e) => {
               const file = e.target.files[0];
@@ -432,17 +386,16 @@ const ChatContainer = () => {
             hidden
           />
           <label htmlFor="media">
-            <div className="hover:bg-purple-500/20 p-2 rounded-full transition-colors">
+            <div className="hover:bg-purple-500/20 p-2 rounded-full">
               <img
                 src={assets.gallery_icon}
-                alt="Upload media"
+                alt="media"
                 className="w-5 cursor-pointer"
-                style={{
-                  filter: "invert(0.5) sepia(1) saturate(5) hue-rotate(175deg)",
-                }}
               />
             </div>
           </label>
+
+          {/* Audio upload */}
           <input
             onChange={handleSendAudio}
             type="file"
@@ -451,25 +404,23 @@ const ChatContainer = () => {
             hidden
           />
           <label htmlFor="audio">
-            <div className="w-9 h-9 flex items-center justify-center rounded-full bg-purple-600 hover:bg-purple-700 transition-colors duration-200 cursor-pointer">
-              <img
-                src={assets.mic_icon}
-                alt="audio"
-                className="w-4 h-4"
-                style={{ filter: "brightness(0) invert(1)" }}
-              />
+            <div className="w-9 h-9 flex items-center justify-center rounded-full bg-purple-600 cursor-pointer">
+              <img src={assets.mic_icon} alt="audio" className="w-4 h-4" />
             </div>
           </label>
         </div>
+
+        {/* Send button */}
         <div
           onClick={handleSendMessage}
-          className="w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 transition-all duration-200 cursor-pointer shadow-lg"
+          className="w-12 h-12 flex items-center justify-center rounded-full bg-purple-600 cursor-pointer"
         >
           <img src={assets.send_button} alt="Send" className="w-5 h-5" />
         </div>
       </div>
     </div>
   ) : (
+    // Empty chat screen (when no user is selected)
     <div className="flex flex-col items-center justify-center gap-2 text-gray-500 bg-white/10 max-md:hidden">
       <img src={assets.logo_icon} className="max-w-16" alt="" />
       <p className="text-lg font-medium text-white">Chat anytime, anywhere</p>

@@ -6,23 +6,27 @@ import { AuthContext } from "../context/AuthContext";
 const ProfilePage = () => {
   const { authUser, updateProfile } = useContext(AuthContext);
 
-  const [selectedImg, setSelectedImg] = useState(null);
+  // ✅ Local states
+  const [selectedImg, setSelectedImg] = useState(null); // Holds selected image file
+  const [name, setName] = useState(authUser.fullName); // Editable name
+  const [bio, setBio] = useState(authUser.bio); // Editable bio
+  const [isLoading, setIsLoading] = useState(false); // For loading button
   const navigate = useNavigate();
-  const [name, setName] = useState(authUser.fullName);
-  const [bio, setBio] = useState(authUser.bio);
-  const [isLoading, setIsLoading] = useState(false);
 
+  // ✅ Handle profile save
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       if (!selectedImg) {
+        // Case: only updating text fields
         await updateProfile({ fullName: name, bio });
         navigate("/");
         return;
       }
 
+      // Case: updating image + text
       const reader = new FileReader();
       reader.readAsDataURL(selectedImg);
       reader.onload = async () => {
@@ -41,9 +45,10 @@ const ProfilePage = () => {
     <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-4xl backdrop-blur-xl bg-black/20 text-gray-200 border-2 border-gray-600 rounded-xl shadow-2xl overflow-hidden">
         <div className="flex flex-col md:flex-row">
-          {/* Profile Image Section */}
+          {/* -------- Left Section: Profile Picture Preview -------- */}
           <div className="w-full md:w-2/5 p-6 flex flex-col items-center justify-center bg-gradient-to-br from-purple-900/40 to-violet-800/30">
             <div className="relative group mb-4">
+              {/* Profile Picture (live preview if user selects new image) */}
               <img
                 className="w-40 h-40 object-cover rounded-full border-4 border-violet-500/50 shadow-lg transition-all duration-300 group-hover:scale-105"
                 src={
@@ -53,10 +58,13 @@ const ProfilePage = () => {
                 }
                 alt="Profile"
               />
+
+              {/* Upload Button Overlay */}
               <label
                 htmlFor="avatar"
                 className="absolute bottom-0 right-0 bg-violet-600 hover:bg-violet-700 p-2 rounded-full cursor-pointer shadow-lg transition-all"
               >
+                {/* Camera Icon */}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5 text-white"
@@ -77,6 +85,7 @@ const ProfilePage = () => {
                     d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
                   />
                 </svg>
+                {/* Hidden file input */}
                 <input
                   onChange={(e) => setSelectedImg(e.target.files[0])}
                   type="file"
@@ -86,6 +95,8 @@ const ProfilePage = () => {
                 />
               </label>
             </div>
+
+            {/* Current Info */}
             <h2 className="text-xl font-semibold text-white mb-1 text-center">
               {authUser.fullName}
             </h2>
@@ -94,11 +105,12 @@ const ProfilePage = () => {
             </p>
           </div>
 
-          {/* Form Section */}
+          {/* -------- Right Section: Edit Form -------- */}
           <div className="w-full md:w-3/5 p-6">
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               <h3 className="text-xl font-semibold mb-2">Edit Profile</h3>
 
+              {/* Name Input */}
               <div className="space-y-1">
                 <label htmlFor="name" className="text-sm text-gray-300">
                   Full Name
@@ -114,6 +126,7 @@ const ProfilePage = () => {
                 />
               </div>
 
+              {/* Bio Input */}
               <div className="space-y-1">
                 <label htmlFor="bio" className="text-sm text-gray-300">
                   Bio
@@ -129,6 +142,7 @@ const ProfilePage = () => {
                 ></textarea>
               </div>
 
+              {/* Action Buttons */}
               <div className="flex items-center justify-between mt-2">
                 <button
                   type="button"
