@@ -271,7 +271,7 @@ const ChatContainer = () => {
                   ) : (
                     /* Text message */
                     <div className="relative">
-                      <p className="p-3 max-w-[250px] rounded-xl mb-8 whitespace-pre-wrap text-white overflow-x-auto">
+                      <p className="p-3 max-w-[250px] rounded-xl mb-8 text-white overflow-x-auto whitespace-nowrap">
                         {detectAndConvertURLs(msg.text)}
                       </p>
                     </div>
