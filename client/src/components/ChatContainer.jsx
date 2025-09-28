@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import assets from "../assets/assets";
-import { formatMessageTime } from "../lib/utils";
+import { formatMessageTime, detectAndConvertURLs } from "../lib/utils";
 import { ChatContext } from "../context/ChatContext";
 import { AuthContext } from "../context/AuthContext";
 import toast from "react-hot-toast";
@@ -271,14 +271,8 @@ const ChatContainer = () => {
                   ) : (
                     /* Text message */
                     <div className="relative">
-                      <p
-                        className={`p-3 max-w-[250px] rounded-xl mb-8 ${
-                          msg.senderId === authUser._id
-                            ? "bg-purple-600 text-white"
-                            : "bg-gray-700 text-white"
-                        }`}
-                      >
-                        {msg.text}
+                      <p className="p-3 max-w-[250px] rounded-xl mb-8 whitespace-pre-wrap text-white overflow-x-auto">
+                        {detectAndConvertURLs(msg.text)}
                       </p>
                     </div>
                   )}
