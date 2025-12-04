@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import assets from "../assets/assets";
-import { formatMessageTime, formatDateLabel } from "../lib/utils";
+import { formatMessageTime } from "../lib/utils";
 import { ChatContext } from "../context/ChatContext";
 import { AuthContext } from "../context/AuthContext";
 import toast from "react-hot-toast";
@@ -329,34 +329,17 @@ const ChatContainer = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="relative mb-2">
-                      <div
-                        className={`px-3 py-2 max-w-[420px] rounded-lg shadow-sm ${
+                    /* Text message */
+                    <div className="relative">
+                      <p
+                        className={`p-3 max-w-[250px] rounded-xl mb-8 ${
                           msg.senderId === authUser._id
-                            ? "bg-[#005c4b] text-[#e9edef]"
-                            : "bg-[#202c33] text-[#e9edef]"
+                            ? "bg-purple-600 text-white"
+                            : "bg-gray-700 text-white"
                         }`}
                       >
-                        <div className="break-words text-sm">{msg.text}</div>
-                        <div className="flex justify-end gap-1 mt-1 text-[11px] text-gray-300">
-                          <span>{formatMessageTime(msg.createdAt)}</span>
-                          {msg.senderId === authUser._id && (
-                            <span className={msg.seen ? "text-blue-500" : "text-gray-400"}>✓✓</span>
-                          )}
-                        </div>
-                        <button
-                          className="absolute top-2 right-2"
-                          onClick={() =>
-                            setMessageOptionsState({
-                              isOpen: true,
-                              messageId: msg._id,
-                              isOwnMessage: msg.senderId === authUser._id,
-                            })
-                          }
-                        >
-                          ⋮
-                        </button>
-                      </div>
+                        {msg.text}
+                      </p>
                     </div>
                   )}
                 </>
