@@ -9,3 +9,18 @@
 ::-webkit-scrollbar {
   display: none;
 }
+
+.chat-wallpaper {
+  background-color: #0b141a;
+  background-image:
+    radial-gradient(#0b141a 1px, transparent 1px),
+    radial-gradient(#0b141a 1px, transparent 1px);
+  background-position: 0 0, 10px 10px;
+  background-size: 20px 20px;
+}
+
+.messages-scroll {
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}

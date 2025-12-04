@@ -5,19 +5,14 @@ import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
 import { Toaster } from "react-hot-toast";
 import { AuthContext } from "./context/AuthContext";
-import assets from "./assets/assets";
 
 const App = () => {
   const { authUser } = useContext(AuthContext); // ✅ Access current authenticated user
 
   return (
-    <div
-      className="bg-no-repeat bg-cover min-h-screen"
-      style={{ backgroundImage: `url(${assets.bgImage})` }} // ✅ App-wide background image
-    >
+    <div className="min-h-screen bg-[#0b141a] text-[#e9edef]">
       {/* ✅ Toast notifications (for success/error messages) */}
       <Toaster />
-
       {/* ✅ Define application routes */}
       <Routes>
         {/* Home route — accessible only if logged in */}
@@ -25,13 +20,11 @@ const App = () => {
           path="/"
           element={authUser ? <HomePage /> : <Navigate to="/login" />}
         />
-
         {/* Login route — redirect to home if already logged in */}
         <Route
           path="/login"
           element={!authUser ? <LoginPage /> : <Navigate to="/" />}
         />
-
         {/* Profile route — only accessible when authenticated */}
         <Route
           path="/profile"

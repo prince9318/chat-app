@@ -91,6 +91,34 @@ export const ChatProvider = ({ children }) => {
     return () => unsubscribeFromMessages();
   }, [socket, selectedUser]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleMessageSeen = ({ messageId }) => {
+      setMessages((prev) =>
+        prev.map((msg) => (msg._id === messageId ? { ...msg, seen: true } : msg))
+      );
+    };
+
+    const handleMessagesSeen = ({ messageIds }) => {
+      if (!Array.isArray(messageIds)) return;
+      setMessages((prev) =>
+        prev.map((msg) =>
+          messageIds.includes(msg._id) ? { ...msg, seen: true } : msg
+        )
+      );
+    };
+
+    socket.on("messageSeen", handleMessageSeen);
+    socket.on("messagesSeen", handleMessagesSeen);
+
+    return () => {
+      if (!socket) return;
+      socket.off("messageSeen", handleMessageSeen);
+      socket.off("messagesSeen", handleMessagesSeen);
+    };
+  }, [socket]);
+
   // ✅ Delete message (for self or everyone)
   const deleteMessage = async (messageId, deleteFor) => {
     try {

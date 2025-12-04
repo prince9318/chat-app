@@ -8,17 +8,16 @@ const HomePage = () => {
   const { selectedUser } = useContext(ChatContext); // ✅ Check if a chat user is selected
 
   return (
-    <div className="border w-full h-screen sm:px-[15%] sm:py-[5%]">
+    <div className="w-full h-screen px-4 py-4 md:px-8 md:py-6">
       <div
         className={`
-          backdrop-blur-xl border-2 border-gray-600 rounded-2xl overflow-hidden 
-          h-[100%] grid grid-cols-1 relative
+          rounded-xl overflow-hidden h-full grid grid-cols-1 relative border border-[#202c33]
           ${
-            // ✅ Layout adapts based on whether a user is selected
             selectedUser
-              ? "md:grid-cols-[1fr_1.5fr_1fr] xl:grid-cols-[1fr_2fr_1fr]" // Show all 3 columns (sidebar, chat, right sidebar)
-              : "md:grid-cols-2" // Show only sidebar + chat (hide right sidebar)
+              ? "md:grid-cols-[360px_minmax(0,1fr)_320px]"
+              : "md:grid-cols-[360px_minmax(0,1fr)]"
           }
+          bg-[#0b141a]
         `}
       >
         {/* ✅ Left Sidebar: List of users */}

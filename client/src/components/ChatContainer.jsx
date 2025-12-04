@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import assets from "../assets/assets";
-import { formatMessageTime } from "../lib/utils";
+import { formatMessageTime, formatDateLabel } from "../lib/utils";
 import { ChatContext } from "../context/ChatContext";
 import { AuthContext } from "../context/AuthContext";
 import toast from "react-hot-toast";
@@ -18,6 +18,7 @@ const ChatContainer = () => {
 
   // Reference for auto-scrolling chat to bottom
   const scrollEnd = useRef();
+  const messagesRef = useRef();
 
   // Local state for input field, emoji picker, and modals
   const [input, setInput] = useState("");
@@ -32,6 +33,7 @@ const ChatContainer = () => {
     messageId: null,
     isOwnMessage: false,
   });
+  const [currentDateLabel, setCurrentDateLabel] = useState("");
 
   /**
    * Send a text message
@@ -125,6 +127,27 @@ const ChatContainer = () => {
     }
   }, [messages]);
 
+  useEffect(() => {
+    const container = messagesRef.current;
+    if (!container) return;
+    const update = () => {
+      const markers = Array.from(
+        container.getElementsByClassName("date-marker")
+      );
+      const contRect = container.getBoundingClientRect();
+      let label = markers.length ? markers[0].dataset.dateLabel : "";
+      for (let i = 0; i < markers.length; i++) {
+        const r = markers[i].getBoundingClientRect();
+        if (r.top - contRect.top <= 16) label = markers[i].dataset.dateLabel;
+        else break;
+      }
+      setCurrentDateLabel(label);
+    };
+    update();
+    container.addEventListener("scroll", update, { passive: true });
+    return () => container.removeEventListener("scroll", update);
+  }, [messages]);
+
   /**
    * Append emoji to message input
    */
@@ -133,7 +156,7 @@ const ChatContainer = () => {
   };
 
   return selectedUser ? (
-    <div className="h-full overflow-scroll relative backdrop-blur-lg">
+    <div className="h-full min-h-0 relative flex flex-col">
       {/* ---------------- Profile Image Modal ---------------- */}
       {profileModal.isOpen && (
         <ProfileImageModal
@@ -144,7 +167,7 @@ const ChatContainer = () => {
       )}
 
       {/* ---------------- Chat Header ---------------- */}
-      <div className="flex items-center gap-3 py-3 mx-4 border-b border-stone-500">
+      <div className="sticky top-0 z-20 flex items-center gap-3 py-3 px-4 bg-[#202c33] border-b border-[#202c33]">
         {/* Profile picture */}
         <img
           src={selectedUser.profilePic || assets.avatar_icon}
@@ -160,7 +183,7 @@ const ChatContainer = () => {
         />
 
         {/* Username + online status */}
-        <p className="flex-1 text-lg text-white flex items-center gap-2">
+        <p className="flex-1 text-sm text-[#e9edef] flex items-center gap-2">
           {selectedUser.fullName}
           {onlineUsers.includes(selectedUser._id) && (
             <span className="w-2 h-2 rounded-full bg-green-500"></span>
@@ -180,14 +203,33 @@ const ChatContainer = () => {
       </div>
 
       {/* ---------------- Chat Messages Area ---------------- */}
-      <div className="flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3 pb-6">
-        {messages.map((msg, index) => (
+      <div ref={messagesRef} className="flex-1 min-h-0 flex flex-col overflow-y-auto p-3 chat-wallpaper messages-scroll">
+        <div className="sticky top-0 z-10 flex justify-center pointer-events-none">
+          {currentDateLabel && (
+            <span className="px-3 py-1 text-xs rounded-full bg-[#202c33] text-[#e9edef]">{currentDateLabel}</span>
+          )}
+        </div>
+        {messages.map((msg, index) => {
+          const showDate =
+            index === 0 ||
+            (messages[index - 1] &&
+              new Date(messages[index - 1].createdAt).toDateString() !==
+                new Date(msg.createdAt).toDateString());
+          const label = formatDateLabel(msg.createdAt);
+          return (
           <div
             key={index}
             className={`flex items-end gap-2 justify-end ${
               msg.senderId !== authUser._id && "flex-row-reverse"
             }`}
           >
+            {showDate && (
+              <div className="date-marker w-full flex justify-center my-2" data-date-label={label}>
+                {currentDateLabel !== label && (
+                  <span className="px-3 py-1 text-xs rounded-full bg-[#202c33] text-[#e9edef]">{label}</span>
+                )}
+              </div>
+            )}
             {/* Message bubble + options */}
             <div className="relative">
               {/* Message options menu */}
@@ -216,7 +258,7 @@ const ChatContainer = () => {
                       <img
                         src={msg.image}
                         alt="img"
-                        className="max-w-[250px] md:max-w-[300px] shadow-xl rounded-2xl"
+                        className="max-w-[250px] md:max-w-[300px] max-h-[70vh] object-contain shadow-xl rounded-2xl"
                         onClick={() => window.open(msg.image, "_blank")}
                       />
                       {/* Options button for image */}
@@ -233,6 +275,12 @@ const ChatContainer = () => {
                       >
                         ⋮
                       </button>
+                      <div className="absolute bottom-2 right-3 text-[11px] flex items-center gap-1 text-gray-300">
+                        <span>{formatMessageTime(msg.createdAt)}</span>
+                        {msg.senderId === authUser._id && (
+                          <span className={msg.seen ? "text-blue-500" : "text-gray-400"}>✓✓</span>
+                        )}
+                      </div>
                     </div>
                   ) : msg.video ? (
                     /* Video message */
@@ -250,6 +298,12 @@ const ChatContainer = () => {
                       >
                         ⋮
                       </button>
+                      <div className="absolute bottom-2 right-3 text-[11px] flex items-center gap-1 text-gray-300">
+                        <span>{formatMessageTime(msg.createdAt)}</span>
+                        {msg.senderId === authUser._id && (
+                          <span className={msg.seen ? "text-blue-500" : "text-gray-400"}>✓✓</span>
+                        )}
+                      </div>
                     </div>
                   ) : msg.audio ? (
                     /* Audio message */
@@ -267,73 +321,63 @@ const ChatContainer = () => {
                       >
                         ⋮
                       </button>
+                      <div className="absolute bottom-2 right-3 text-[11px] flex items-center gap-1 text-gray-300">
+                        <span>{formatMessageTime(msg.createdAt)}</span>
+                        {msg.senderId === authUser._id && (
+                          <span className={msg.seen ? "text-blue-500" : "text-gray-400"}>✓✓</span>
+                        )}
+                      </div>
                     </div>
                   ) : (
-                    /* Text message */
-                    <div className="relative">
-                      <p
-                        className={`p-3 max-w-[250px] rounded-xl mb-8 ${
+                    <div className="relative mb-2">
+                      <div
+                        className={`px-3 py-2 max-w-[420px] rounded-lg shadow-sm ${
                           msg.senderId === authUser._id
-                            ? "bg-purple-600 text-white"
-                            : "bg-gray-700 text-white"
+                            ? "bg-[#005c4b] text-[#e9edef]"
+                            : "bg-[#202c33] text-[#e9edef]"
                         }`}
                       >
-                        {msg.text}
-                      </p>
+                        <div className="break-words text-sm">{msg.text}</div>
+                        <div className="flex justify-end gap-1 mt-1 text-[11px] text-gray-300">
+                          <span>{formatMessageTime(msg.createdAt)}</span>
+                          {msg.senderId === authUser._id && (
+                            <span className={msg.seen ? "text-blue-500" : "text-gray-400"}>✓✓</span>
+                          )}
+                        </div>
+                        <button
+                          className="absolute top-2 right-2"
+                          onClick={() =>
+                            setMessageOptionsState({
+                              isOpen: true,
+                              messageId: msg._id,
+                              isOwnMessage: msg.senderId === authUser._id,
+                            })
+                          }
+                        >
+                          ⋮
+                        </button>
+                      </div>
                     </div>
                   )}
                 </>
               ) : (
                 // Deleted message placeholder
-                <p className="p-3 max-w-[250px] text-gray-400 italic">
+                <p className="p-3 max-w-[250px] text-gray-300 italic bg-gray-800/50 rounded-xl border border-gray-600">
                   This message was deleted
                 </p>
               )}
             </div>
 
-            {/* Sender info + timestamp */}
-            <div className="text-center text-xs">
-              <img
-                src={
-                  msg.senderId === authUser._id
-                    ? authUser?.profilePic || assets.avatar_icon
-                    : selectedUser?.profilePic || assets.avatar_icon
-                }
-                alt="profile"
-                className="w-7 rounded-full cursor-pointer"
-                onClick={() =>
-                  setProfileModal({
-                    isOpen: true,
-                    imageUrl:
-                      msg.senderId === authUser._id
-                        ? authUser?.profilePic || assets.avatar_icon
-                        : selectedUser?.profilePic || assets.avatar_icon,
-                    userName:
-                      msg.senderId === authUser._id
-                        ? authUser.fullName
-                        : selectedUser.fullName,
-                  })
-                }
-              />
-              <p
-                className={
-                  msg.senderId === authUser._id
-                    ? "text-green-400"
-                    : "text-blue-400"
-                }
-              >
-                {formatMessageTime(msg.createdAt)}
-              </p>
-            </div>
+            
           </div>
-        ))}
+        )})}
         {/* Scroll anchor (auto-scroll to bottom) */}
         <div ref={scrollEnd}></div>
       </div>
 
       {/* ---------------- Bottom Input Area ---------------- */}
-      <div className="absolute bottom-0 left-0 right-0 flex items-center gap-3 p-4 backdrop-blur-md bg-black/20">
-        <div className="flex-1 flex items-center bg-gray-800/50 px-4 py-2 rounded-xl shadow-inner border border-purple-500/20">
+      <div className="shrink-0 flex items-center gap-3 p-4 bg-[#202c33] border-t border-[#202c33]">
+        <div className="flex-1 flex items-center bg-[#111b21] px-4 py-2 rounded-xl border border-[#202c33]">
           {/* Emoji button */}
           <div className="hover:bg-purple-500/20 p-2 rounded-full">
             <img
@@ -363,7 +407,7 @@ const ChatContainer = () => {
             onKeyDown={(e) => (e.key === "Enter" ? handleSendMessage(e) : null)}
             type="text"
             placeholder="Type a message"
-            className="flex-1 text-sm p-3 mx-2 bg-transparent text-white"
+            className="flex-1 text-sm p-2 mx-2 bg-transparent text-[#e9edef] placeholder-gray-400 focus:outline-none"
           />
 
           {/* Image / Video upload */}
@@ -386,7 +430,7 @@ const ChatContainer = () => {
             hidden
           />
           <label htmlFor="media">
-            <div className="hover:bg-purple-500/20 p-2 rounded-full">
+            <div className="p-2 rounded-full hover:bg-[#2a3942]">
               <img
                 src={assets.gallery_icon}
                 alt="media"
@@ -404,7 +448,7 @@ const ChatContainer = () => {
             hidden
           />
           <label htmlFor="audio">
-            <div className="w-9 h-9 flex items-center justify-center rounded-full bg-purple-600 cursor-pointer">
+            <div className="w-9 h-9 flex items-center justify-center rounded-full bg-green-600 cursor-pointer">
               <img src={assets.mic_icon} alt="audio" className="w-4 h-4" />
             </div>
           </label>
@@ -413,7 +457,7 @@ const ChatContainer = () => {
         {/* Send button */}
         <div
           onClick={handleSendMessage}
-          className="w-12 h-12 flex items-center justify-center rounded-full bg-purple-600 cursor-pointer"
+          className="w-12 h-12 flex items-center justify-center rounded-full bg-green-600 cursor-pointer"
         >
           <img src={assets.send_button} alt="Send" className="w-5 h-5" />
         </div>
@@ -421,9 +465,9 @@ const ChatContainer = () => {
     </div>
   ) : (
     // Empty chat screen (when no user is selected)
-    <div className="flex flex-col items-center justify-center gap-2 text-gray-500 bg-white/10 max-md:hidden">
+    <div className="flex flex-col items-center justify-center gap-2 text-gray-300 bg-white/10 max-md:hidden">
       <img src={assets.logo_icon} className="max-w-16" alt="" />
-      <p className="text-lg font-medium text-white">Chat anytime, anywhere</p>
+      <p className="text-lg font-medium text-white drop-shadow-lg">Chat anytime, anywhere</p>
     </div>
   );
 };

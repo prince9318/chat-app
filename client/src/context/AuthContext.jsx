@@ -59,7 +59,6 @@ export const AuthProvider = ({ children }) => {
       toast.error(error.message);
     }
   };
-
   // ✅ Logout user and clear session
   const logout = async () => {
     localStorage.removeItem("token");

@@ -23,11 +23,11 @@ const RightSidebar = () => {
   }, [messages]);
 
   return (
-    selectedUser && ( // Show sidebar only when a user is selected
+    selectedUser && (
       <div
-        className={`bg-[#8185B2]/10 text-white w-full relative overflow-y-scroll ${
+        className={`text-[#e9edef] w-full relative overflow-y-scroll ${
           selectedUser ? "max-md:hidden" : ""
-        }`}
+        } bg-[#0b141a] border-l border-[#202c33]`}
       >
         {/* Profile Image Modal */}
         {profileModal.isOpen && (
@@ -39,7 +39,7 @@ const RightSidebar = () => {
         )}
 
         {/* User Profile Section */}
-        <div className="pt-16 flex flex-col items-center gap-2 text-xs font-light mx-auto">
+        <div className="pt-6 flex flex-col items-center gap-2 text-xs font-light mx-auto">
           {/* Profile Picture (clickable -> opens modal) */}
           <img
             src={selectedUser?.profilePic || assets.avatar_icon}
@@ -59,7 +59,7 @@ const RightSidebar = () => {
             {onlineUsers.includes(selectedUser._id) && (
               <div className="w-2 h-2 rounded-full bg-green-500"></div>
             )}
-            <h1 className="text-xl font-medium">{selectedUser.fullName}</h1>
+            <h1 className="text-base font-medium">{selectedUser.fullName}</h1>
           </div>
 
           {/* User Bio */}
@@ -87,7 +87,7 @@ const RightSidebar = () => {
         {/* Logout Button */}
         <button
           onClick={() => logout()}
-          className="absolute bottom-5 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-400 to-violet-600 text-white border-none text-sm font-light py-2 px-20 rounded-full cursor-pointer"
+          className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-green-600 text-white text-sm font-light py-2 px-16 rounded-full cursor-pointer"
         >
           Logout
         </button>
