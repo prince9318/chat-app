@@ -34,6 +34,19 @@ const ChatContainer = () => {
     isOwnMessage: false,
   });
   const [currentDateLabel, setCurrentDateLabel] = useState("");
+  const toLabel = (date) => {
+    const d = new Date(date);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    const same = (a, b) =>
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate();
+    if (same(d, today)) return "Today";
+    if (same(d, yesterday)) return "Yesterday";
+    return d.toLocaleDateString("en-GB");
+  };
 
   /**
    * Send a text message
@@ -215,7 +228,7 @@ const ChatContainer = () => {
             (messages[index - 1] &&
               new Date(messages[index - 1].createdAt).toDateString() !==
                 new Date(msg.createdAt).toDateString());
-          const label = formatDateLabel(msg.createdAt);
+          const label = toLabel(msg.createdAt);
           return (
           <div
             key={index}
