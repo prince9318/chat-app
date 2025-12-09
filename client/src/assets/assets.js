@@ -8,9 +8,6 @@ import search_icon from "./search_icon.png";
 import send_button from "./send_button.svg";
 import menu_icon from "./menu_icon.png";
 import arrow_icon from "./arrow_icon.png";
-import code from "./code.svg";
-import bgImage from "./bgImage.svg";
-import bgImages from "./airobot.png";
 import emoji_icon from "./emoji_icon.png";
 import mic_icon from "./mic_icon.png";
 
@@ -25,9 +22,6 @@ const assets = {
   send_button,
   menu_icon,
   arrow_icon,
-  code,
-  bgImage,
-  bgImages,
   emoji_icon,
   mic_icon,
 };

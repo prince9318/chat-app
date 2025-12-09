@@ -1,4 +1,5 @@
 import { useContext, useState } from "react";
+import { Link } from "react-router-dom";
 import assets from "../assets/assets";
 import { AuthContext } from "../context/AuthContext";
 
@@ -9,7 +10,9 @@ const LoginPage = () => {
   const [email, setEmail] = useState(""); // User's email
   const [password, setPassword] = useState(""); // User's password
   const [bio, setBio] = useState(""); // User's bio (signup step 2)
-  const [isDataSubmitted, setIsDataSubmitted] = useState(false); // Tracks step within signup
+  const [isDataSubmitted, setIsDataSubmitted] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [showAgreementError, setShowAgreementError] = useState(false);
 
   // ✅ Context: Authentication handler
   const { login } = useContext(AuthContext);
@@ -17,6 +20,11 @@ const LoginPage = () => {
   // ✅ Handle form submission
   const onSubmitHandler = (event) => {
     event.preventDefault();
+
+    if (!agreed) {
+      setShowAgreementError(true);
+      return;
+    }
 
     // Step 1 of signup: first submit only asks for basic info → move to bio step
     if (currState === "Sign up" && !isDataSubmitted) {
@@ -30,6 +38,7 @@ const LoginPage = () => {
       email,
       password,
       bio,
+      agreedToTerms: agreed,
     });
   };
 
@@ -45,17 +54,17 @@ const LoginPage = () => {
       {/* -------- Right Section: Login / Signup Form -------- */}
       <form
         onSubmit={onSubmitHandler}
-        className="border-2 bg-black/20 backdrop-blur-md text-white border-gray-400 p-8 flex flex-col gap-6 rounded-xl shadow-2xl min-w-[350px]"
+        className="border-2 bg-white/10 text-white border-gray-600 p-6 flex flex-col gap-6 rounded-xl shadow-2xl backdrop-blur-md w-[min(95vw,380px)]"
       >
         {/* -------- Form Heading (Sign up / Login) -------- */}
-        <h2 className="font-semibold text-3xl flex justify-between items-center text-white drop-shadow-lg">
+        <h2 className="font-medium text-2xl flex justify-between items-center text-white">
           {currState}
           {isDataSubmitted && (
             <img
-              onClick={() => setIsDataSubmitted(false)} // Back button for signup step
+              onClick={() => setIsDataSubmitted(false)}
               src={assets.arrow_icon}
               alt="Go Back"
-              className="w-5 cursor-pointer hover:opacity-70 transition-opacity"
+              className="w-5 cursor-pointer"
             />
           )}
         </h2>
@@ -66,7 +75,7 @@ const LoginPage = () => {
             onChange={(e) => setFullName(e.target.value)}
             value={fullName}
             type="text"
-            className="p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-800/50 text-white placeholder-gray-400"
+            className="p-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-gray-800/50 text-white placeholder-gray-400"
             placeholder="Full Name"
             required
           />
@@ -81,16 +90,16 @@ const LoginPage = () => {
               type="email"
               placeholder="Email Address"
               required
-              className="p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-800/50 text-white placeholder-gray-400"
+              className="p-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-gray-800/50 text-white placeholder-gray-400"
             />
 
             <input
               onChange={(e) => setPassword(e.target.value)}
               value={password}
               type="password"
-              placeholder="Enter your password"
+              placeholder="Password"
               required
-              className="p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-800/50 text-white placeholder-gray-400"
+              className="p-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-gray-800/50 text-white placeholder-gray-400"
             />
           </>
         )}
@@ -101,7 +110,7 @@ const LoginPage = () => {
             onChange={(e) => setBio(e.target.value)}
             value={bio}
             rows={4}
-            className="p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-800/50 text-white placeholder-gray-400"
+            className="p-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-gray-800/50 text-white placeholder-gray-400"
             placeholder="Provide a short bio..."
             required
           ></textarea>
@@ -110,16 +119,32 @@ const LoginPage = () => {
         {/* -------- Submit Button -------- */}
         <button
           type="submit"
-          className="py-3 bg-gradient-to-r from-purple-500 to-violet-600 text-white rounded-lg cursor-pointer font-medium hover:from-purple-600 hover:to-violet-700 transition-all duration-200 shadow-lg"
+          className={`py-3 bg-gradient-to-r from-purple-500 to-violet-600 text-white rounded-lg shadow-lg transition-all ${
+            !agreed ? "opacity-90" : "hover:from-purple-600 hover:to-violet-700"
+          }`}
         >
           {currState === "Sign up" ? "Create Account" : "Login Now"}
         </button>
 
-        {/* -------- Terms & Policy Checkbox -------- */}
-        <div className="flex items-center gap-2 text-sm text-gray-300">
-          <input type="checkbox" />
-          <p>Agree to the terms of use & privacy policy.</p>
+        <div className="flex items-start gap-2 text-sm text-gray-300">
+          <input
+            type="checkbox"
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            className="mt-1"
+          />
+          <p>
+            I agree to the
+            {" "}
+            <Link to="/terms" className="text-violet-400 hover:text-violet-300">terms of use</Link>
+            {" "}&
+            {" "}
+            <Link to="/privacy" className="text-violet-400 hover:text-violet-300">privacy policy</Link>.
+          </p>
         </div>
+        {showAgreementError && !agreed && (
+          <p className="text-xs text-red-400">Please agree to continue.</p>
+        )}
 
         {/* -------- Toggle Between Login & Signup -------- */}
         <div className="flex flex-col gap-2">
@@ -129,7 +154,7 @@ const LoginPage = () => {
               <span
                 onClick={() => {
                   setCurrState("Login");
-                  setIsDataSubmitted(false); // Reset to first step
+                  setIsDataSubmitted(false);
                 }}
                 className="font-medium text-violet-400 cursor-pointer hover:text-violet-300"
               >

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState, Fragment } from "react";
 import assets from "../assets/assets";
 import { formatMessageTime } from "../lib/utils";
 import { ChatContext } from "../context/ChatContext";
@@ -168,6 +168,29 @@ const ChatContainer = () => {
     setInput((prev) => prev + emojiData.emoji);
   };
 
+  /* 2.  USE THAT CLASS INSIDE renderTextWithLinks */
+const renderTextWithLinks = (text) => {
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi;
+  const parts = String(text).split(urlRegex);
+  return parts.map((part, i) => {
+    if (urlRegex.test(part)) {
+      const href = part.startsWith("http") ? part : `http://${part}`;
+      return (
+        <a
+          key={i}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline message-link"   /* <-- added message-link */
+        >
+          {part}
+        </a>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+};
+
   return selectedUser ? (
     <div className="h-full min-h-0 relative flex flex-col">
       {/* ---------------- Profile Image Modal ---------------- */}
@@ -230,12 +253,7 @@ const ChatContainer = () => {
                 new Date(msg.createdAt).toDateString());
           const label = toLabel(msg.createdAt);
           return (
-          <div
-            key={index}
-            className={`flex items-end gap-2 justify-end ${
-              msg.senderId !== authUser._id && "flex-row-reverse"
-            }`}
-          >
+          <Fragment key={index}>
             {showDate && (
               <div className="date-marker w-full flex justify-center my-2" data-date-label={label}>
                 {currentDateLabel !== label && (
@@ -243,8 +261,13 @@ const ChatContainer = () => {
                 )}
               </div>
             )}
+            <div
+              className={`w-full flex items-end gap-2 ${
+                msg.senderId === authUser._id ? "justify-end" : "justify-start"
+              }`}
+            >
             {/* Message bubble + options */}
-            <div className="relative">
+            <div className="relative inline-block">
               {/* Message options menu */}
               {messageOptionsState.isOpen &&
                 messageOptionsState.messageId === msg._id && (
@@ -263,11 +286,34 @@ const ChatContainer = () => {
                 )}
 
               {/* Render message types: Image | Video | Audio | Text */}
-              {!msg.isDeleted && !msg.deletedFor?.includes(authUser._id) ? (
+              {(() => {
+                const deletedForMe = Array.isArray(msg.deletedFor) && msg.deletedFor.includes(authUser._id);
+                if (deletedForMe) return null;
+                if (msg.isDeleted) {
+                  return (
+                    <div className="relative inline-block mb-8 group max-w-[85%] md:max-w-[70%] min-w-[160px]">
+                      <p className="p-3 text-gray-300 italic bg-gray-800/50 rounded-xl border border-gray-600 break-normal whitespace-pre-wrap">This message was deleted</p>
+                      <button
+                        className={`absolute top-2 ${msg.senderId === authUser._id ? "right-2" : "left-2"} w-6 h-6 flex items-center justify-center rounded-full bg-[#202c33] hover:bg-[#2a3942] text-[#e9edef] opacity-0 group-hover:opacity-100 transition-opacity`}
+                        aria-label="Message options"
+                        onClick={() =>
+                          setMessageOptionsState({
+                            isOpen: true,
+                            messageId: msg._id,
+                            isOwnMessage: false,
+                          })
+                        }
+                      >
+                        ⋮
+                      </button>
+                    </div>
+                  );
+                }
+                return (
                 <>
                   {/* Image message */}
                   {msg.image ? (
-                    <div className="relative mb-8 group">
+                    <div className="relative inline-block mb-8 group">
                       <img
                         src={msg.image}
                         alt="img"
@@ -276,7 +322,9 @@ const ChatContainer = () => {
                       />
                       {/* Options button for image */}
                       <button
-                        className="absolute top-2 right-2 ..."
+                        className={`absolute top-2 ${
+                          msg.senderId === authUser._id ? "right-2" : "left-2"
+                        } ... opacity-0 group-hover:opacity-100 transition-opacity`}
                         onClick={(e) => {
                           e.stopPropagation();
                           setMessageOptionsState({
@@ -288,7 +336,7 @@ const ChatContainer = () => {
                       >
                         ⋮
                       </button>
-                      <div className="absolute bottom-2 right-3 text-[11px] flex items-center gap-1 text-gray-300">
+                      <div className="absolute bottom-1 right-2 text-[11px] leading-none flex items-center gap-1 text-gray-300">
                         <span>{formatMessageTime(msg.createdAt)}</span>
                         {msg.senderId === authUser._id && (
                           <span className={msg.seen ? "text-blue-500" : "text-gray-400"}>✓✓</span>
@@ -297,10 +345,12 @@ const ChatContainer = () => {
                     </div>
                   ) : msg.video ? (
                     /* Video message */
-                    <div className="relative mb-8">
+                    <div className="relative inline-block mb-8 group">
                       <video controls src={msg.video} className="..." />
                       <button
-                        className="absolute top-2 right-2 ..."
+                        className={`absolute top-2 ${
+                          msg.senderId === authUser._id ? "right-2" : "left-2"
+                        } ... opacity-0 group-hover:opacity-100 transition-opacity`}
                         onClick={() =>
                           setMessageOptionsState({
                             isOpen: true,
@@ -311,7 +361,7 @@ const ChatContainer = () => {
                       >
                         ⋮
                       </button>
-                      <div className="absolute bottom-2 right-3 text-[11px] flex items-center gap-1 text-gray-300">
+                      <div className="absolute bottom-1 right-2 text-[11px] leading-none flex items-center gap-1 text-gray-300">
                         <span>{formatMessageTime(msg.createdAt)}</span>
                         {msg.senderId === authUser._id && (
                           <span className={msg.seen ? "text-blue-500" : "text-gray-400"}>✓✓</span>
@@ -320,10 +370,12 @@ const ChatContainer = () => {
                     </div>
                   ) : msg.audio ? (
                     /* Audio message */
-                    <div className="relative mb-8">
+                    <div className="relative inline-block mb-8 group">
                       <audio controls src={msg.audio} className="..." />
                       <button
-                        className="absolute top-2 right-2 ..."
+                        className={`absolute top-2 ${
+                          msg.senderId === authUser._id ? "right-2" : "left-2"
+                        } ... opacity-0 group-hover:opacity-100 transition-opacity`}
                         onClick={() =>
                           setMessageOptionsState({
                             isOpen: true,
@@ -334,7 +386,7 @@ const ChatContainer = () => {
                       >
                         ⋮
                       </button>
-                      <div className="absolute bottom-2 right-3 text-[11px] flex items-center gap-1 text-gray-300">
+                      <div className="absolute bottom-1 right-2 text-[11px] leading-none flex items-center gap-1 text-gray-300">
                         <span>{formatMessageTime(msg.createdAt)}</span>
                         {msg.senderId === authUser._id && (
                           <span className={msg.seen ? "text-blue-500" : "text-gray-400"}>✓✓</span>
@@ -342,31 +394,47 @@ const ChatContainer = () => {
                       </div>
                     </div>
                   ) : (
-                    /* Text message */
-                    <div className="relative">
+                    <div className="relative inline-block mb-8 group max-w-[85%] md:max-w-[70%] min-w-[160px]">
                       <p
-                        className={`p-3 max-w-[250px] rounded-xl mb-8 ${
-                          msg.senderId === authUser._id
-                            ? "bg-purple-600 text-white"
-                            : "bg-gray-700 text-white"
-                        }`}
+  className={`message-bubble p-3 pr-10 rounded-2xl break-words whitespace-pre-wrap leading-relaxed shadow-md ${
+    msg.senderId === authUser._id
+      ? "bg-[#128C7E] text-white rounded-tr-none"
+      : "bg-[#202c33] text-[#e9edef] rounded-tl-none"
+  }`}
+>
+  {renderTextWithLinks(msg.text)}
+</p>
+                      <button
+                        className={`absolute top-2 ${
+                          msg.senderId === authUser._id ? "right-2" : "left-2"
+                        } w-6 h-6 flex items-center justify-center rounded-full bg-[#202c33] hover:bg-[#2a3942] text-[#e9edef] opacity-0 group-hover:opacity-100 transition-opacity`}
+                        aria-label="Message options"
+                        onClick={() =>
+                          setMessageOptionsState({
+                            isOpen: true,
+                            messageId: msg._id,
+                            isOwnMessage: msg.senderId === authUser._id,
+                          })
+                        }
                       >
-                        {msg.text}
-                      </p>
+                        ⋮
+                      </button>
+                      <div className="absolute bottom-1 right-2 text-[11px] leading-none flex items-center gap-1 text-gray-300">
+                        <span>{formatMessageTime(msg.createdAt)}</span>
+                        {msg.senderId === authUser._id && (
+                          <span className={msg.seen ? "text-blue-500" : "text-gray-400"}>✓✓</span>
+                        )}
+                      </div>
                     </div>
                   )}
                 </>
-              ) : (
-                // Deleted message placeholder
-                <p className="p-3 max-w-[250px] text-gray-300 italic bg-gray-800/50 rounded-xl border border-gray-600">
-                  This message was deleted
-                </p>
-              )}
+                );
+              })()}
             </div>
-
+            </div>
             
-          </div>
-        )})}
+          </Fragment>
+          )})}
         {/* Scroll anchor (auto-scroll to bottom) */}
         <div ref={scrollEnd}></div>
       </div>

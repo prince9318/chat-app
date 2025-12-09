@@ -24,3 +24,12 @@
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
 }
+
+
+/* force long links to break, never add a background, keep bubble colour */
+.message-bubble a {
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  background: transparent !important;
+  color: inherit !important;
+}
