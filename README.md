@@ -42,6 +42,9 @@ A real-time chat application built with the **MERN stack** and **Socket.IO** tha
 
 ## Getting Started
 
+> ⚠️ **Important:** The free-tier Render backend sleeps after 15–20 min of inactivity.  
+> If you experience connection issues, simply open [https://chat-app-backend-1mlq.onrender.com](https://chat-app-backend-1mlq.onrender.com) in a new tab to wake the server, then refresh the frontend.
+
 ### Prerequisites
 
 - Node.js and npm installed
