@@ -13,6 +13,7 @@ export default function InCallScreen() {
   } = useContext(CallContext);
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
+  const remoteAudioRef = useRef(null);
 
   useEffect(() => {
     if (localVideoRef.current && localStream) {
@@ -26,12 +27,21 @@ export default function InCallScreen() {
     }
   }, [remoteStream]);
 
+  useEffect(() => {
+    if (remoteAudioRef.current && remoteStream && callType === "audio") {
+      remoteAudioRef.current.srcObject = remoteStream;
+    }
+  }, [remoteStream, callType]);
+
   if (!remoteUser) return null;
 
   const isVideo = callType === "video";
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col bg-[var(--bg-app)]">
+      {/* Remote audio: must be in DOM for audio calls so you can hear the other person */}
+      {!isVideo && <audio ref={remoteAudioRef} autoPlay playsInline />}
+
       {/* Remote stream (full screen for video, or just label for audio) */}
       <div className="flex-1 relative min-h-0 flex items-center justify-center bg-[var(--bg-panel)]">
         {isVideo ? (
