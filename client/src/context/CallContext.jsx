@@ -1,5 +1,6 @@
 import { createContext, useContext, useRef, useState, useCallback, useEffect } from "react";
 import { AuthContext } from "./AuthContext";
+import { ChatContext } from "./ChatContext";
 
 export const CallContext = createContext();
 
@@ -7,11 +8,12 @@ const defaultConstraints = { audio: true, video: true };
 const audioOnlyConstraints = { audio: true, video: false };
 
 export function CallProvider({ children }) {
-  const { authUser, socket } = useContext(AuthContext);
-  const [callState, setCallState] = useState("idle"); // idle | incoming | outgoing | connected
-  const [callType, setCallType] = useState("audio"); // audio | video
+  const { authUser, socket, axios } = useContext(AuthContext);
+  const { addCallLogMessage } = useContext(ChatContext);
+  const [callState, setCallState] = useState("idle");
+  const [callType, setCallType] = useState("audio");
   const [remoteUser, setRemoteUser] = useState(null);
-  const [incomingCall, setIncomingCall] = useState(null); // { from, type, callerName }
+  const [incomingCall, setIncomingCall] = useState(null);
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
@@ -20,6 +22,9 @@ export function CallProvider({ children }) {
   const localStreamRef = useRef(null);
   const pendingOfferRef = useRef(null);
   const remoteIdRef = useRef(null);
+  const callStartTimeRef = useRef(null);
+  const wasCallerRef = useRef(false);
+  const callTypeRef = useRef("audio");
 
   const cleanup = useCallback(() => {
     if (localStreamRef.current) {
@@ -69,9 +74,32 @@ export function CallProvider({ children }) {
     [socket, cleanup]
   );
 
+  const saveCallLog = useCallback(
+    async (otherUserId, type, status, duration, wasCaller) => {
+      if (!axios || !otherUserId) return;
+      try {
+        const { data } = await axios.post("/api/messages/call-log", {
+          otherUserId,
+          callType: type,
+          callStatus: status,
+          callDuration: duration,
+          wasCaller,
+        });
+        if (data?.success && data.newMessage && addCallLogMessage) {
+          addCallLogMessage(data.newMessage);
+        }
+      } catch (err) {
+        console.error("Save call log error:", err);
+      }
+    },
+    [axios, addCallLogMessage]
+  );
+
   const startCall = useCallback(
     async (user, type = "video") => {
       if (!socket || !authUser || !user) return;
+      wasCallerRef.current = true;
+      callTypeRef.current = type;
       setRemoteUser(user);
       setCallType(type);
       setCallState("outgoing");
@@ -104,6 +132,8 @@ export function CallProvider({ children }) {
     async () => {
       if (!socket || !authUser || !incomingCall) return;
       const { from: fromId, type } = incomingCall;
+      wasCallerRef.current = false;
+      callTypeRef.current = type || "video";
       remoteIdRef.current = fromId;
       setCallType(type || "video");
       setIncomingCall(null);
@@ -115,6 +145,7 @@ export function CallProvider({ children }) {
         localStreamRef.current = stream;
         setLocalStream(stream);
         createPeer(false, fromId, stream);
+        callStartTimeRef.current = Date.now();
         setCallState("connected");
         socket.emit("call:accept", { to: fromId });
       } catch (err) {
@@ -127,19 +158,37 @@ export function CallProvider({ children }) {
   );
 
   const rejectCall = useCallback(() => {
-    if (socket && incomingCall) {
-      socket.emit("call:reject", { to: incomingCall.from });
+    if (incomingCall) {
+      saveCallLog(
+        incomingCall.from,
+        incomingCall.type || "video",
+        "missed",
+        0,
+        false
+      );
+      if (socket) socket.emit("call:reject", { to: incomingCall.from });
     }
     setIncomingCall(null);
     setCallState("idle");
-  }, [socket, incomingCall]);
+  }, [socket, incomingCall, saveCallLog]);
 
   const endCall = useCallback(() => {
-    if (socket && remoteUser) {
-      socket.emit("call:end", { to: remoteUser._id });
+    const rid = remoteUser?._id || remoteIdRef.current;
+    const duration = callStartTimeRef.current
+      ? Math.floor((Date.now() - callStartTimeRef.current) / 1000)
+      : 0;
+    if (rid) {
+      saveCallLog(
+        rid,
+        callTypeRef.current,
+        callState === "connected" ? "answered" : "missed",
+        duration,
+        wasCallerRef.current
+      );
+      if (socket) socket.emit("call:end", { to: rid });
     }
     cleanup();
-  }, [socket, remoteUser, cleanup]);
+  }, [socket, remoteUser, callState, saveCallLog, cleanup]);
 
   const toggleMute = useCallback(() => {
     if (localStreamRef.current) {
@@ -160,13 +209,29 @@ export function CallProvider({ children }) {
     const onAccepted = ({ from }) => {
       setCallState((s) => {
         if (s !== "outgoing" || !pendingOfferRef.current) return s;
+        callStartTimeRef.current = Date.now();
         socket.emit("webrtc:signal", { to: from, signal: pendingOfferRef.current });
         pendingOfferRef.current = null;
         return "connected";
       });
     };
-    const onRejected = () => cleanup();
-    const onEnded = () => cleanup();
+    const onRejected = () => {
+      const rid = remoteIdRef.current;
+      if (rid && axios) {
+        saveCallLog(rid, callTypeRef.current, "missed", 0, true);
+      }
+      cleanup();
+    };
+    const onEnded = () => {
+      const rid = remoteIdRef.current;
+      const duration = callStartTimeRef.current
+        ? Math.floor((Date.now() - callStartTimeRef.current) / 1000)
+        : 0;
+      if (rid && axios) {
+        saveCallLog(rid, callTypeRef.current, "answered", duration, wasCallerRef.current);
+      }
+      cleanup();
+    };
     const onSignal = async ({ from, signal }) => {
       const pc = peerRef.current;
       try {
@@ -199,7 +264,7 @@ export function CallProvider({ children }) {
       socket.off("call:ended", onEnded);
       socket.off("webrtc:signal", onSignal);
     };
-  }, [socket, cleanup]);
+  }, [socket, cleanup, saveCallLog, axios]);
 
   const value = {
     callState,

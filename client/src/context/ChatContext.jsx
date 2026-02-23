@@ -63,13 +63,17 @@ export const ChatProvider = ({ children }) => {
     if (!socket) return;
 
     socket.on("newMessage", (newMessage) => {
-      if (selectedUser && newMessage.senderId === selectedUser._id) {
-        // If user is chatting with sender, mark as seen immediately
-        newMessage.seen = true;
+      const isForSelectedChat =
+        selectedUser &&
+        (newMessage.senderId === selectedUser._id ||
+          newMessage.receiverId === selectedUser._id);
+      if (isForSelectedChat) {
+        if (newMessage.messageType !== "call") {
+          newMessage.seen = true;
+          axios.put(`/api/messages/mark/${newMessage._id}`);
+        }
         setMessages((prevMessages) => [...prevMessages, newMessage]);
-        axios.put(`/api/messages/mark/${newMessage._id}`); // mark as seen in DB
-      } else {
-        // Otherwise increment unseen count for that sender
+      } else if (newMessage.messageType !== "call") {
         setUnseenMessages((prev) => ({
           ...prev,
           [newMessage.senderId]: prev[newMessage.senderId]
@@ -178,7 +182,18 @@ export const ChatProvider = ({ children }) => {
     };
   }, [socket]);
 
-  // ✅ Values shared across app
+  // ✅ Add a call log message to current chat (used by CallContext after saving)
+  const addCallLogMessage = (newMessage) => {
+    if (
+      !selectedUser ||
+      !newMessage ||
+      (newMessage.senderId !== selectedUser._id &&
+        newMessage.receiverId !== selectedUser._id)
+    )
+      return;
+    setMessages((prev) => [...prev, newMessage]);
+  };
+
   const value = {
     messages,
     users,
@@ -190,6 +205,7 @@ export const ChatProvider = ({ children }) => {
     setSelectedUser,
     unseenMessages,
     setUnseenMessages,
+    addCallLogMessage,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

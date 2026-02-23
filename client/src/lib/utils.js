@@ -7,6 +7,13 @@ export function formatMessageTime(date) {
   });
 }
 
+export function formatCallDuration(seconds) {
+  if (!seconds || seconds <= 0) return null;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
 export function formatDateLabel(date) {
   const d = new Date(date);
   const today = new Date();

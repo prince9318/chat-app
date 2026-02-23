@@ -16,6 +16,7 @@
     "@tailwindcss/vite": "^4.1.12",
     "axios": "^1.11.0",
     "emoji-picker-react": "^4.13.2",
+    "react-easy-crop": "^5.0.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hot-toast": "^2.6.0",
