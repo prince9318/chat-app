@@ -72,7 +72,10 @@ export const ChatProvider = ({ children }) => {
           newMessage.seen = true;
           axios.put(`/api/messages/mark/${newMessage._id}`);
         }
-        setMessages((prevMessages) => [...prevMessages, newMessage]);
+        setMessages((prevMessages) => {
+          if (prevMessages.some((m) => m._id === newMessage._id)) return prevMessages;
+          return [...prevMessages, newMessage];
+        });
       } else if (newMessage.messageType !== "call") {
         setUnseenMessages((prev) => ({
           ...prev,
@@ -191,7 +194,10 @@ export const ChatProvider = ({ children }) => {
         newMessage.receiverId !== selectedUser._id)
     )
       return;
-    setMessages((prev) => [...prev, newMessage]);
+    setMessages((prev) => {
+      if (prev.some((m) => m._id === newMessage._id)) return prev;
+      return [...prev, newMessage];
+    });
   };
 
   const value = {

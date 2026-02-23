@@ -216,20 +216,11 @@ export function CallProvider({ children }) {
       });
     };
     const onRejected = () => {
-      const rid = remoteIdRef.current;
-      if (rid && axios) {
-        saveCallLog(rid, callTypeRef.current, "missed", 0, true);
-      }
+      // Only the callee (who clicked Decline) saves "missed" — do not save again here
       cleanup();
     };
     const onEnded = () => {
-      const rid = remoteIdRef.current;
-      const duration = callStartTimeRef.current
-        ? Math.floor((Date.now() - callStartTimeRef.current) / 1000)
-        : 0;
-      if (rid && axios) {
-        saveCallLog(rid, callTypeRef.current, "answered", duration, wasCallerRef.current);
-      }
+      // Only the person who clicked End call saves — do not save again here to avoid duplicates
       cleanup();
     };
     const onSignal = async ({ from, signal }) => {
@@ -264,7 +255,7 @@ export function CallProvider({ children }) {
       socket.off("call:ended", onEnded);
       socket.off("webrtc:signal", onSignal);
     };
-  }, [socket, cleanup, saveCallLog, axios]);
+  }, [socket, cleanup]);
 
   const value = {
     callState,
