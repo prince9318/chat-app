@@ -12,7 +12,7 @@ const App = () => {
   const { authUser } = useContext(AuthContext); // ✅ Access current authenticated user
 
   return (
-    <div className="min-h-screen bg-[#0b141a] text-[#e9edef]">
+    <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)]">
       {/* ✅ Toast notifications (for success/error messages) */}
       <Toaster />
       {/* ✅ Define application routes */}

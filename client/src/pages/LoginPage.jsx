@@ -43,136 +43,146 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-cover bg-center flex items-center justify-center gap-8 sm:justify-evenly max-sm:flex-col backdrop-blur-2xl">
-      {/* -------- Left Section: App Logo -------- */}
-      <img
-        src={assets.logo_big}
-        alt="App Logo"
-        className="w-[min(100vw,250px)]"
+    <div className="min-h-screen flex items-center justify-center gap-10 sm:justify-evenly max-sm:flex-col p-4 sm:p-6 relative overflow-hidden">
+      {/* Background: gradient + subtle grid */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628]" />
+      <div
+        className="absolute inset-0 opacity-[0.4]"
+        style={{
+          backgroundImage: `radial-gradient(circle at 2px 2px, var(--border-default) 1px, transparent 0)`,
+          backgroundSize: "32px 32px",
+        }}
       />
 
-      {/* -------- Right Section: Login / Signup Form -------- */}
+      {/* Left: Logo */}
+      <div className="relative z-10 flex flex-col items-center gap-4">
+        <img
+          src={assets.logo_big}
+          alt="App Logo"
+          className="w-[min(100vw,260px)] drop-shadow-2xl"
+        />
+        <p className="text-[var(--text-secondary)] text-sm max-w-[200px] text-center hidden sm:block">
+          Chat with anyone, anywhere. Simple and private.
+        </p>
+      </div>
+
+      {/* Right: Form card */}
       <form
         onSubmit={onSubmitHandler}
-        className="border-2 bg-white/10 text-white border-gray-600 p-6 flex flex-col gap-6 rounded-xl shadow-2xl backdrop-blur-md w-[min(95vw,380px)]"
+        className="relative z-10 w-[min(95vw,400px)] rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 flex flex-col gap-5 shadow-[var(--shadow-card)]"
       >
-        {/* -------- Form Heading (Sign up / Login) -------- */}
-        <h2 className="font-medium text-2xl flex justify-between items-center text-white">
-          {currState}
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+            {currState}
+          </h2>
           {isDataSubmitted && (
-            <img
+            <button
+              type="button"
               onClick={() => setIsDataSubmitted(false)}
-              src={assets.arrow_icon}
-              alt="Go Back"
-              className="w-5 cursor-pointer"
-            />
+              className="p-2 rounded-full hover:bg-[var(--bg-input)] text-[var(--text-secondary)] transition-colors"
+              aria-label="Go back"
+            >
+              <img src={assets.arrow_icon} alt="" className="w-5 h-5" />
+            </button>
           )}
-        </h2>
+        </div>
 
-        {/* -------- Signup Step 1: Full Name -------- */}
         {currState === "Sign up" && !isDataSubmitted && (
           <input
             onChange={(e) => setFullName(e.target.value)}
             value={fullName}
             type="text"
-            className="p-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-gray-800/50 text-white placeholder-gray-400"
+            className="input-field"
             placeholder="Full Name"
             required
           />
         )}
 
-        {/* -------- Email & Password (Both Login + Signup Step 1) -------- */}
         {!isDataSubmitted && (
           <>
             <input
               onChange={(e) => setEmail(e.target.value)}
               value={email}
               type="email"
-              placeholder="Email Address"
+              placeholder="Email"
               required
-              className="p-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-gray-800/50 text-white placeholder-gray-400"
+              className="input-field"
             />
-
             <input
               onChange={(e) => setPassword(e.target.value)}
               value={password}
               type="password"
               placeholder="Password"
               required
-              className="p-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-gray-800/50 text-white placeholder-gray-400"
+              className="input-field"
             />
           </>
         )}
 
-        {/* -------- Signup Step 2: Bio -------- */}
         {currState === "Sign up" && isDataSubmitted && (
           <textarea
             onChange={(e) => setBio(e.target.value)}
             value={bio}
             rows={4}
-            className="p-3 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-gray-800/50 text-white placeholder-gray-400"
-            placeholder="Provide a short bio..."
+            className="input-field resize-none"
+            placeholder="A short bio..."
             required
-          ></textarea>
+          />
         )}
 
-        {/* -------- Submit Button -------- */}
         <button
           type="submit"
-          className={`py-3 bg-gradient-to-r from-purple-500 to-violet-600 text-white rounded-lg shadow-lg transition-all ${
-            !agreed ? "opacity-90" : "hover:from-purple-600 hover:to-violet-700"
-          }`}
+          className="mt-1 py-3 rounded-[var(--radius-md)] bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          {currState === "Sign up" ? "Create Account" : "Login Now"}
+          {currState === "Sign up" ? "Create account" : "Log in"}
         </button>
 
-        <div className="flex items-start gap-2 text-sm text-gray-300">
+        <label className="flex items-start gap-3 text-sm text-[var(--text-secondary)] cursor-pointer">
           <input
             type="checkbox"
             checked={agreed}
             onChange={(e) => setAgreed(e.target.checked)}
-            className="mt-1"
+            className="mt-0.5 rounded border-[var(--border-default)] text-[var(--accent)] focus:ring-[var(--accent)]"
           />
-          <p>
-            I agree to the
-            {" "}
-            <Link to="/terms" className="text-violet-400 hover:text-violet-300">terms of use</Link>
-            {" "}&
-            {" "}
-            <Link to="/privacy" className="text-violet-400 hover:text-violet-300">privacy policy</Link>.
-          </p>
-        </div>
+          <span>
+            I agree to the{" "}
+            <Link to="/terms" className="text-[var(--accent)] hover:underline">Terms</Link>
+            {" "}&{" "}
+            <Link to="/privacy" className="text-[var(--accent)] hover:underline">Privacy</Link>.
+          </span>
+        </label>
         {showAgreementError && !agreed && (
-          <p className="text-xs text-red-400">Please agree to continue.</p>
+          <p className="text-xs text-red-400 -mt-2">Please agree to continue.</p>
         )}
 
-        {/* -------- Toggle Between Login & Signup -------- */}
-        <div className="flex flex-col gap-2">
+        <p className="text-sm text-[var(--text-secondary)] text-center pt-1">
           {currState === "Sign up" ? (
-            <p className="text-sm text-gray-300">
+            <>
               Already have an account?{" "}
-              <span
+              <button
+                type="button"
                 onClick={() => {
                   setCurrState("Login");
                   setIsDataSubmitted(false);
                 }}
-                className="font-medium text-violet-400 cursor-pointer hover:text-violet-300"
+                className="font-medium text-[var(--accent)] hover:underline"
               >
-                Login here
-              </span>
-            </p>
+                Log in
+              </button>
+            </>
           ) : (
-            <p className="text-sm text-gray-300">
-              Create an account{" "}
-              <span
+            <>
+              New here?{" "}
+              <button
+                type="button"
                 onClick={() => setCurrState("Sign up")}
-                className="font-medium text-violet-400 cursor-pointer hover:text-violet-300"
+                className="font-medium text-[var(--accent)] hover:underline"
               >
-                Click here
-              </span>
-            </p>
+                Sign up
+              </button>
+            </>
           )}
-        </div>
+        </p>
       </form>
     </div>
   );

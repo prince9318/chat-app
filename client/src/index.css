@@ -1,22 +1,61 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap");
 
 @import "tailwindcss";
+
+/* WhatsApp Web–style design tokens */
+:root {
+  --bg-app: #0b141a;
+  --bg-panel: #111b21;
+  --bg-elevated: #202c33;
+  --bg-input: #2a3942;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-default: #2a3942;
+  --text-primary: #e9edef;
+  --text-secondary: #8696a0;
+  --text-muted: #667781;
+  --accent: #00a884;
+  --accent-hover: #06cf9c;
+  --accent-soft: rgba(0, 168, 132, 0.2);
+  --sent-bubble: #005c4b;
+  --received-bubble: #202c33;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --bubble-radius: 0.5rem;
+  --bubble-tail: 0.25rem;
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-modal: 0 24px 48px rgba(0, 0, 0, 0.5);
+}
 
 * {
   font-family: "Outfit", sans-serif;
 }
 
 ::-webkit-scrollbar {
-  display: none;
+  width: 6px;
+  height: 6px;
 }
 
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* WhatsApp-style chat background (subtle dot grid) */
 .chat-wallpaper {
-  background-color: #0b141a;
-  background-image:
-    radial-gradient(#0b141a 1px, transparent 1px),
-    radial-gradient(#0b141a 1px, transparent 1px);
-  background-position: 0 0, 10px 10px;
-  background-size: 20px 20px;
+  background-color: var(--bg-app);
+  background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.06) 1px, transparent 0);
+  background-size: 22px 22px;
 }
 
 .messages-scroll {
@@ -25,11 +64,49 @@
   touch-action: pan-y;
 }
 
+/* Form inputs (login, profile, etc.) */
+.input-field {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-default);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-field::placeholder {
+  color: var(--text-muted);
+}
+.input-field:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
 
-/* force long links to break, never add a background, keep bubble colour */
+/* Message bubbles: keep "Hi" and short text on one line (horizontal); wrap only long words/URLs */
+.message-bubble {
+  word-break: normal;
+  overflow-wrap: break-word;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+/* Only links and long unbreakable strings break inside the bubble */
 .message-bubble a {
   word-break: break-all;
   overflow-wrap: anywhere;
   background: transparent !important;
   color: inherit !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* WhatsApp-style bubble tails (one sharp corner) */
+.bubble-sent {
+  border-radius: var(--bubble-radius) var(--bubble-radius) var(--bubble-tail) var(--bubble-radius);
+  box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
+}
+.bubble-received {
+  border-radius: var(--bubble-radius) var(--bubble-radius) var(--bubble-radius) var(--bubble-tail);
+  box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
 }

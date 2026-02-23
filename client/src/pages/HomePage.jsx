@@ -8,25 +8,16 @@ const HomePage = () => {
   const { selectedUser } = useContext(ChatContext); // ✅ Check if a chat user is selected
 
   return (
-    <div className="w-full h-screen px-4 py-4 md:px-8 md:py-6">
+    <div className="w-full h-screen flex bg-[var(--bg-app)]">
       <div
-        className={`
-          rounded-xl overflow-hidden h-full grid grid-cols-1 relative border border-[#202c33]
-          ${
-            selectedUser
-              ? "md:grid-cols-[360px_minmax(0,1fr)_320px]"
-              : "md:grid-cols-[360px_minmax(0,1fr)]"
-          }
-          bg-[#0b141a]
-        `}
+        className={`h-full grid grid-cols-1 flex-1 min-w-0 ${
+          selectedUser
+            ? "md:grid-cols-[min(400px,30%)_1fr_min(360px,25%)]"
+            : "md:grid-cols-[min(400px,30%)_1fr]"
+        }`}
       >
-        {/* ✅ Left Sidebar: List of users */}
         <Sidebar />
-
-        {/* ✅ Chat Container: Main chat window */}
         <ChatContainer />
-
-        {/* ✅ Right Sidebar: User profile + media (visible only when user is selected) */}
         <RightSidebar />
       </div>
     </div>

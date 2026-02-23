@@ -202,13 +202,12 @@ const renderTextWithLinks = (text) => {
         />
       )}
 
-      {/* ---------------- Chat Header ---------------- */}
-      <div className="sticky top-0 z-20 flex items-center gap-3 py-3 px-4 bg-[#202c33] border-b border-[#202c33]">
-        {/* Profile picture */}
+      {/* Chat header - WhatsApp Web style */}
+      <div className="sticky top-0 z-20 flex items-center gap-3 py-2 px-4 bg-[var(--bg-elevated)] border-b border-[var(--border-subtle)] min-h-[59px]">
         <img
           src={selectedUser.profilePic || assets.avatar_icon}
           alt=""
-          className="w-8 rounded-full cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all"
+          className="w-10 h-10 rounded-full object-cover cursor-pointer shrink-0"
           onClick={() =>
             setProfileModal({
               isOpen: true,
@@ -217,32 +216,36 @@ const renderTextWithLinks = (text) => {
             })
           }
         />
-
-        {/* Username + online status */}
-        <p className="flex-1 text-sm text-[#e9edef] flex items-center gap-2">
-          {selectedUser.fullName}
-          {onlineUsers.includes(selectedUser._id) && (
-            <span className="w-2 h-2 rounded-full bg-green-500"></span>
-          )}
-        </p>
-
-        {/* Back button (mobile only) */}
-        <img
+        <div className="flex-1 min-w-0">
+          <p className="text-[var(--text-primary)] font-medium truncate">
+            {selectedUser.fullName}
+          </p>
+          <p className="text-xs text-[var(--text-secondary)]">
+            {onlineUsers.includes(selectedUser._id) ? "online" : "offline"}
+          </p>
+        </div>
+        <button
+          type="button"
           onClick={() => setSelectedUser(null)}
-          src={assets.arrow_icon}
-          alt="back"
-          className="md:hidden max-w-7"
-        />
-
-        {/* Help icon (desktop only) */}
-        <img src={assets.help_icon} alt="" className="max-md:hidden max-w-5" />
+          className="md:hidden p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors"
+          aria-label="Back"
+        >
+          <img src={assets.arrow_icon} alt="" className="w-5 h-5 opacity-80" />
+        </button>
+        <div className="max-md:hidden flex items-center">
+          <button type="button" className="p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors" aria-label="Info">
+            <img src={assets.help_icon} alt="" className="w-5 h-5 opacity-80" />
+          </button>
+        </div>
       </div>
 
-      {/* ---------------- Chat Messages Area ---------------- */}
-      <div ref={messagesRef} className="flex-1 min-h-0 flex flex-col overflow-y-auto p-3 chat-wallpaper messages-scroll">
-        <div className="sticky top-0 z-10 flex justify-center pointer-events-none">
+      {/* Messages area - balanced padding; bubbles use more width for readable lines */}
+      <div ref={messagesRef} className="flex-1 min-h-0 flex flex-col overflow-y-auto px-3 py-1 chat-wallpaper messages-scroll">
+        <div className="sticky top-0 z-10 flex justify-center pointer-events-none py-2">
           {currentDateLabel && (
-            <span className="px-3 py-1 text-xs rounded-full bg-[#202c33] text-[#e9edef]">{currentDateLabel}</span>
+            <span className="text-[var(--text-muted)] text-xs">
+              {currentDateLabel}
+            </span>
           )}
         </div>
         {messages.map((msg, index) => {
@@ -255,9 +258,9 @@ const renderTextWithLinks = (text) => {
           return (
           <Fragment key={index}>
             {showDate && (
-              <div className="date-marker w-full flex justify-center my-2" data-date-label={label}>
+              <div className="date-marker w-full flex justify-center my-4" data-date-label={label}>
                 {currentDateLabel !== label && (
-                  <span className="px-3 py-1 text-xs rounded-full bg-[#202c33] text-[#e9edef]">{label}</span>
+                  <span className="text-[var(--text-muted)] text-xs">{label}</span>
                 )}
               </div>
             )}
@@ -291,10 +294,11 @@ const renderTextWithLinks = (text) => {
                 if (deletedForMe) return null;
                 if (msg.isDeleted) {
                   return (
-                    <div className="relative inline-block mb-8 group max-w-[85%] md:max-w-[70%] min-w-[160px]">
-                      <p className="p-3 text-gray-300 italic bg-gray-800/50 rounded-xl border border-gray-600 break-normal whitespace-pre-wrap">This message was deleted</p>
+                    <div className="relative inline-block mb-1 group max-w-[min(85%,22rem)] min-w-[120px]">
+                      <p className="p-3 text-[var(--text-muted)] italic bg-[var(--received-bubble)] bubble-received break-normal whitespace-pre-wrap text-sm">This message was deleted</p>
                       <button
-                        className={`absolute top-2 ${msg.senderId === authUser._id ? "right-2" : "left-2"} w-6 h-6 flex items-center justify-center rounded-full bg-[#202c33] hover:bg-[#2a3942] text-[#e9edef] opacity-0 group-hover:opacity-100 transition-opacity`}
+                        type="button"
+                        className={`absolute top-2 ${msg.senderId === authUser._id ? "right-2" : "left-2"} w-7 h-7 flex items-center justify-center rounded-full bg-[var(--bg-elevated)] hover:bg-[var(--bg-input)] text-[var(--text-primary)] opacity-0 group-hover:opacity-100 transition-opacity border border-[var(--border-subtle)]`}
                         aria-label="Message options"
                         onClick={() =>
                           setMessageOptionsState({
@@ -309,22 +313,20 @@ const renderTextWithLinks = (text) => {
                     </div>
                   );
                 }
+                const optionBtnClass = "absolute top-2 w-7 h-7 flex items-center justify-center rounded-full bg-[var(--bg-elevated)] hover:bg-[var(--bg-input)] text-[var(--text-primary)] opacity-0 group-hover:opacity-100 transition-opacity border border-[var(--border-subtle)]";
                 return (
                 <>
-                  {/* Image message */}
                   {msg.image ? (
-                    <div className="relative inline-block mb-8 group">
+                    <div className="relative inline-block mb-6 group">
                       <img
                         src={msg.image}
                         alt="img"
-                        className="max-w-[250px] md:max-w-[300px] max-h-[70vh] object-contain shadow-xl rounded-2xl"
+                        className="max-w-[250px] md:max-w-[300px] max-h-[70vh] object-contain shadow-lg rounded-[var(--radius-xl)] cursor-pointer"
                         onClick={() => window.open(msg.image, "_blank")}
                       />
-                      {/* Options button for image */}
                       <button
-                        className={`absolute top-2 ${
-                          msg.senderId === authUser._id ? "right-2" : "left-2"
-                        } ... opacity-0 group-hover:opacity-100 transition-opacity`}
+                        type="button"
+                        className={`${optionBtnClass} ${msg.senderId === authUser._id ? "right-2" : "left-2"}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           setMessageOptionsState({
@@ -336,21 +338,19 @@ const renderTextWithLinks = (text) => {
                       >
                         ⋮
                       </button>
-                      <div className="absolute bottom-1 right-2 text-[11px] leading-none flex items-center gap-1 text-gray-300">
+                      <div className="absolute bottom-1 right-2 text-[11px] leading-none flex items-center gap-1 text-[var(--text-muted)]">
                         <span>{formatMessageTime(msg.createdAt)}</span>
                         {msg.senderId === authUser._id && (
-                          <span className={msg.seen ? "text-blue-500" : "text-gray-400"}>✓✓</span>
+                          <span className={msg.seen ? "text-[var(--accent)]" : "text-[var(--text-muted)]"}>✓✓</span>
                         )}
                       </div>
                     </div>
                   ) : msg.video ? (
-                    /* Video message */
-                    <div className="relative inline-block mb-8 group">
-                      <video controls src={msg.video} className="..." />
+                    <div className="relative inline-block mb-6 group">
+                      <video controls src={msg.video} className="max-w-[250px] md:max-w-[300px] max-h-[50vh] rounded-[var(--radius-xl)] shadow-lg" />
                       <button
-                        className={`absolute top-2 ${
-                          msg.senderId === authUser._id ? "right-2" : "left-2"
-                        } ... opacity-0 group-hover:opacity-100 transition-opacity`}
+                        type="button"
+                        className={`${optionBtnClass} ${msg.senderId === authUser._id ? "right-2" : "left-2"}`}
                         onClick={() =>
                           setMessageOptionsState({
                             isOpen: true,
@@ -361,21 +361,19 @@ const renderTextWithLinks = (text) => {
                       >
                         ⋮
                       </button>
-                      <div className="absolute bottom-1 right-2 text-[11px] leading-none flex items-center gap-1 text-gray-300">
+                      <div className="absolute bottom-1 right-2 text-[11px] leading-none flex items-center gap-1 text-[var(--text-muted)]">
                         <span>{formatMessageTime(msg.createdAt)}</span>
                         {msg.senderId === authUser._id && (
-                          <span className={msg.seen ? "text-blue-500" : "text-gray-400"}>✓✓</span>
+                          <span className={msg.seen ? "text-[var(--accent)]" : "text-[var(--text-muted)]"}>✓✓</span>
                         )}
                       </div>
                     </div>
                   ) : msg.audio ? (
-                    /* Audio message */
-                    <div className="relative inline-block mb-8 group">
-                      <audio controls src={msg.audio} className="..." />
+                    <div className="relative inline-block mb-6 group">
+                      <audio controls src={msg.audio} className="max-w-[240px] h-9" />
                       <button
-                        className={`absolute top-2 ${
-                          msg.senderId === authUser._id ? "right-2" : "left-2"
-                        } ... opacity-0 group-hover:opacity-100 transition-opacity`}
+                        type="button"
+                        className={`${optionBtnClass} ${msg.senderId === authUser._id ? "right-2" : "left-2"}`}
                         onClick={() =>
                           setMessageOptionsState({
                             isOpen: true,
@@ -386,28 +384,27 @@ const renderTextWithLinks = (text) => {
                       >
                         ⋮
                       </button>
-                      <div className="absolute bottom-1 right-2 text-[11px] leading-none flex items-center gap-1 text-gray-300">
+                      <div className="absolute bottom-1 right-2 text-[11px] leading-none flex items-center gap-1 text-[var(--text-muted)]">
                         <span>{formatMessageTime(msg.createdAt)}</span>
                         {msg.senderId === authUser._id && (
-                          <span className={msg.seen ? "text-blue-500" : "text-gray-400"}>✓✓</span>
+                          <span className={msg.seen ? "text-[var(--accent)]" : "text-[var(--text-muted)]"}>✓✓</span>
                         )}
                       </div>
                     </div>
                   ) : (
-                    <div className="relative inline-block mb-8 group max-w-[85%] md:max-w-[70%] min-w-[160px]">
+                    <div className="relative inline-block mb-1 group min-w-[7rem] max-w-[min(90%,28rem)]">
                       <p
-  className={`message-bubble p-3 pr-10 rounded-2xl break-words whitespace-pre-wrap leading-relaxed shadow-md ${
-    msg.senderId === authUser._id
-      ? "bg-[#128C7E] text-white rounded-tr-none"
-      : "bg-[#202c33] text-[#e9edef] rounded-tl-none"
-  }`}
->
-  {renderTextWithLinks(msg.text)}
-</p>
+                        className={`message-bubble p-2 pl-3 pr-12 pb-1 pt-2 text-sm ${
+                          msg.senderId === authUser._id
+                            ? "bg-[var(--sent-bubble)] text-white bubble-sent"
+                            : "bg-[var(--received-bubble)] text-[var(--text-primary)] bubble-received"
+                        }`}
+                      >
+                        {renderTextWithLinks(msg.text)}
+                      </p>
                       <button
-                        className={`absolute top-2 ${
-                          msg.senderId === authUser._id ? "right-2" : "left-2"
-                        } w-6 h-6 flex items-center justify-center rounded-full bg-[#202c33] hover:bg-[#2a3942] text-[#e9edef] opacity-0 group-hover:opacity-100 transition-opacity`}
+                        type="button"
+                        className={`${optionBtnClass} ${msg.senderId === authUser._id ? "right-2" : "left-2"}`}
                         aria-label="Message options"
                         onClick={() =>
                           setMessageOptionsState({
@@ -419,10 +416,10 @@ const renderTextWithLinks = (text) => {
                       >
                         ⋮
                       </button>
-                      <div className="absolute bottom-1 right-2 text-[11px] leading-none flex items-center gap-1 text-gray-300">
+                      <div className={`absolute bottom-1 right-2 text-[11px] leading-none flex items-center gap-0.5 opacity-90 ${msg.senderId === authUser._id ? "text-white/90" : "text-[var(--text-muted)]"}`}>
                         <span>{formatMessageTime(msg.createdAt)}</span>
                         {msg.senderId === authUser._id && (
-                          <span className={msg.seen ? "text-blue-500" : "text-gray-400"}>✓✓</span>
+                          <span className={msg.seen ? "text-white" : "text-white/70"} style={{ marginLeft: "2px" }}>✓✓</span>
                         )}
                       </div>
                     </div>
@@ -435,57 +432,48 @@ const renderTextWithLinks = (text) => {
             
           </Fragment>
           )})}
-        {/* Scroll anchor (auto-scroll to bottom) */}
-        <div ref={scrollEnd}></div>
+        <div ref={scrollEnd} />
       </div>
 
-      {/* ---------------- Bottom Input Area ---------------- */}
-      <div className="shrink-0 flex items-center gap-3 p-4 bg-[#202c33] border-t border-[#202c33]">
-        <div className="flex-1 flex items-center bg-[#111b21] px-4 py-2 rounded-xl border border-[#202c33]">
-          {/* Emoji button */}
-          <div className="hover:bg-purple-500/20 p-2 rounded-full">
-            <img
-              src={assets.emoji_icon}
-              alt="emoji"
-              className="w-6 cursor-pointer"
-              onClick={() => setShowEmojiPicker((prev) => !prev)}
-            />
-          </div>
+      {/* Input area - WhatsApp Web style */}
+      <div className="shrink-0 flex items-center gap-2 px-4 py-3 bg-[var(--bg-elevated)]">
+        <div className="flex-1 flex items-center gap-1 bg-[var(--bg-input)] pl-3 pr-1 py-1.5 rounded-[1.75rem] min-h-[42px]">
+          <button
+            type="button"
+            onClick={() => setShowEmojiPicker((prev) => !prev)}
+            className="p-2 rounded-full hover:bg-[var(--accent-soft)] transition-colors"
+            aria-label="Emoji"
+          >
+            <img src={assets.emoji_icon} alt="" className="w-5 h-5 opacity-80" />
+          </button>
 
-          {/* Emoji picker popup */}
           {showEmojiPicker && (
-            <div className="absolute bottom-16 left-4 z-50">
+            <div className="absolute bottom-20 left-4 z-50 rounded-[var(--radius-lg)] overflow-hidden border border-[var(--border-subtle)] shadow-[var(--shadow-modal)]">
               <EmojiPicker
                 onEmojiClick={handleEmojiClick}
                 theme="dark"
                 width={300}
-                height={400}
+                height={360}
               />
             </div>
           )}
 
-          {/* Text input */}
           <input
             onChange={(e) => setInput(e.target.value)}
             value={input}
             onKeyDown={(e) => (e.key === "Enter" ? handleSendMessage(e) : null)}
             type="text"
             placeholder="Type a message"
-            className="flex-1 text-sm p-2 mx-2 bg-transparent text-[#e9edef] placeholder-gray-400 focus:outline-none"
+            className="flex-1 min-w-0 text-sm px-2 py-1.5 bg-transparent text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none"
           />
 
-          {/* Image / Video upload */}
           <input
             onChange={(e) => {
               const file = e.target.files[0];
               if (file) {
-                if (file.type.startsWith("image/")) {
-                  handleSendImage(e);
-                } else if (file.type.startsWith("video/")) {
-                  handleSendVideo(e);
-                } else {
-                  toast.error("Please select an image or video file");
-                }
+                if (file.type.startsWith("image/")) handleSendImage(e);
+                else if (file.type.startsWith("video/")) handleSendVideo(e);
+                else toast.error("Please select an image or video file");
               }
             }}
             type="file"
@@ -493,45 +481,35 @@ const renderTextWithLinks = (text) => {
             accept="image/png, image/jpeg, video/*"
             hidden
           />
-          <label htmlFor="media">
-            <div className="p-2 rounded-full hover:bg-[#2a3942]">
-              <img
-                src={assets.gallery_icon}
-                alt="media"
-                className="w-5 cursor-pointer"
-              />
-            </div>
+          <label htmlFor="media" className="p-2 rounded-full hover:bg-[var(--bg-elevated)] cursor-pointer transition-colors">
+            <img src={assets.gallery_icon} alt="Attach" className="w-5 h-5 opacity-80" />
           </label>
 
-          {/* Audio upload */}
-          <input
-            onChange={handleSendAudio}
-            type="file"
-            id="audio"
-            accept="audio/*"
-            hidden
-          />
-          <label htmlFor="audio">
-            <div className="w-9 h-9 flex items-center justify-center rounded-full bg-green-600 cursor-pointer">
-              <img src={assets.mic_icon} alt="audio" className="w-4 h-4" />
-            </div>
+          <input onChange={handleSendAudio} type="file" id="audio" accept="audio/*" hidden />
+          <label htmlFor="audio" className="w-9 h-9 flex items-center justify-center rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] cursor-pointer transition-colors shrink-0">
+            <img src={assets.mic_icon} alt="Voice" className="w-4 h-4 invert" />
           </label>
         </div>
 
-        {/* Send button */}
-        <div
+        <button
+          type="button"
           onClick={handleSendMessage}
-          className="w-12 h-12 flex items-center justify-center rounded-full bg-green-600 cursor-pointer"
+          className="w-12 h-12 flex items-center justify-center rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] transition-colors shrink-0"
+          aria-label="Send"
         >
-          <img src={assets.send_button} alt="Send" className="w-5 h-5" />
-        </div>
+          <img src={assets.send_button} alt="" className="w-5 h-5 invert" />
+        </button>
       </div>
     </div>
   ) : (
-    // Empty chat screen (when no user is selected)
-    <div className="flex flex-col items-center justify-center gap-2 text-gray-300 bg-white/10 max-md:hidden">
-      <img src={assets.logo_icon} className="max-w-16" alt="" />
-      <p className="text-lg font-medium text-white drop-shadow-lg">Chat anytime, anywhere</p>
+    <div className="flex flex-col items-center justify-center gap-6 bg-[var(--bg-app)] max-md:hidden px-6">
+      <div className="w-24 h-24 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex items-center justify-center">
+        <img src={assets.logo_icon} className="w-14 h-14 opacity-70" alt="" />
+      </div>
+      <div className="text-center">
+        <p className="text-lg font-medium text-[var(--text-primary)]">Chat anytime, anywhere</p>
+        <p className="text-sm text-[var(--text-muted)] mt-1">Select a chat from the list or search for someone</p>
+      </div>
     </div>
   );
 };

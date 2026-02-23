@@ -25,11 +25,8 @@ const RightSidebar = () => {
   return (
     selectedUser && (
       <div
-        className={`text-[#e9edef] w-full relative overflow-y-scroll ${
-          selectedUser ? "max-md:hidden" : ""
-        } bg-[#0b141a] border-l border-[#202c33]`}
+        className={`text-[var(--text-primary)] w-full flex flex-col max-md:hidden bg-[var(--bg-panel)] border-l border-[var(--border-subtle)] overflow-hidden`}
       >
-        {/* Profile Image Modal */}
         {profileModal.isOpen && (
           <ProfileImageModal
             imageUrl={profileModal.imageUrl}
@@ -38,59 +35,66 @@ const RightSidebar = () => {
           />
         )}
 
-        {/* User Profile Section */}
-        <div className="pt-6 flex flex-col items-center gap-2 text-xs font-light mx-auto">
-          {/* Profile Picture (clickable -> opens modal) */}
-          <img
-            src={selectedUser?.profilePic || assets.avatar_icon}
-            alt=""
-            className="w-20 aspect-[1/1] rounded-full cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all"
-            onClick={() =>
-              setProfileModal({
-                isOpen: true,
-                imageUrl: selectedUser?.profilePic || assets.avatar_icon,
-                userName: selectedUser.fullName,
-              })
-            }
-          />
-
-          {/* Username + Online Indicator */}
-          <div className="flex items-center justify-center gap-2">
-            {onlineUsers.includes(selectedUser._id) && (
-              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+        <div className="flex-1 overflow-y-auto bg-[var(--bg-elevated)]">
+          <div className="pt-10 pb-6 flex flex-col items-center px-6">
+            <button
+              type="button"
+              onClick={() =>
+                setProfileModal({
+                  isOpen: true,
+                  imageUrl: selectedUser?.profilePic || assets.avatar_icon,
+                  userName: selectedUser.fullName,
+                })
+              }
+              className="rounded-full mb-4 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            >
+              <img
+                src={selectedUser?.profilePic || assets.avatar_icon}
+                alt=""
+                className="w-28 h-28 rounded-full object-cover"
+              />
+            </button>
+            <h1 className="text-xl font-medium text-[var(--text-primary)] text-center">
+              {selectedUser.fullName}
+            </h1>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">
+              {onlineUsers.includes(selectedUser._id) ? "online" : "offline"}
+            </p>
+            {selectedUser.bio && (
+              <p className="mt-4 text-sm text-[var(--text-secondary)] text-center max-w-[260px]">
+                {selectedUser.bio}
+              </p>
             )}
-            <h1 className="text-base font-medium">{selectedUser.fullName}</h1>
           </div>
 
-          {/* User Bio */}
-          <p className="px-10 mx-auto text-center">{selectedUser.bio}</p>
-        </div>
-
-        <hr className="border-[#ffffff50] my-4" />
-
-        {/* Media Section (shows all shared images) */}
-        <div className="px-5 text-xs">
-          <p>Media</p>
-          <div className="mt-2 max-h-[200px] overflow-y-scroll grid grid-cols-2 gap-4 opacity-80">
-            {msgImages.map((url, index) => (
-              <div
-                key={index}
-                onClick={() => window.open(url)} // Open image in new tab
-                className="cursor-pointer rounded"
-              >
-                <img src={url} alt="" className="h-full rounded-md" />
-              </div>
-            ))}
+          <div className="border-t border-[var(--border-subtle)] px-4 py-4">
+            <p className="text-sm text-[var(--text-muted)] mb-3 px-2">
+              Media, links and docs
+            </p>
+            <div className="grid grid-cols-2 gap-2 max-h-[240px] overflow-y-auto">
+              {msgImages.map((url, index) => (
+                <button
+                  key={`${url}-${index}`}
+                  type="button"
+                  onClick={() => window.open(url, "_blank")}
+                  className="aspect-square rounded-[var(--radius-md)] overflow-hidden border border-[var(--border-subtle)] hover:opacity-90 transition-opacity focus:ring-2 focus:ring-[var(--accent)] focus:outline-none"
+                >
+                  <img src={url} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Logout Button */}
-        <button
-          onClick={() => logout()}
-          className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-green-600 text-white text-sm font-light py-2 px-16 rounded-full cursor-pointer"
-        >
-          Logout
-        </button>
+        <div className="p-4 border-t border-[var(--border-subtle)]">
+          <button
+            type="button"
+            onClick={() => logout()}
+            className="w-full py-2.5 rounded-[var(--radius-md)] bg-[var(--bg-input)] hover:bg-[var(--bg-elevated)] text-sm text-[var(--text-primary)] transition-colors border border-[var(--border-subtle)]"
+          >
+            Log out
+          </button>
+        </div>
       </div>
     )
   );

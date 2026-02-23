@@ -28,44 +28,27 @@ const ProfileImageModal = ({ imageUrl, onClose, userName }) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-      onClick={handleBackdropClick} // Detect backdrop click
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4"
+      onClick={handleBackdropClick}
     >
-      <div className="relative max-w-[90%] max-h-[90%] rounded-xl overflow-hidden">
-        {/* Close button in top-right corner */}
-        <div className="absolute top-4 right-4 z-10">
-          <button
-            onClick={onClose}
-            className="bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
-          >
-            {/* Close (X) icon */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        {/* Profile image */}
+      <div className="relative max-w-[90%] max-h-[90%] rounded-[var(--radius-xl)] overflow-hidden border border-[var(--border-subtle)] shadow-[var(--shadow-modal)]">
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-[var(--bg-elevated)]/90 hover:bg-[var(--bg-input)] text-[var(--text-primary)] transition-colors border border-[var(--border-subtle)]"
+          aria-label="Close"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
         <img
           src={imageUrl}
-          alt={`${userName}'s profile`}
-          className="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl"
+          alt={userName ? `${userName}'s profile` : "Profile"}
+          className="max-w-full max-h-[80vh] object-contain"
         />
-
-        {/* Optional username overlay at bottom */}
         {userName && (
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
             <h3 className="text-white text-lg font-medium">{userName}</h3>
           </div>
         )}

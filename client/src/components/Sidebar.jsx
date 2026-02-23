@@ -44,11 +44,10 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`h-full flex flex-col text-[#e9edef] ${
+      className={`h-full flex flex-col text-[var(--text-primary)] bg-[var(--bg-panel)] ${
         selectedUser ? "max-md:hidden" : ""
       }`}
     >
-      {/* ✅ Profile Image Modal */}
       {profileModal.isOpen && (
         <ProfileImageModal
           imageUrl={profileModal.imageUrl}
@@ -57,104 +56,104 @@ const Sidebar = () => {
         />
       )}
 
-      {/* ---------- Header Section ---------- */}
-      <div className="sticky top-0 z-20 pb-3 bg-[#202c33] px-4 py-3 border-b border-[#202c33]">
+      {/* Header - WhatsApp Web style */}
+      <div className="sticky top-0 z-20 px-4 py-3 bg-[var(--bg-elevated)]">
         <div className="flex justify-between items-center">
-          <img src={assets.logo} alt="logo" className="h-6" />
+          <img src={assets.logo} alt="QuickChat" className="h-8" />
           <div className="relative">
-            <img
-              src={assets.menu_icon}
-              alt="Menu"
-              className="h-5 cursor-pointer"
-              onClick={() => setIsMenuOpen((prev) => !prev)}
-            />
-            {isMenuOpen && (
-              <div className="absolute top-full right-0 z-20 w-36 p-3 rounded-md bg-[#111b21] border border-[#202c33] shadow-xl">
-                <p
-                  onClick={() => {
-                    navigate("/profile");
-                    setIsMenuOpen(false);
-                  }}
-                  className="cursor-pointer text-sm hover:text-green-400"
-                >
-                  Edit Profile
-                </p>
-                <hr className="my-2 border-[#202c33]" />
-                <p
-                  onClick={() => {
-                    logout();
-                    setIsMenuOpen(false);
-                  }}
-                  className="cursor-pointer text-sm hover:text-green-400"
-                >
-                  Logout
-                </p>
-              </div>
-            )}
+              <button
+                type="button"
+                onClick={() => setIsMenuOpen((prev) => !prev)}
+                className="p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors"
+                aria-label="Menu"
+              >
+                <img src={assets.menu_icon} alt="" className="w-5 h-5 opacity-90" />
+              </button>
+              {isMenuOpen && (
+                <div className="absolute top-full right-0 z-20 mt-1 w-44 py-1 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border border-[var(--border-subtle)] shadow-[var(--shadow-modal)]">
+                  <button
+                    type="button"
+                    onClick={() => { navigate("/profile"); setIsMenuOpen(false); }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-input)] transition-colors"
+                  >
+                    Profile
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { logout(); setIsMenuOpen(false); }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-input)] transition-colors"
+                  >
+                    Log out
+                  </button>
+                </div>
+              )}
           </div>
         </div>
 
-        <div className="bg-[#111b21] rounded-md flex items-center gap-2 py-2 px-3 mt-3">
-          <img src={assets.search_icon} alt="Search" className="w-3" />
+        <div className="mt-2 flex items-center gap-2 rounded-lg bg-[var(--bg-input)] py-2 px-3">
+          <img src={assets.search_icon} alt="" className="w-4 h-4 opacity-60 shrink-0" />
           <input
             onChange={(e) => setInput(e.target.value)}
             type="text"
-            className="bg-transparent border-none outline-none text-[#e9edef] text-xs placeholder-gray-400 flex-1"
+            value={input}
+            className="flex-1 min-w-0 bg-transparent border-none outline-none text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)]"
             placeholder="Search or start new chat"
           />
         </div>
       </div>
 
-      {/* ---------- User List ---------- */}
-      <div className="flex-1 overflow-y-auto flex flex-col">
-        {filteredUsers.map((user, index) => (
-          <div
-            onClick={() => {
-              setSelectedUser(user); // Set selected chat
-              setUnseenMessages((prev) => ({ ...prev, [user._id]: 0 })); // Reset unseen messages for that user
-            }}
-            key={index}
-            className={`relative flex items-center gap-3 px-4 py-3 cursor-pointer max-sm:text-sm border-b border-[#202c33] ${
-              selectedUser?._id === user._id ? "bg-[#111b21]" : "hover:bg-[#111b21]"
-            }`}
-          >
-            {/* Profile Picture (click opens modal) */}
-            <img
-              src={user?.profilePic || assets.avatar_icon}
-              alt=""
-              className="w-10 h-10 rounded-full cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent selecting chat when clicking avatar
-                setProfileModal({
-                  isOpen: true,
-                  imageUrl: user?.profilePic || assets.avatar_icon,
-                  userName: user.fullName,
-                });
+      {/* Chat list - WhatsApp Web style */}
+      <div className="flex-1 overflow-y-auto border-t border-[var(--border-subtle)]">
+        {filteredUsers.map((user, index) => {
+          const isSelected = selectedUser?._id === user._id;
+          const unseen = unseenMessages[user._id] || 0;
+          return (
+            <div
+              onClick={() => {
+                setSelectedUser(user);
+                setUnseenMessages((prev) => ({ ...prev, [user._id]: 0 }));
               }}
-            />
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium truncate">{user.fullName}</p>
-                <span className="text-[11px] text-gray-400">&nbsp;</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-gray-400">
-                {onlineUsers.includes(user._id) ? (
-                  <span className="text-green-400">Online</span>
-                ) : (
-                  <span>Offline</span>
+              key={user._id || index}
+              className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-[var(--border-subtle)] ${
+                isSelected ? "bg-[var(--bg-input)]" : "hover:bg-[var(--bg-panel)]"
+              }`}
+            >
+              <div className="relative shrink-0">
+                <img
+                  src={user?.profilePic || assets.avatar_icon}
+                  alt=""
+                  className="w-12 h-12 rounded-full object-cover cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setProfileModal({
+                      isOpen: true,
+                      imageUrl: user?.profilePic || assets.avatar_icon,
+                      userName: user.fullName,
+                    });
+                  }}
+                />
+                {onlineUsers.includes(user._id) && (
+                  <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[var(--accent)] border-2 border-[var(--bg-panel)]" />
                 )}
               </div>
-            </div>
 
-            {/* ✅ Unseen message count badge */}
-            {unseenMessages[user._id] > 0 && (
-              <p className="text-xs h-5 w-5 flex justify-center items-center rounded-full bg-green-600 text-white font-bold">
-                {unseenMessages[user._id]}
-              </p>
-            )}
-          </div>
-        ))}
+              <div className="flex-1 min-w-0 py-1">
+                <p className="text-[var(--text-primary)] font-medium truncate">
+                  {user.fullName}
+                </p>
+                <p className="text-sm text-[var(--text-secondary)]">
+                  {onlineUsers.includes(user._id) ? "online" : "offline"}
+                </p>
+              </div>
+
+              {unseen > 0 && (
+                <span className="shrink-0 min-w-[22px] h-[22px] flex items-center justify-center rounded-full bg-[var(--accent)] text-white text-xs font-medium">
+                  {unseen > 99 ? "99+" : unseen}
+                </span>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
