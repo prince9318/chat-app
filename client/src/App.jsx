@@ -7,14 +7,21 @@ import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import { Toaster } from "react-hot-toast";
 import { AuthContext } from "./context/AuthContext";
+import { CallContext } from "./context/CallContext";
+import IncomingCallModal from "./components/IncomingCallModal";
+import OutgoingCallModal from "./components/OutgoingCallModal";
+import InCallScreen from "./components/InCallScreen";
 
 const App = () => {
-  const { authUser } = useContext(AuthContext); // ✅ Access current authenticated user
+  const { authUser } = useContext(AuthContext);
+  const { callState } = useContext(CallContext);
 
   return (
     <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)]">
-      {/* ✅ Toast notifications (for success/error messages) */}
       <Toaster />
+      {callState === "incoming" && <IncomingCallModal />}
+      {callState === "outgoing" && <OutgoingCallModal />}
+      {callState === "connected" && <InCallScreen />}
       {/* ✅ Define application routes */}
       <Routes>
         {/* Home route — accessible only if logged in */}
