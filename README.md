@@ -4,15 +4,31 @@ A real-time chat application built with the **MERN stack** and **Socket.IO** tha
 
 ---
 
+# QuickChat 💬
+
+A real-time chat application built with the **MERN stack** and **Socket.IO** that allows users to exchange text, images, audio, and video in real time.
+
+---
+
 ## 🚀 Features
 
 - 🔑 User Authentication (JWT-based login & signup)
 - 💬 Real-time messaging with Socket.IO
 - 👤 Online/Offline user status
 - 📸 Share multimedia (Images, Audio, Video) via **Cloudinary**
-- ✅ Message seen/unseen tracking in progress
+- 📞 Voice and video calling with real-time communication
+- ✅ Message seen/unseen tracking
 - 🗑️ Delete messages (for me / for everyone)
-- 🎨 Responsive UI with React + Tailwind CSS
+- 😀 Emoji picker for expressive messaging
+- 🔗 Automatic link detection and clickable links in messages
+- 📅 Date separators in chat history
+- 📞 Call history in chat (missed, answered calls with duration)
+- 👤 User profiles with customizable bio, name, and profile picture
+- ✂️ Profile picture cropping and editing
+- 📱 Responsive UI with React + Tailwind CSS
+- 📄 Terms of Service and Privacy Policy pages
+
+---
 
 ---
 
