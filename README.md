@@ -4,12 +4,6 @@ A real-time chat application built with the **MERN stack** and **Socket.IO** tha
 
 ---
 
-# QuickChat 💬
-
-A real-time chat application built with the **MERN stack** and **Socket.IO** that allows users to exchange text, images, audio, and video in real time.
-
----
-
 ## 🚀 Features
 
 - 🔑 User Authentication (JWT-based login & signup)
