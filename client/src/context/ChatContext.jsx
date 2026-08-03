@@ -42,6 +42,10 @@ export const ChatProvider = ({ children }) => {
 
   // ✅ Send a new message to the selected user
   const sendMessage = async (messageData) => {
+    if (!selectedUser?._id) {
+      return { success: false, message: "Select a chat first" };
+    }
+
     try {
       const { data } = await axios.post(
         `/api/messages/send/${selectedUser._id}`,
@@ -50,11 +54,14 @@ export const ChatProvider = ({ children }) => {
       if (data.success) {
         // append new message to local state
         setMessages((prevMessages) => [...prevMessages, data.newMessage]);
+        return { success: true, message: data.message, newMessage: data.newMessage };
       } else {
         toast.error(data.message);
+        return { success: false, message: data.message };
       }
     } catch (error) {
       toast.error(error.message);
+      return { success: false, message: error.message };
     }
   };
 

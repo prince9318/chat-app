@@ -1,6 +1,13 @@
 import { useContext, useEffect, useRef, useState, Fragment } from "react";
 import assets from "../assets/assets";
-import { formatMessageTime, formatCallDuration } from "../lib/utils";
+import {
+  formatMessageTime,
+  formatCallDuration,
+  formatFileSize,
+  extractUrls,
+  normalizeUrl,
+  getFileTypeLabel,
+} from "../lib/utils";
 import { ChatContext } from "../context/ChatContext";
 import { AuthContext } from "../context/AuthContext";
 import { CallContext } from "../context/CallContext";
@@ -8,6 +15,8 @@ import toast from "react-hot-toast";
 import EmojiPicker from "emoji-picker-react";
 import ProfileImageModal from "./ProfileImageModal";
 import MessageOptions from "./MessageOptions";
+
+const MAX_ATTACHMENT_SIZE_BYTES = 50 * 1024 * 1024;
 
 const ChatContainer = () => {
   // Extract data and functions from Chat context
@@ -36,6 +45,7 @@ const ChatContainer = () => {
     isOwnMessage: false,
   });
   const [currentDateLabel, setCurrentDateLabel] = useState("");
+  const hasMessageText = input.trim().length > 0;
   const toLabel = (date) => {
     const d = new Date(date);
     const today = new Date();
@@ -60,68 +70,42 @@ const ChatContainer = () => {
     setInput(""); // clear input after sending
   };
 
-  /**
-   * Send an audio message
-   */
+  const sendAttachmentFile = async (file) => {
+    if (!file) return;
+
+    if (file.size > MAX_ATTACHMENT_SIZE_BYTES) {
+      toast.error("Attachment is too large (max 50MB)");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("attachment", file);
+
+    const toastId = toast.loading(`Uploading ${file.name}...`);
+    const result = await sendMessage(formData);
+    toast.dismiss(toastId);
+
+    if (result?.success) {
+      toast.success(`${file.name} sent`);
+    }
+  };
+
+  const handleSendAttachment = async (e) => {
+    const file = e.target.files?.[0];
+    await sendAttachmentFile(file);
+    e.target.value = "";
+  };
+
   const handleSendAudio = async (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file || !file.type.startsWith("audio/")) {
       toast.error("Select a valid audio file");
-      return;
-    }
-    const reader = new FileReader();
-
-    // Convert audio file to base64 and send
-    reader.onloadend = async () => {
-      await sendMessage({ audio: reader.result });
       e.target.value = "";
-    };
-    reader.readAsDataURL(file);
-  };
-
-  /**
-   * Send an image message
-   */
-  const handleSendImage = async (e) => {
-    const file = e.target.files[0];
-    if (!file || !file.type.startsWith("image/")) {
-      toast.error("select an image file");
-      return;
-    }
-    const reader = new FileReader();
-
-    reader.onloadend = async () => {
-      await sendMessage({ image: reader.result });
-      e.target.value = "";
-    };
-    reader.readAsDataURL(file);
-  };
-
-  /**
-   * Send a video message (max 50MB)
-   */
-  const handleSendVideo = async (e) => {
-    const file = e.target.files[0];
-    if (!file || !file.type.startsWith("video/")) {
-      toast.error("Select a valid video file");
       return;
     }
 
-    if (file.size > 50 * 1024 * 1024) {
-      toast.error("Video file is too large (max 50MB)");
-      return;
-    }
-
-    toast.loading("Uploading video...");
-    const reader = new FileReader();
-
-    reader.onloadend = async () => {
-      await sendMessage({ video: reader.result });
-      toast.dismiss();
-      toast.success("Video sent successfully");
-      e.target.value = "";
-    };
-    reader.readAsDataURL(file);
+    await sendAttachmentFile(file);
+    e.target.value = "";
   };
 
   /**
@@ -170,28 +154,54 @@ const ChatContainer = () => {
     setInput((prev) => prev + emojiData.emoji);
   };
 
-  /* 2.  USE THAT CLASS INSIDE renderTextWithLinks */
-const renderTextWithLinks = (text) => {
-  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi;
-  const parts = String(text).split(urlRegex);
-  return parts.map((part, i) => {
-    if (urlRegex.test(part)) {
-      const href = part.startsWith("http") ? part : `http://${part}`;
+  const renderTextWithLinks = (text) => {
+    const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi;
+    const parts = String(text || "").split(urlRegex);
+
+    return parts.map((part, i) => {
+      const isLink = /^(https?:\/\/|www\.)/i.test(part);
+
+      if (!isLink) return <span key={i}>{part}</span>;
+
       return (
         <a
           key={i}
-          href={href}
+          href={normalizeUrl(part)}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline message-link"   /* <-- added message-link */
+          className="underline message-link break-all"
         >
           {part}
         </a>
       );
+    });
+  };
+
+  const getSingleLink = (text) => {
+    const links = extractUrls(text);
+    if (links.length !== 1) return null;
+    return String(text || "").trim() === links[0] ? links[0] : null;
+  };
+
+  const getLinkHost = (url) => {
+    try {
+      return new URL(normalizeUrl(url)).hostname.replace(/^www\./i, "");
+    } catch {
+      return "Open link";
     }
-    return <span key={i}>{part}</span>;
-  });
-};
+  };
+
+  const renderFileBadge = (file, isOwnMessage) => (
+    <div
+      className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-semibold shrink-0 shadow-sm ${
+        isOwnMessage
+          ? "bg-white/12 text-white border border-white/10"
+          : "bg-[var(--bg-app)] text-[var(--text-primary)] border border-[var(--border-subtle)]"
+      }`}
+    >
+      {getFileTypeLabel(file)}
+    </div>
+  );
 
   return selectedUser ? (
     <div className="h-full min-h-0 relative flex flex-col">
@@ -267,7 +277,7 @@ const renderTextWithLinks = (text) => {
       <div ref={messagesRef} className="flex-1 min-h-0 flex flex-col overflow-y-auto px-3 py-1 chat-wallpaper messages-scroll">
         <div className="sticky top-0 z-10 flex justify-center pointer-events-none py-2">
           {currentDateLabel && (
-            <span className="text-[var(--text-muted)] text-xs">
+            <span className="date-chip text-xs">
               {currentDateLabel}
             </span>
           )}
@@ -284,7 +294,7 @@ const renderTextWithLinks = (text) => {
             {showDate && (
               <div className="date-marker w-full flex justify-center my-4" data-date-label={label}>
                 {currentDateLabel !== label && (
-                  <span className="text-[var(--text-muted)] text-xs">{label}</span>
+                  <span className="date-chip text-xs">{label}</span>
                 )}
               </div>
             )}
@@ -444,6 +454,108 @@ const renderTextWithLinks = (text) => {
                         )}
                       </div>
                     </div>
+                  ) : msg.file?.url ? (
+                    <div
+                      className={`message-card relative inline-flex items-start gap-3 min-w-[15rem] max-w-[min(90vw,24rem)] rounded-[var(--radius-xl)] px-3 py-3 mb-1 group ${
+                        msg.senderId === authUser._id
+                          ? "bg-[var(--sent-bubble)] text-white bubble-sent"
+                          : "bg-[var(--received-bubble)] text-[var(--text-primary)] bubble-received"
+                      }`}
+                    >
+                      {renderFileBadge(msg.file, msg.senderId === authUser._id)}
+                      <div className="min-w-0 flex-1 pr-10">
+                        <a
+                          href={msg.file.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block font-medium break-words underline-offset-2 hover:underline"
+                        >
+                          {msg.file.name || "Attachment"}
+                        </a>
+                        <p className={`text-xs mt-1 ${msg.senderId === authUser._id ? "text-white/80" : "text-[var(--text-muted)]"}`}>
+                          {formatFileSize(msg.file.size)}
+                          {msg.file.mimeType ? ` • ${msg.file.mimeType}` : ""}
+                        </p>
+                        <div className={`mt-2 inline-flex items-center gap-1.5 text-[11px] font-medium ${msg.senderId === authUser._id ? "text-white/80" : "text-[var(--accent)]"}`}>
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 16V4m0 12l-4-4m4 4l4-4M4 20h16" />
+                          </svg>
+                          <span>Open file</span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className={`${optionBtnClass} ${msg.senderId === authUser._id ? "right-2" : "left-2"}`}
+                        aria-label="Message options"
+                        onClick={() =>
+                          setMessageOptionsState({
+                            isOpen: true,
+                            messageId: msg._id,
+                            isOwnMessage: msg.senderId === authUser._id,
+                          })
+                        }
+                      >
+                        ⋮
+                      </button>
+                      <div className={`absolute bottom-2 right-3 text-[11px] leading-none flex items-center gap-0.5 opacity-90 ${msg.senderId === authUser._id ? "text-white/90" : "text-[var(--text-muted)]"}`}>
+                        <span>{formatMessageTime(msg.createdAt)}</span>
+                        {msg.senderId === authUser._id && (
+                          <span className={msg.seen ? "text-white" : "text-white/70"} style={{ marginLeft: "2px" }}>✓✓</span>
+                        )}
+                      </div>
+                    </div>
+                  ) : getSingleLink(msg.text) ? (
+                    <div
+                      className={`message-card relative inline-block mb-1 group min-w-[12rem] max-w-[min(90%,28rem)] ${
+                        msg.senderId === authUser._id ? "text-white" : "text-[var(--text-primary)]"
+                      }`}
+                    >
+                      <a
+                        href={normalizeUrl(getSingleLink(msg.text))}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`block rounded-[var(--radius-xl)] px-3 py-3 pr-12 ${
+                          msg.senderId === authUser._id
+                            ? "bg-[var(--sent-bubble)] bubble-sent"
+                            : "bg-[var(--received-bubble)] bubble-received"
+                        }`}
+                      >
+                        <p className="text-xs uppercase tracking-wide opacity-75">Link</p>
+                        <div className="mt-2 flex items-start gap-2">
+                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${msg.senderId === authUser._id ? "bg-white/12" : "bg-[var(--bg-app)] border border-[var(--border-subtle)]"}`}>
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 010 5.656l-2 2a4 4 0 01-5.656-5.656l1.414-1.414m8.486-1.414l1.414-1.414a4 4 0 015.656 5.656l-2 2a4 4 0 01-5.656 0" />
+                            </svg>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-medium break-all">{getLinkHost(getSingleLink(msg.text))}</p>
+                            <p className={`text-xs break-all mt-1 ${msg.senderId === authUser._id ? "text-white/80" : "text-[var(--text-muted)]"}`}>
+                              {getSingleLink(msg.text)}
+                            </p>
+                          </div>
+                        </div>
+                      </a>
+                      <button
+                        type="button"
+                        className={`${optionBtnClass} ${msg.senderId === authUser._id ? "right-2" : "left-2"}`}
+                        aria-label="Message options"
+                        onClick={() =>
+                          setMessageOptionsState({
+                            isOpen: true,
+                            messageId: msg._id,
+                            isOwnMessage: msg.senderId === authUser._id,
+                          })
+                        }
+                      >
+                        ⋮
+                      </button>
+                      <div className={`absolute bottom-2 right-2 text-[11px] leading-none flex items-center gap-0.5 opacity-90 ${msg.senderId === authUser._id ? "text-white/90" : "text-[var(--text-muted)]"}`}>
+                        <span>{formatMessageTime(msg.createdAt)}</span>
+                        {msg.senderId === authUser._id && (
+                          <span className={msg.seen ? "text-white" : "text-white/70"} style={{ marginLeft: "2px" }}>✓✓</span>
+                        )}
+                      </div>
+                    </div>
                   ) : (
                     <div className="relative inline-block mb-1 group min-w-[7rem] max-w-[min(90%,28rem)]">
                       <p
@@ -489,12 +601,13 @@ const renderTextWithLinks = (text) => {
       </div>
 
       {/* Input area - WhatsApp Web style */}
-      <div className="shrink-0 flex items-center gap-2 px-4 py-3 bg-[var(--bg-elevated)]">
-        <div className="flex-1 flex items-center gap-1 bg-[var(--bg-input)] pl-3 pr-1 py-1.5 rounded-[1.75rem] min-h-[42px]">
+      <div className="chat-composer shrink-0 px-4 py-3 bg-[var(--bg-elevated)]">
+        <div className="flex items-center gap-2.5">
+          <div className="flex-1 flex items-center gap-1.5 bg-[var(--bg-input)] pl-2.5 pr-1.5 py-1.5 rounded-[1.25rem] min-h-[52px] border border-[var(--border-subtle)] shadow-[var(--shadow-card)]">
           <button
             type="button"
             onClick={() => setShowEmojiPicker((prev) => !prev)}
-            className="p-2 rounded-full hover:bg-[var(--accent-soft)] transition-colors"
+            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--accent-soft)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             aria-label="Emoji"
           >
             <img src={assets.emoji_icon} alt="" className="w-5 h-5 opacity-80" />
@@ -516,42 +629,46 @@ const renderTextWithLinks = (text) => {
             value={input}
             onKeyDown={(e) => (e.key === "Enter" ? handleSendMessage(e) : null)}
             type="text"
-            placeholder="Type a message"
-            className="flex-1 min-w-0 text-sm px-2 py-1.5 bg-transparent text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none"
+            placeholder="Type a message or paste a link"
+            className="flex-1 min-w-0 text-sm px-2 py-2 bg-transparent text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none"
           />
 
           <input
-            onChange={(e) => {
-              const file = e.target.files[0];
-              if (file) {
-                if (file.type.startsWith("image/")) handleSendImage(e);
-                else if (file.type.startsWith("video/")) handleSendVideo(e);
-                else toast.error("Please select an image or video file");
-              }
-            }}
+            onChange={handleSendAttachment}
             type="file"
-            id="media"
-            accept="image/png, image/jpeg, video/*"
+            id="attachment"
+            accept="*/*"
             hidden
           />
-          <label htmlFor="media" className="p-2 rounded-full hover:bg-[var(--bg-elevated)] cursor-pointer transition-colors">
-            <img src={assets.gallery_icon} alt="Attach" className="w-5 h-5 opacity-80" />
+          <label htmlFor="attachment" className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--bg-elevated)] cursor-pointer transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)]" title="Attach file">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16.5 6.5l-7.793 7.793a3 3 0 104.243 4.243l8.132-8.132a5 5 0 10-7.071-7.071L5.879 11.464a7 7 0 109.9 9.9l6.01-6.01" />
+            </svg>
           </label>
 
           <input onChange={handleSendAudio} type="file" id="audio" accept="audio/*" hidden />
-          <label htmlFor="audio" className="w-9 h-9 flex items-center justify-center rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] cursor-pointer transition-colors shrink-0">
-            <img src={assets.mic_icon} alt="Voice" className="w-4 h-4 invert" />
+          <label htmlFor="audio" className="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--accent-soft)] hover:bg-[var(--accent)] cursor-pointer transition-colors shrink-0 text-[var(--accent)] hover:text-white">
+            <img src={assets.mic_icon} alt="Voice" className="w-4 h-4 opacity-85 hover:opacity-100" />
           </label>
         </div>
 
         <button
           type="button"
           onClick={handleSendMessage}
-          className="w-12 h-12 flex items-center justify-center rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] transition-colors shrink-0"
+          className={`w-12 h-12 flex items-center justify-center rounded-full transition-all duration-200 shrink-0 shadow-[var(--shadow-card)] ${
+            hasMessageText
+              ? "bg-[var(--accent)] hover:bg-[var(--accent-hover)] scale-100"
+              : "bg-[var(--bg-input)] text-[var(--text-muted)] hover:bg-[var(--bg-input)]"
+          }`}
           aria-label="Send"
         >
-          <img src={assets.send_button} alt="" className="w-5 h-5 invert" />
+          <img
+            src={assets.send_button}
+            alt=""
+            className={`w-5 h-5 ${hasMessageText ? "invert" : "opacity-45"}`}
+          />
         </button>
+        </div>
       </div>
     </div>
   ) : (
