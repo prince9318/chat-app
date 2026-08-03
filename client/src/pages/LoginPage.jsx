@@ -16,29 +16,30 @@ const LoginPage = () => {
 
   // ✅ Context: Authentication handler
   const { login } = useContext(AuthContext);
+  const isSignup = currState === "Sign up";
 
   // ✅ Handle form submission
   const onSubmitHandler = (event) => {
     event.preventDefault();
 
-    if (!agreed) {
+    if (isSignup && !agreed) {
       setShowAgreementError(true);
       return;
     }
 
     // Step 1 of signup: first submit only asks for basic info → move to bio step
-    if (currState === "Sign up" && !isDataSubmitted) {
+    if (isSignup && !isDataSubmitted) {
       setIsDataSubmitted(true);
       return;
     }
 
     // Step 2 of signup OR login: send data to AuthContext
-    login(currState === "Sign up" ? "signup" : "login", {
+    login(isSignup ? "signup" : "login", {
       fullName,
       email,
       password,
       bio,
-      agreedToTerms: agreed,
+      ...(isSignup ? { agreedToTerms: agreed } : {}),
     });
   };
 
@@ -87,7 +88,7 @@ const LoginPage = () => {
           )}
         </div>
 
-        {currState === "Sign up" && !isDataSubmitted && (
+        {isSignup && !isDataSubmitted && (
           <input
             onChange={(e) => setFullName(e.target.value)}
             value={fullName}
@@ -119,7 +120,7 @@ const LoginPage = () => {
           </>
         )}
 
-        {currState === "Sign up" && isDataSubmitted && (
+        {isSignup && isDataSubmitted && (
           <textarea
             onChange={(e) => setBio(e.target.value)}
             value={bio}
@@ -134,7 +135,7 @@ const LoginPage = () => {
           type="submit"
           className="mt-1 py-3 rounded-[var(--radius-md)] bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          {currState === "Sign up" ? "Create account" : "Log in"}
+          {isSignup ? "Create account" : "Log in"}
         </button>
 
         {currState === "Login" && !isDataSubmitted && (
@@ -148,26 +149,35 @@ const LoginPage = () => {
           </div>
         )}
 
-        <label className="flex items-start gap-3 text-sm text-[var(--text-secondary)] cursor-pointer">
-          <input
-            type="checkbox"
-            checked={agreed}
-            onChange={(e) => setAgreed(e.target.checked)}
-            className="mt-0.5 rounded border-[var(--border-default)] text-[var(--accent)] focus:ring-[var(--accent)]"
-          />
-          <span>
-            I agree to the{" "}
-            <Link to="/terms" className="text-[var(--accent)] hover:underline">Terms</Link>
-            {" "}&{" "}
-            <Link to="/privacy" className="text-[var(--accent)] hover:underline">Privacy</Link>.
-          </span>
-        </label>
-        {showAgreementError && !agreed && (
-          <p className="text-xs text-red-400 -mt-2">Please agree to continue.</p>
+        {isSignup && (
+          <>
+            <label className="flex items-start gap-3 text-sm text-[var(--text-secondary)] cursor-pointer">
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => {
+                  setAgreed(e.target.checked);
+                  if (e.target.checked) {
+                    setShowAgreementError(false);
+                  }
+                }}
+                className="mt-0.5 rounded border-[var(--border-default)] text-[var(--accent)] focus:ring-[var(--accent)]"
+              />
+              <span>
+                I agree to the{" "}
+                <Link to="/terms" className="text-[var(--accent)] hover:underline">Terms</Link>
+                {" "}&{" "}
+                <Link to="/privacy" className="text-[var(--accent)] hover:underline">Privacy</Link>.
+              </span>
+            </label>
+            {showAgreementError && !agreed && (
+              <p className="text-xs text-red-400 -mt-2">Please agree to continue.</p>
+            )}
+          </>
         )}
 
         <p className="text-sm text-[var(--text-secondary)] text-center pt-1">
-          {currState === "Sign up" ? (
+          {isSignup ? (
             <>
               Already have an account?{" "}
               <button
@@ -175,6 +185,7 @@ const LoginPage = () => {
                 onClick={() => {
                   setCurrState("Login");
                   setIsDataSubmitted(false);
+                  setShowAgreementError(false);
                 }}
                 className="font-medium text-[var(--accent)] hover:underline"
               >
@@ -186,7 +197,10 @@ const LoginPage = () => {
               New here?{" "}
               <button
                 type="button"
-                onClick={() => setCurrState("Sign up")}
+                onClick={() => {
+                  setCurrState("Sign up");
+                  setShowAgreementError(false);
+                }}
                 className="font-medium text-[var(--accent)] hover:underline"
               >
                 Sign up
