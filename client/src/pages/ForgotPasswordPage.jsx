@@ -8,21 +8,33 @@ const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [devResetUrl, setDevResetUrl] = useState("");
+  const [responseMessage, setResponseMessage] = useState("");
+  const [responseType, setResponseType] = useState("info");
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setDevResetUrl("");
+    setResponseMessage("");
     try {
       const { data } = await axios.post("/api/auth/forgot-password", { email });
       if (data?.success) {
         toast.success(data.message);
+        setResponseType("success");
+        setResponseMessage(data.message);
         if (data.resetUrl) setDevResetUrl(data.resetUrl);
       } else {
-        toast.error(data?.message || "Something went wrong");
+        const message = data?.message || "Something went wrong";
+        toast.error(message);
+        setResponseType("error");
+        setResponseMessage(message);
       }
     } catch (err) {
-      toast.error(err?.message || "Something went wrong");
+      const message =
+        err?.response?.data?.message || err?.message || "Something went wrong";
+      toast.error(message);
+      setResponseType("error");
+      setResponseMessage(message);
     } finally {
       setLoading(false);
     }
@@ -57,6 +69,18 @@ const ForgotPasswordPage = () => {
             {loading ? "Sending..." : "Send reset link"}
           </button>
         </form>
+
+        {responseMessage && (
+          <div
+            className={`mt-4 rounded-[var(--radius-md)] border p-3 text-sm ${
+              responseType === "error"
+                ? "border-red-500/40 bg-red-500/10 text-red-200"
+                : "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+            }`}
+          >
+            {responseMessage}
+          </div>
+        )}
 
         {devResetUrl && (
           <div className="mt-5 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-input)] p-3">
