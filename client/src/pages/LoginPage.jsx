@@ -137,6 +137,17 @@ const LoginPage = () => {
           {currState === "Sign up" ? "Create account" : "Log in"}
         </button>
 
+        {currState === "Login" && !isDataSubmitted && (
+          <div className="-mt-2 text-right">
+            <Link
+              to="/forgot-password"
+              className="text-sm text-[var(--accent)] hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
+        )}
+
         <label className="flex items-start gap-3 text-sm text-[var(--text-secondary)] cursor-pointer">
           <input
             type="checkbox"

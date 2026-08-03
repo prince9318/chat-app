@@ -5,6 +5,8 @@ import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import { Toaster } from "react-hot-toast";
 import { AuthContext } from "./context/AuthContext";
 import { CallContext } from "./context/CallContext";
@@ -33,6 +35,14 @@ const App = () => {
         <Route
           path="/login"
           element={!authUser ? <LoginPage /> : <Navigate to="/" />}
+        />
+        <Route
+          path="/forgot-password"
+          element={!authUser ? <ForgotPasswordPage /> : <Navigate to="/" />}
+        />
+        <Route
+          path="/reset-password"
+          element={!authUser ? <ResetPasswordPage /> : <Navigate to="/" />}
         />
         {/* Profile route — only accessible when authenticated */}
         <Route
