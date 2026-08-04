@@ -44,7 +44,7 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`h-full flex flex-col text-[var(--text-primary)] bg-[var(--bg-panel)] ${
+      className={`h-full flex flex-col text-[var(--text-primary)] bg-[var(--bg-panel)] panel-divider ${
         selectedUser ? "max-md:hidden" : ""
       }`}
     >
@@ -57,14 +57,14 @@ const Sidebar = () => {
       )}
 
       {/* Header - WhatsApp Web style */}
-      <div className="sticky top-0 z-20 px-4 py-3 bg-[var(--bg-elevated)]">
-        <div className="flex justify-between items-center">
-          <img src={assets.logo} alt="QuickChat" className="h-8" />
+      <div className="sidebar-header sticky top-0 z-20 px-3 sm:px-4 py-3 bg-[var(--bg-elevated)] safe-top">
+        <div className="flex justify-between items-center gap-2">
+          <img src={assets.logo} alt="QuickChat" className="h-7 sm:h-8" />
           <div className="relative">
               <button
                 type="button"
                 onClick={() => setIsMenuOpen((prev) => !prev)}
-                className="p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors"
+                className="touch-target p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors"
                 aria-label="Menu"
               >
                 <img src={assets.menu_icon} alt="" className="w-5 h-5 opacity-90" />
@@ -104,6 +104,18 @@ const Sidebar = () => {
 
       {/* Chat list - WhatsApp Web style */}
       <div className="flex-1 overflow-y-auto border-t border-[var(--border-subtle)]">
+        {filteredUsers.length === 0 && (
+          <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
+            <p className="text-[var(--text-secondary)] text-sm">
+              {input ? "No chats match your search" : "No conversations yet"}
+            </p>
+            {!input && (
+              <p className="text-[var(--text-muted)] text-xs">
+                Search above to find people and start chatting
+              </p>
+            )}
+          </div>
+        )}
         {filteredUsers.map((user, index) => {
           const isSelected = selectedUser?._id === user._id;
           const unseen = unseenMessages[user._id] || 0;
@@ -114,7 +126,7 @@ const Sidebar = () => {
                 setUnseenMessages((prev) => ({ ...prev, [user._id]: 0 }));
               }}
               key={user._id || index}
-              className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-[var(--border-subtle)] ${
+              className={`flex items-center gap-3 px-3 sm:px-4 py-3.5 sm:py-3 cursor-pointer transition-colors border-b border-[var(--border-subtle)] active:bg-[var(--bg-input)] ${
                 isSelected ? "bg-[var(--bg-input)]" : "hover:bg-[var(--bg-panel)]"
               }`}
             >

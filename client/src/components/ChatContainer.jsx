@@ -204,7 +204,7 @@ const ChatContainer = () => {
   );
 
   return selectedUser ? (
-    <div className="h-full min-h-0 relative flex flex-col">
+    <div className="h-full min-h-0 relative flex flex-col bg-[var(--bg-panel)] max-md:fixed max-md:inset-0 max-md:z-30">
       {/* ---------------- Profile Image Modal ---------------- */}
       {profileModal.isOpen && (
         <ProfileImageModal
@@ -214,8 +214,16 @@ const ChatContainer = () => {
         />
       )}
 
-      {/* Chat header - WhatsApp Web style */}
-      <div className="sticky top-0 z-20 flex items-center gap-3 py-2 px-4 bg-[var(--bg-elevated)] border-b border-[var(--border-subtle)] min-h-[59px]">
+      {/* Chat header - WhatsApp style: back on mobile, then avatar + name */}
+      <div className="chat-header sticky top-0 z-20 flex items-center gap-2 sm:gap-3 py-2 px-2 sm:px-4 bg-[var(--bg-elevated)] border-b border-[var(--border-subtle)] min-h-[56px] sm:min-h-[59px] safe-top">
+        <button
+          type="button"
+          onClick={() => setSelectedUser(null)}
+          className="md:hidden touch-target p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors shrink-0 -ml-1"
+          aria-label="Back to chats"
+        >
+          <img src={assets.arrow_icon} alt="" className="w-5 h-5 opacity-80" />
+        </button>
         <img
           src={selectedUser.profilePic || assets.avatar_icon}
           alt=""
@@ -229,26 +237,18 @@ const ChatContainer = () => {
           }
         />
         <div className="flex-1 min-w-0">
-          <p className="text-[var(--text-primary)] font-medium truncate">
+          <p className="text-[var(--text-primary)] font-medium truncate text-[15px] sm:text-base">
             {selectedUser.fullName}
           </p>
           <p className="text-xs text-[var(--text-secondary)]">
             {onlineUsers.includes(selectedUser._id) ? "online" : "offline"}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setSelectedUser(null)}
-          className="md:hidden p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors"
-          aria-label="Back"
-        >
-          <img src={assets.arrow_icon} alt="" className="w-5 h-5 opacity-80" />
-        </button>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
           <button
             type="button"
             onClick={() => startCall(selectedUser, "audio")}
-            className="p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors"
+            className="touch-target p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors"
             aria-label="Voice call"
             title="Voice call"
           >
@@ -259,7 +259,7 @@ const ChatContainer = () => {
           <button
             type="button"
             onClick={() => startCall(selectedUser, "video")}
-            className="p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors"
+            className="touch-target p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors flex max-[380px]:hidden"
             aria-label="Video call"
             title="Video call"
           >
@@ -267,7 +267,7 @@ const ChatContainer = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
           </button>
-          <button type="button" className="p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors md:block hidden" aria-label="Info">
+          <button type="button" className="touch-target p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors lg:flex hidden" aria-label="Info">
             <img src={assets.help_icon} alt="" className="w-5 h-5 opacity-80" />
           </button>
         </div>
@@ -384,7 +384,7 @@ const ChatContainer = () => {
                       <img
                         src={msg.image}
                         alt="img"
-                        className="max-w-[250px] md:max-w-[300px] max-h-[70vh] object-contain shadow-lg rounded-[var(--radius-xl)] cursor-pointer"
+                        className="max-w-[min(85vw,250px)] sm:max-w-[250px] md:max-w-[300px] max-h-[70vh] object-contain shadow-lg rounded-[var(--radius-xl)] cursor-pointer"
                         onClick={() => window.open(msg.image, "_blank")}
                       />
                       <button
@@ -410,7 +410,7 @@ const ChatContainer = () => {
                     </div>
                   ) : msg.video ? (
                     <div className="relative inline-block mb-6 group">
-                      <video controls src={msg.video} className="max-w-[250px] md:max-w-[300px] max-h-[50vh] rounded-[var(--radius-xl)] shadow-lg" />
+                      <video controls src={msg.video} className="max-w-[min(85vw,250px)] sm:max-w-[250px] md:max-w-[300px] max-h-[50vh] rounded-[var(--radius-xl)] shadow-lg" />
                       <button
                         type="button"
                         className={`${optionBtnClass} ${msg.senderId === authUser._id ? "right-2" : "left-2"}`}
@@ -601,25 +601,25 @@ const ChatContainer = () => {
       </div>
 
       {/* Input area - WhatsApp Web style */}
-      <div className="chat-composer shrink-0 px-4 py-3 bg-[var(--bg-elevated)]">
-        <div className="flex items-center gap-2.5">
-          <div className="flex-1 flex items-center gap-1.5 bg-[var(--bg-input)] pl-2.5 pr-1.5 py-1.5 rounded-[1.25rem] min-h-[52px] border border-[var(--border-subtle)] shadow-[var(--shadow-card)]">
+      <div className="chat-composer shrink-0 px-2 sm:px-4 py-2 sm:py-3 bg-[var(--bg-elevated)] safe-bottom">
+        <div className="flex items-end gap-2 sm:gap-2.5">
+          <div className="flex-1 flex items-center gap-0.5 sm:gap-1.5 bg-[var(--bg-input)] pl-1.5 sm:pl-2.5 pr-1 sm:pr-1.5 py-1 sm:py-1.5 rounded-[1.25rem] min-h-[48px] sm:min-h-[52px] border border-[var(--border-subtle)] shadow-[var(--shadow-card)]">
           <button
             type="button"
             onClick={() => setShowEmojiPicker((prev) => !prev)}
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--accent-soft)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            className="touch-target w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full hover:bg-[var(--accent-soft)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0"
             aria-label="Emoji"
           >
             <img src={assets.emoji_icon} alt="" className="w-5 h-5 opacity-80" />
           </button>
 
           {showEmojiPicker && (
-            <div className="absolute bottom-20 left-4 z-50 rounded-[var(--radius-lg)] overflow-hidden border border-[var(--border-subtle)] shadow-[var(--shadow-modal)]">
+            <div className="fixed sm:absolute bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-20 left-2 right-2 sm:left-4 sm:right-auto z-50 rounded-[var(--radius-lg)] overflow-hidden border border-[var(--border-subtle)] shadow-[var(--shadow-modal)] max-w-[min(100vw-1rem,320px)] mx-auto sm:mx-0">
               <EmojiPicker
                 onEmojiClick={handleEmojiClick}
                 theme="dark"
-                width={300}
-                height={360}
+                width="100%"
+                height={320}
               />
             </div>
           )}
@@ -640,14 +640,14 @@ const ChatContainer = () => {
             accept="*/*"
             hidden
           />
-          <label htmlFor="attachment" className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--bg-elevated)] cursor-pointer transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)]" title="Attach file">
+          <label htmlFor="attachment" className="touch-target w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full hover:bg-[var(--bg-elevated)] cursor-pointer transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0" title="Attach file">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16.5 6.5l-7.793 7.793a3 3 0 104.243 4.243l8.132-8.132a5 5 0 10-7.071-7.071L5.879 11.464a7 7 0 109.9 9.9l6.01-6.01" />
             </svg>
           </label>
 
           <input onChange={handleSendAudio} type="file" id="audio" accept="audio/*" hidden />
-          <label htmlFor="audio" className="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--accent-soft)] hover:bg-[var(--accent)] cursor-pointer transition-colors shrink-0 text-[var(--accent)] hover:text-white">
+          <label htmlFor="audio" className="touch-target w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-[var(--accent-soft)] hover:bg-[var(--accent)] cursor-pointer transition-colors shrink-0 text-[var(--accent)] hover:text-white max-[380px]:hidden">
             <img src={assets.mic_icon} alt="Voice" className="w-4 h-4 opacity-85 hover:opacity-100" />
           </label>
         </div>
@@ -655,7 +655,7 @@ const ChatContainer = () => {
         <button
           type="button"
           onClick={handleSendMessage}
-          className={`w-12 h-12 flex items-center justify-center rounded-full transition-all duration-200 shrink-0 shadow-[var(--shadow-card)] ${
+          className={`touch-target w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-full transition-all duration-200 shrink-0 shadow-[var(--shadow-card)] ${
             hasMessageText
               ? "bg-[var(--accent)] hover:bg-[var(--accent-hover)] scale-100"
               : "bg-[var(--bg-input)] text-[var(--text-muted)] hover:bg-[var(--bg-input)]"
@@ -672,13 +672,15 @@ const ChatContainer = () => {
       </div>
     </div>
   ) : (
-    <div className="flex flex-col items-center justify-center gap-6 bg-[var(--bg-app)] max-md:hidden px-6">
+    <div className="hidden md:flex flex-col items-center justify-center gap-6 bg-[var(--bg-app)] chat-wallpaper px-6 min-h-0 h-full">
       <div className="w-24 h-24 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex items-center justify-center">
         <img src={assets.logo_icon} className="w-14 h-14 opacity-70" alt="" />
       </div>
-      <div className="text-center">
+      <div className="text-center max-w-sm">
         <p className="text-lg font-medium text-[var(--text-primary)]">Chat anytime, anywhere</p>
-        <p className="text-sm text-[var(--text-muted)] mt-1">Select a chat from the list or search for someone</p>
+        <p className="text-sm text-[var(--text-muted)] mt-2 leading-relaxed">
+          Select a conversation from the sidebar or search for someone to start messaging
+        </p>
       </div>
     </div>
   );

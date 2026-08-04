@@ -135,3 +135,55 @@
   border-radius: var(--bubble-radius) var(--bubble-radius) var(--bubble-radius) var(--bubble-tail);
   box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
 }
+
+/* App shell: full viewport on mobile browsers (address bar aware) */
+.app-shell {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* Safe area padding for notched phones / home indicators */
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-x {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Touch-friendly tap targets on mobile */
+@media (max-width: 767px) {
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .chat-composer {
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .sidebar-header,
+  .chat-header {
+    padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
+  }
+}
+
+/* Subtle panel divider on desktop */
+@media (min-width: 768px) {
+  .panel-divider {
+    border-right: 1px solid var(--border-subtle);
+  }
+}
+
+/* Prevent iOS zoom on input focus */
+@media (max-width: 767px) {
+  .input-field,
+  .chat-composer input[type="text"] {
+    font-size: 16px;
+  }
+}

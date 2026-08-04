@@ -25,7 +25,7 @@ const RightSidebar = () => {
   return (
     selectedUser && (
       <div
-        className={`text-[var(--text-primary)] w-full flex flex-col max-md:hidden bg-[var(--bg-panel)] border-l border-[var(--border-subtle)] overflow-hidden`}
+        className={`text-[var(--text-primary)] w-full flex flex-col max-lg:hidden bg-[var(--bg-panel)] border-l border-[var(--border-subtle)] overflow-hidden`}
       >
         {profileModal.isOpen && (
           <ProfileImageModal
