@@ -7,6 +7,7 @@ import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 import { Toaster } from "react-hot-toast";
 import { AuthContext } from "./context/AuthContext";
 import { CallContext } from "./context/CallContext";
@@ -44,6 +45,7 @@ const App = () => {
           path="/reset-password"
           element={!authUser ? <ResetPasswordPage /> : <Navigate to="/" />}
         />
+        <Route path="/auth/callback" element={<OAuthCallbackPage />} />
         {/* Profile route — only accessible when authenticated */}
         <Route
           path="/profile"

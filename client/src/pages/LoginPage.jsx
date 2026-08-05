@@ -2,6 +2,7 @@ import { useContext, useState } from "react";
 import { Link } from "react-router-dom";
 import assets from "../assets/assets";
 import { AuthContext } from "../context/AuthContext";
+import OAuthButtons from "../components/OAuthButtons";
 
 const LoginPage = () => {
   // ✅ State for handling form flow and inputs
@@ -137,6 +138,8 @@ const LoginPage = () => {
         >
           {isSignup ? "Create account" : "Log in"}
         </button>
+
+        {!isDataSubmitted && <OAuthButtons />}
 
         {currState === "Login" && !isDataSubmitted && (
           <div className="-mt-2 text-right">

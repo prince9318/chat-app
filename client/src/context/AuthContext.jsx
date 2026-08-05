@@ -41,6 +41,33 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // ✅ Establish socket connection (only once per user)
+  const connectSocket = useCallback((userData) => {
+    if (!userData || socketRef.current?.connected) return;
+
+    socketRef.current = io(backendUrl, {
+      query: { userId: userData._id },
+      transports: ["websocket"],
+    });
+
+    socketRef.current.on("connect", () => {
+      console.log("Socket connected:", socketRef.current.id);
+      setSocket(socketRef.current);
+    });
+
+    socketRef.current.on("getOnlineUsers", (userIds) => {
+      setOnlineUsers((prev) => {
+        if (arraysEqual(prev, userIds)) return prev;
+        return userIds;
+      });
+    });
+
+    socketRef.current.on("disconnect", () => {
+      console.log("Socket disconnected");
+      setSocket(null);
+    });
+  }, []);
+
   // ✅ Handle login / signup
   const login = async (state, credentials) => {
     try {
@@ -59,6 +86,26 @@ export const AuthProvider = ({ children }) => {
       toast.error(error.message);
     }
   };
+
+  // ✅ Complete OAuth login after redirect callback
+  const completeOAuthLogin = useCallback(async (oauthToken) => {
+    localStorage.setItem("token", oauthToken);
+    axios.defaults.headers.common["token"] = oauthToken;
+    setToken(oauthToken);
+
+    const { data } = await axios.get("/api/auth/check");
+    if (!data.success) {
+      localStorage.removeItem("token");
+      axios.defaults.headers.common["token"] = null;
+      setToken(null);
+      throw new Error(data.message || "Authentication failed");
+    }
+
+    setAuthUser(data.user);
+    connectSocket(data.user);
+    toast.success("Signed in successfully");
+  }, [connectSocket]);
+
   // ✅ Logout user and clear session
   const logout = async () => {
     localStorage.removeItem("token");
@@ -89,37 +136,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ✅ Establish socket connection (only once per user)
-  const connectSocket = useCallback((userData) => {
-    if (!userData || socketRef.current?.connected) return;
-
-    // create socket connection with userId
-    socketRef.current = io(backendUrl, {
-      query: { userId: userData._id },
-      transports: ["websocket"],
-    });
-
-    // when socket connects
-    socketRef.current.on("connect", () => {
-      console.log("Socket connected:", socketRef.current.id);
-      setSocket(socketRef.current);
-    });
-
-    // listen for online users list
-    socketRef.current.on("getOnlineUsers", (userIds) => {
-      setOnlineUsers((prev) => {
-        if (arraysEqual(prev, userIds)) return prev; // prevent unnecessary updates
-        return userIds;
-      });
-    });
-
-    // when socket disconnects
-    socketRef.current.on("disconnect", () => {
-      console.log("Socket disconnected");
-      setSocket(null);
-    });
-  }, []);
-
   // ✅ On mount: check auth if token exists + cleanup socket on unmount
   useEffect(() => {
     if (token) {
@@ -143,6 +159,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     updateProfile,
+    completeOAuthLogin,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
