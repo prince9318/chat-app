@@ -1,6 +1,5 @@
 import Sidebar from "../components/Sidebar";
 import ChatContainer from "../components/ChatContainer";
-import RightSidebar from "../components/RightSidebar";
 import { useContext } from "react";
 import { ChatContext } from "../context/ChatContext";
 
@@ -12,13 +11,12 @@ const HomePage = () => {
       <div
         className={`h-full w-full grid grid-cols-1 min-w-0 ${
           selectedUser
-            ? "md:grid-cols-[minmax(260px,36%)_1fr] lg:grid-cols-[minmax(280px,32%)_1fr_minmax(280px,28%)] xl:grid-cols-[minmax(320px,30%)_1fr_minmax(300px,25%)]"
+            ? "md:grid-cols-[minmax(260px,36%)_1fr] lg:grid-cols-[minmax(280px,32%)_1fr xl:grid-cols-[minmax(320px,30%)_1fr]"
             : "md:grid-cols-[minmax(280px,38%)_1fr] lg:grid-cols-[minmax(320px,35%)_1fr]"
         }`}
       >
         <Sidebar />
         <ChatContainer />
-        <RightSidebar />
       </div>
     </div>
   );

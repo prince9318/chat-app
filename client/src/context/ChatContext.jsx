@@ -49,16 +49,53 @@ export const ChatProvider = ({ children }) => {
     try {
       const { data } = await axios.post(
         `/api/messages/send/${selectedUser._id}`,
-        messageData
+        messageData,
       );
       if (data.success) {
         // append new message to local state
         setMessages((prevMessages) => [...prevMessages, data.newMessage]);
-        return { success: true, message: data.message, newMessage: data.newMessage };
+        return {
+          success: true,
+          message: data.message,
+          newMessage: data.newMessage,
+        };
       } else {
         toast.error(data.message);
         return { success: false, message: data.message };
       }
+    } catch (error) {
+      toast.error(error.message);
+      return { success: false, message: error.message };
+    }
+  };
+
+  const sendAudioMessage = async (audioBlob) => {
+    if (!selectedUser?._id) {
+      return { success: false, message: "Select a chat first" };
+    }
+    if (!audioBlob) {
+      return { success: false, message: "No audio recorded" };
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("audio", audioBlob, `voice-${Date.now()}.webm`);
+
+      const { data } = await axios.post(
+        `/api/messages/send-audio/${selectedUser._id}`,
+        formData,
+      );
+
+      if (data.success) {
+        const newMessage = data.newMessage || data.data;
+        if (newMessage) {
+          setMessages((prevMessages) => [...prevMessages, newMessage]);
+        }
+        return { success: true, message: data.message, newMessage };
+      }
+
+      toast.error(data.message);
+      return { success: false, message: data.message };
     } catch (error) {
       toast.error(error.message);
       return { success: false, message: error.message };
@@ -80,7 +117,8 @@ export const ChatProvider = ({ children }) => {
           axios.put(`/api/messages/mark/${newMessage._id}`);
         }
         setMessages((prevMessages) => {
-          if (prevMessages.some((m) => m._id === newMessage._id)) return prevMessages;
+          if (prevMessages.some((m) => m._id === newMessage._id))
+            return prevMessages;
           return [...prevMessages, newMessage];
         });
       } else if (newMessage.messageType !== "call") {
@@ -110,7 +148,9 @@ export const ChatProvider = ({ children }) => {
 
     const handleMessageSeen = ({ messageId }) => {
       setMessages((prev) =>
-        prev.map((msg) => (msg._id === messageId ? { ...msg, seen: true } : msg))
+        prev.map((msg) =>
+          msg._id === messageId ? { ...msg, seen: true } : msg,
+        ),
       );
     };
 
@@ -118,8 +158,8 @@ export const ChatProvider = ({ children }) => {
       if (!Array.isArray(messageIds)) return;
       setMessages((prev) =>
         prev.map((msg) =>
-          messageIds.includes(msg._id) ? { ...msg, seen: true } : msg
-        )
+          messageIds.includes(msg._id) ? { ...msg, seen: true } : msg,
+        ),
       );
     };
 
@@ -147,8 +187,8 @@ export const ChatProvider = ({ children }) => {
           // Mark as deleted for all users
           setMessages((prev) =>
             prev.map((msg) =>
-              msg._id === messageId ? { ...msg, isDeleted: true } : msg
-            )
+              msg._id === messageId ? { ...msg, isDeleted: true } : msg,
+            ),
           );
         } else {
           // Delete only for current user (track in deletedFor array)
@@ -162,7 +202,7 @@ export const ChatProvider = ({ children }) => {
                 ? Array.from(new Set([...prevDeleted, currentUserId]))
                 : prevDeleted;
               return { ...msg, deletedFor: newDeleted };
-            })
+            }),
           );
         }
 
@@ -182,8 +222,8 @@ export const ChatProvider = ({ children }) => {
     socket.on("messageDeleted", ({ messageId }) => {
       setMessages((prev) =>
         prev.map((msg) =>
-          msg._id === messageId ? { ...msg, isDeleted: true } : msg
-        )
+          msg._id === messageId ? { ...msg, isDeleted: true } : msg,
+        ),
       );
     });
 
@@ -214,6 +254,7 @@ export const ChatProvider = ({ children }) => {
     getUsers,
     getMessages,
     sendMessage,
+    sendAudioMessage,
     deleteMessage,
     setSelectedUser,
     unseenMessages,

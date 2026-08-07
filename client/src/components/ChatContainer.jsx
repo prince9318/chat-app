@@ -1,4 +1,11 @@
-import { useContext, useEffect, useRef, useState, Fragment } from "react";
+import {
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  Fragment,
+} from "react";
 import assets from "../assets/assets";
 import {
   formatMessageTime,
@@ -20,8 +27,14 @@ const MAX_ATTACHMENT_SIZE_BYTES = 50 * 1024 * 1024;
 
 const ChatContainer = () => {
   // Extract data and functions from Chat context
-  const { messages, selectedUser, setSelectedUser, sendMessage, getMessages } =
-    useContext(ChatContext);
+  const {
+    messages,
+    selectedUser,
+    setSelectedUser,
+    sendMessage,
+    sendAudioMessage,
+    getMessages,
+  } = useContext(ChatContext);
 
   // Extract user-related data from Auth context
   const { authUser, onlineUsers } = useContext(AuthContext);
@@ -39,13 +52,141 @@ const ChatContainer = () => {
     imageUrl: "",
     userName: "",
   });
+  const [previewModal, setPreviewModal] = useState({
+    isOpen: false,
+    url: "",
+    type: "",
+    title: "",
+  });
   const [messageOptionsState, setMessageOptionsState] = useState({
     isOpen: false,
     messageId: null,
     isOwnMessage: false,
   });
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const mediaStreamRef = useRef(null);
+  const mediaChunksRef = useRef([]);
+
+  const getPreviewType = (file) => {
+    const mimeType = String(file?.mimeType || "").toLowerCase();
+    if (mimeType.startsWith("image/")) return "image";
+    if (mimeType.startsWith("video/")) return "video";
+    if (mimeType.startsWith("audio/")) return "audio";
+    if (mimeType.includes("pdf")) return "pdf";
+    return "file";
+  };
+
+  const openPreview = (url, type, title) => {
+    if (!url) return;
+    setPreviewModal({ isOpen: true, url, type, title });
+  };
+
+  const openMediaPreview = (msg) => {
+    const url = msg?.image || msg?.video || msg?.audio;
+    if (!url) return;
+
+    const type = msg?.image ? "image" : msg?.video ? "video" : "audio";
+    const title = msg?.image
+      ? "Image preview"
+      : msg?.video
+        ? "Video preview"
+        : "Audio preview";
+
+    openPreview(url, type, title);
+  };
+
+  const closePreview = () =>
+    setPreviewModal({ isOpen: false, url: "", type: "", title: "" });
+
+  const stopRecording = async () => {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder) return;
+
+    recorder.stop();
+    setIsRecording(false);
+  };
+
+  const startRecording = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      toast.error("Audio recording is not supported in this browser.");
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      mediaChunksRef.current = [];
+
+      const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          mediaChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(mediaChunksRef.current, {
+          type: "audio/webm",
+        });
+        mediaChunksRef.current = [];
+
+        if (mediaStreamRef.current) {
+          mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+          mediaStreamRef.current = null;
+        }
+
+        if (audioBlob.size > 0) {
+          await sendAudioMessage(audioBlob);
+        } else {
+          toast.error("No audio captured.");
+        }
+      };
+
+      recorder.start();
+      setIsRecording(true);
+      toast.success("Recording started. Tap again to send.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Unable to access microphone.");
+      setIsRecording(false);
+    }
+  };
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+      return;
+    }
+    startRecording();
+  };
+
+  const [showSharedDocs, setShowSharedDocs] = useState(false);
   const [currentDateLabel, setCurrentDateLabel] = useState("");
   const hasMessageText = input.trim().length > 0;
+  const sharedMedia = useMemo(
+    () => messages.filter((msg) => msg.image || msg.video || msg.audio),
+    [messages],
+  );
+  const sharedFiles = useMemo(
+    () => messages.filter((msg) => msg.file?.url),
+    [messages],
+  );
+  const sharedLinks = useMemo(
+    () =>
+      messages
+        .flatMap((msg) =>
+          extractUrls(msg.text).map((url) => ({
+            url,
+            senderId: msg.senderId,
+            createdAt: msg.createdAt,
+          })),
+        )
+        .filter((item) => item.url),
+    [messages],
+  );
   const toLabel = (date) => {
     const d = new Date(date);
     const today = new Date();
@@ -213,6 +354,84 @@ const ChatContainer = () => {
           onClose={() => setProfileModal({ ...profileModal, isOpen: false })}
         />
       )}
+      {previewModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)] shadow-[var(--shadow-modal)]">
+            <div className="flex items-center justify-between gap-3 border-b border-[var(--border-subtle)] px-4 py-3 bg-[var(--bg-elevated)]">
+              <div>
+                <p className="text-sm font-semibold text-[var(--text-primary)]">
+                  {previewModal.title}
+                </p>
+                <p className="text-xs text-[var(--text-secondary)]">
+                  {previewModal.type === "file"
+                    ? "File preview is not available for this type."
+                    : `Preview ${previewModal.type}`}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href={previewModal.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full px-3 py-1 text-xs font-medium border border-[var(--border-subtle)] hover:bg-[var(--bg-input)]"
+                >
+                  Open in new tab
+                </a>
+                <button
+                  type="button"
+                  onClick={closePreview}
+                  className="touch-target rounded-full p-2 hover:bg-[var(--bg-input)] transition-colors"
+                  aria-label="Close preview"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div className="max-h-[80vh] overflow-auto bg-[var(--bg-panel)] p-4">
+              {previewModal.type === "image" && (
+                <img
+                  src={previewModal.url}
+                  alt={previewModal.title}
+                  className="mx-auto max-h-[70vh] w-auto rounded-[var(--radius-lg)] object-contain"
+                />
+              )}
+              {previewModal.type === "video" && (
+                <video
+                  controls
+                  src={previewModal.url}
+                  className="w-full rounded-[var(--radius-lg)]"
+                />
+              )}
+              {previewModal.type === "audio" && (
+                <audio controls src={previewModal.url} className="w-full" />
+              )}
+              {previewModal.type === "pdf" && (
+                <object
+                  data={previewModal.url}
+                  type="application/pdf"
+                  className="w-full min-h-[60vh] rounded-[var(--radius-lg)] border border-[var(--border-subtle)]"
+                >
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    PDF preview is not supported by your browser. Use the button
+                    above to open or download the file.
+                  </p>
+                </object>
+              )}
+              {previewModal.type === "file" && (
+                <div className="rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--bg-app)] p-6 text-sm text-[var(--text-secondary)]">
+                  <p className="font-medium text-[var(--text-primary)]">
+                    {previewModal.title}
+                  </p>
+                  <p className="mt-2">
+                    This file type cannot be previewed in the app. Use the
+                    button above to open it in a new tab or download it.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Chat header - WhatsApp style: back on mobile, then avatar + name */}
       <div className="chat-header sticky top-0 z-20 flex items-center gap-2 sm:gap-3 py-2 px-2 sm:px-4 bg-[var(--bg-elevated)] border-b border-[var(--border-subtle)] min-h-[56px] sm:min-h-[59px] safe-top">
@@ -289,6 +508,27 @@ const ChatContainer = () => {
           </button>
           <button
             type="button"
+            onClick={() => setShowSharedDocs(true)}
+            className="touch-target p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors"
+            aria-label="Open shared media"
+            title="Media, links and docs"
+          >
+            <svg
+              className="w-5 h-5 text-[var(--text-secondary)]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.8}
+                d="M4 6a2 2 0 012-2h10a2 2 0 012 2v2h2a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"
+              />
+            </svg>
+          </button>
+          <button
+            type="button"
             className="touch-target p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors lg:flex hidden"
             aria-label="Info"
           >
@@ -298,6 +538,122 @@ const ChatContainer = () => {
       </div>
 
       {/* Messages area - balanced padding; bubbles use more width for readable lines */}
+      {showSharedDocs && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-3xl overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)] shadow-[var(--shadow-modal)]">
+            <div className="flex items-center justify-between gap-3 border-b border-[var(--border-subtle)] px-4 py-3 bg-[var(--bg-elevated)]">
+              <div>
+                <p className="text-sm font-semibold text-[var(--text-primary)]">
+                  Media, links & docs
+                </p>
+                <p className="text-xs text-[var(--text-secondary)]">
+                  Shared items from this chat
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSharedDocs(false)}
+                className="touch-target rounded-full p-2 hover:bg-[var(--bg-input)] transition-colors"
+                aria-label="Close media panel"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="max-h-[70vh] overflow-y-auto px-4 py-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.15em] text-[var(--text-muted)]">
+                      Media
+                    </p>
+                    {sharedMedia.length ? (
+                      <div className="mt-3 grid grid-cols-2 gap-3">
+                        {sharedMedia.map((msg, index) => (
+                          <button
+                            key={`${msg._id || index}-${index}`}
+                            type="button"
+                            onClick={() => openMediaPreview(msg)}
+                            className="aspect-square overflow-hidden rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-app)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                          >
+                            {msg.image ? (
+                              <img
+                                src={msg.image}
+                                alt="Shared media"
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-full items-center justify-center text-[var(--text-secondary)]">
+                                {msg.video ? "VIDEO" : "AUDIO"}
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm text-[var(--text-secondary)]">
+                        No shared media yet.
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.15em] text-[var(--text-muted)]">
+                      Documents & attachments
+                    </p>
+                    {sharedFiles.length ? (
+                      <div className="mt-3 space-y-3">
+                        {sharedFiles.map((msg) => (
+                          <a
+                            key={msg._id}
+                            href={msg.file.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-input)] px-3 py-3 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors"
+                          >
+                            <span className="font-medium">
+                              {msg.file.name || "Attachment"}
+                            </span>
+                            <span className="block text-[var(--text-secondary)] text-xs mt-1">
+                              {msg.file.mimeType || "File"}
+                            </span>
+                          </a>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm text-[var(--text-secondary)]">
+                        No attached docs or files.
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.15em] text-[var(--text-muted)]">
+                    Links
+                  </p>
+                  {sharedLinks.length ? (
+                    <div className="mt-3 space-y-2">
+                      {sharedLinks.map((item, index) => (
+                        <a
+                          key={`${item.url}-${index}`}
+                          href={normalizeUrl(item.url)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-input)] px-3 py-3 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors"
+                        >
+                          {item.url}
+                        </a>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-sm text-[var(--text-secondary)]">
+                      No shared links found.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div
         ref={messagesRef}
         className="flex-1 min-h-0 flex flex-col overflow-y-auto px-3 py-1 chat-wallpaper messages-scroll"
@@ -444,7 +800,9 @@ const ChatContainer = () => {
                               src={msg.image}
                               alt="img"
                               className="max-w-[min(85vw,250px)] sm:max-w-[250px] md:max-w-[300px] max-h-[70vh] object-contain shadow-lg rounded-[var(--radius-xl)] cursor-pointer"
-                              onClick={() => window.open(msg.image, "_blank")}
+                              onClick={() =>
+                                openPreview(msg.image, "image", "Image preview")
+                              }
                             />
                             <button
                               type="button"
@@ -466,7 +824,7 @@ const ChatContainer = () => {
                                 <span
                                   className={
                                     msg.seen
-                                      ? "text-[var(--accent)]"
+                                      ? "text-blue-400"
                                       : "text-[var(--text-muted)]"
                                   }
                                 >
@@ -501,7 +859,7 @@ const ChatContainer = () => {
                                 <span
                                   className={
                                     msg.seen
-                                      ? "text-[var(--accent)]"
+                                      ? "text-blue-400"
                                       : "text-[var(--text-muted)]"
                                   }
                                 >
@@ -536,7 +894,7 @@ const ChatContainer = () => {
                                 <span
                                   className={
                                     msg.seen
-                                      ? "text-[var(--accent)]"
+                                      ? "text-blue-400"
                                       : "text-[var(--text-muted)]"
                                   }
                                 >
@@ -574,23 +932,41 @@ const ChatContainer = () => {
                                   ? ` • ${msg.file.mimeType}`
                                   : ""}
                               </p>
-                              <div
-                                className={`mt-2 inline-flex items-center gap-1.5 text-[11px] font-medium ${msg.senderId === authUser._id ? "text-white/80" : "text-[var(--accent)]"}`}
-                              >
-                                <svg
-                                  className="w-3.5 h-3.5"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
+                              <div className="mt-2 flex flex-wrap items-center gap-2">
+                                <a
+                                  href={msg.file.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-input)] px-3 py-1 text-[11px] font-medium transition-colors hover:bg-[var(--bg-elevated)]"
                                 >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M12 16V4m0 12l-4-4m4 4l4-4M4 20h16"
-                                  />
-                                </svg>
-                                <span>Open file</span>
+                                  <svg
+                                    className="w-3.5 h-3.5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M12 16V4m0 12l-4-4m4 4l4-4M4 20h16"
+                                    />
+                                  </svg>
+                                  Open file
+                                </a>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    openPreview(
+                                      msg.file.url,
+                                      getPreviewType(msg.file),
+                                      msg.file.name || "Attachment preview",
+                                    )
+                                  }
+                                  className="rounded-full border border-[var(--border-subtle)] bg-[var(--bg-input)] px-3 py-1 text-[11px] font-medium transition-colors hover:bg-[var(--bg-elevated)]"
+                                >
+                                  Preview
+                                </button>
                               </div>
                             </div>
                             <button
@@ -614,7 +990,9 @@ const ChatContainer = () => {
                               {msg.senderId === authUser._id && (
                                 <span
                                   className={
-                                    msg.seen ? "text-white" : "text-white/70"
+                                    msg.seen
+                                      ? "text-blue-400"
+                                      : "text-[var(--text-muted)]"
                                   }
                                   style={{ marginLeft: "2px" }}
                                 >
@@ -823,41 +1201,47 @@ const ChatContainer = () => {
               </svg>
             </label>
 
-            <input
-              onChange={handleSendAudio}
-              type="file"
-              id="audio"
-              accept="audio/*"
-              hidden
-            />
-            <label
-              htmlFor="audio"
-              className="touch-target w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-[var(--accent-soft)] hover:bg-[var(--accent)] cursor-pointer transition-colors shrink-0 text-[var(--accent)] hover:text-white max-[380px]:hidden"
+            <button
+              type="button"
+              onClick={toggleRecording}
+              className={`touch-target w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-colors shrink-0 ${
+                isRecording
+                  ? "bg-red-500 text-white"
+                  : "bg-[var(--accent-soft)] hover:bg-[var(--accent)] text-[var(--accent)] hover:text-white"
+              }`}
+              aria-label={
+                isRecording ? "Stop recording" : "Record voice message"
+              }
+              title={
+                isRecording
+                  ? "Stop and send voice message"
+                  : "Record voice message"
+              }
             >
               <img
                 src={assets.mic_icon}
                 alt="Voice"
                 className="w-4 h-4 opacity-85 hover:opacity-100"
               />
-            </label>
-          </div>
+            </button>
 
-          <button
-            type="button"
-            onClick={handleSendMessage}
-            className={`touch-target w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-full transition-all duration-200 shrink-0 shadow-[var(--shadow-card)] ${
-              hasMessageText
-                ? "bg-[var(--accent)] hover:bg-[var(--accent-hover)] scale-100"
-                : "bg-[var(--bg-input)] text-[var(--text-muted)] hover:bg-[var(--bg-input)]"
-            }`}
-            aria-label="Send"
-          >
-            <img
-              src={assets.send_button}
-              alt=""
-              className={`w-5 h-5 ${hasMessageText ? "invert" : "opacity-45"}`}
-            />
-          </button>
+            <button
+              type="button"
+              onClick={handleSendMessage}
+              className={`touch-target w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-full transition-all duration-200 shrink-0 shadow-[var(--shadow-card)] ${
+                hasMessageText
+                  ? "bg-[var(--accent)] hover:bg-[var(--accent-hover)] scale-100"
+                  : "bg-[var(--bg-input)] text-[var(--text-muted)] hover:bg-[var(--bg-input)]"
+              }`}
+              aria-label="Send"
+            >
+              <img
+                src={assets.send_button}
+                alt=""
+                className={`w-5 h-5 ${hasMessageText ? "invert" : "opacity-45"}`}
+              />
+            </button>
+          </div>
         </div>
       </div>
     </div>
