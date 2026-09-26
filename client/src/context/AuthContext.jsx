@@ -17,6 +17,8 @@ export const AuthProvider = ({ children }) => {
   const [onlineUsers, setOnlineUsers] = useState([]); // list of currently online users
   const [socket, setSocket] = useState(null); // active socket connection
   const socketRef = useRef(null); // reference to socket instance (stable across re-renders)
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState(null);
+  const [pendingVerificationInfo, setPendingVerificationInfo] = useState(null);
 
   // ✅ Helper: compare two arrays to avoid unnecessary re-renders
   const arraysEqual = (a, b) => {
@@ -73,18 +75,111 @@ export const AuthProvider = ({ children }) => {
     try {
       const { data } = await axios.post(`/api/auth/${state}`, credentials);
       if (data.success) {
-        setAuthUser(data.userData);
-        axios.defaults.headers.common["token"] = data.token; // attach token for future requests
-        setToken(data.token);
-        localStorage.setItem("token", data.token);
+        if (data.requiresVerification) {
+          setPendingVerificationEmail(data.email || credentials.email);
+          setPendingVerificationInfo({
+            emailSent: data.emailSent,
+            devOtp: data.devOtp,
+            devVerifyUrl: data.devVerifyUrl,
+            mailError: data.mailError,
+          });
+          toast.success(data.message);
+          return { requiresVerification: true };
+        }
+
+        if (data.userData && data.token) {
+          setAuthUser(data.userData);
+          axios.defaults.headers.common["token"] = data.token; // attach token for future requests
+          setToken(data.token);
+          localStorage.setItem("token", data.token);
+          setPendingVerificationEmail(null);
+          setPendingVerificationInfo(null);
+          toast.success(data.message);
+          connectSocket(data.userData); // connect to socket after login
+          return { success: true };
+        }
+
         toast.success(data.message);
-        connectSocket(data.userData); // connect to socket after login
+        return { success: true };
       } else {
+        if (data.requiresVerification) {
+          setPendingVerificationEmail(data.email || credentials.email);
+          setPendingVerificationInfo({
+            emailSent: data.emailSent,
+            devOtp: data.devOtp,
+            devVerifyUrl: data.devVerifyUrl,
+            mailError: data.mailError,
+          });
+        }
         toast.error(data.message);
+        return {
+          success: false,
+          requiresVerification: data.requiresVerification || false,
+        };
       }
     } catch (error) {
       toast.error(error.message);
+      return { success: false };
     }
+  };
+
+  // ✅ Verify email with OTP or token
+  const verifyEmail = async (payload) => {
+    try {
+      const { data } = await axios.post("/api/auth/verify-email", payload);
+      if (data.success) {
+        setAuthUser(data.userData);
+        axios.defaults.headers.common["token"] = data.token;
+        setToken(data.token);
+        localStorage.setItem("token", data.token);
+        setPendingVerificationEmail(null);
+        setPendingVerificationInfo(null);
+        toast.success(data.message);
+        connectSocket(data.userData);
+        return { success: true };
+      } else {
+        toast.error(data.message);
+        return { success: false, message: data.message };
+      }
+    } catch (error) {
+      toast.error(error.message);
+      return { success: false, message: error.message };
+    }
+  };
+
+  // ✅ Resend verification email
+  const resendVerificationEmail = async (email) => {
+    try {
+      const { data } = await axios.post("/api/auth/resend-verification-email", {
+        email,
+      });
+      if (data.success) {
+        setPendingVerificationInfo({
+          emailSent: data.emailSent,
+          devOtp: data.devOtp,
+          devVerifyUrl: data.devVerifyUrl,
+          mailError: data.mailError,
+        });
+        if (data.alreadyVerified) {
+          toast.success(data.message);
+          return { success: true, alreadyVerified: true };
+        }
+        toast.success(data.message);
+        return { success: true };
+      } else {
+        toast.error(data.message);
+        return { success: false };
+      }
+    } catch (error) {
+      toast.error(error.message);
+      return { success: false };
+    }
+  };
+
+  // ✅ Clear verification state
+  const clearVerificationState = () => {
+    setPendingVerificationEmail(null);
+    setPendingVerificationInfo(null);
   };
 
   // ✅ Complete OAuth login after redirect callback
@@ -113,6 +208,8 @@ export const AuthProvider = ({ children }) => {
     setAuthUser(null);
     setOnlineUsers([]);
     axios.defaults.headers.common["token"] = null;
+    setPendingVerificationEmail(null);
+    setPendingVerificationInfo(null);
     toast.success("Logged out successfully");
 
     // disconnect socket if exists
@@ -157,9 +254,14 @@ export const AuthProvider = ({ children }) => {
     onlineUsers,
     socket,
     login,
+    verifyEmail,
+    resendVerificationEmail,
+    clearVerificationState,
     logout,
     updateProfile,
     completeOAuthLogin,
+    pendingVerificationEmail,
+    pendingVerificationInfo,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
