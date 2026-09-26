@@ -30,7 +30,19 @@ const LoginPage = () => {
 
   const isSignup = currState === "Sign up";
   const effectiveEmail = pendingVerificationEmail || email;
-  const isDev = import.meta.env.DEV;
+
+  const effectiveOtp =
+    pendingVerificationInfo?.otp || pendingVerificationInfo?.devOtp;
+  const effectiveVerifyUrl =
+    pendingVerificationInfo?.verifyUrl || pendingVerificationInfo?.devVerifyUrl;
+  const emailDelivered = Boolean(pendingVerificationInfo?.emailSent);
+  const showFallbackPanel =
+    Boolean(effectiveOtp) || Boolean(effectiveVerifyUrl);
+  const providerLabel =
+    pendingVerificationInfo?.mailProvider &&
+    pendingVerificationInfo.mailProvider !== "none"
+      ? pendingVerificationInfo.mailProvider.toUpperCase()
+      : null;
 
   useEffect(() => {
     if (pendingVerificationEmail) {
@@ -122,8 +134,8 @@ const LoginPage = () => {
   };
 
   const autoFillDevOtp = () => {
-    if (!pendingVerificationInfo?.devOtp) return;
-    const digits = pendingVerificationInfo.devOtp.split("");
+    if (!effectiveOtp) return;
+    const digits = effectiveOtp.split("");
     const next = [...otpInputs];
     for (let i = 0; i < 6; i++) next[i] = digits[i] || "";
     setOtpInputs(next);
@@ -224,54 +236,107 @@ const LoginPage = () => {
               </button>
             </div>
 
-            {pendingVerificationInfo?.mailError && (
-              <p className="text-xs text-amber-400/90 text-center">
-                {pendingVerificationInfo.mailError}
+            {pendingVerificationInfo?.userFacingMailError && (
+              <p className="text-xs text-amber-300/90 text-center leading-relaxed">
+                {pendingVerificationInfo.userFacingMailError}
               </p>
             )}
 
-            {isDev &&
-              (pendingVerificationInfo?.devOtp ||
-                pendingVerificationInfo?.devVerifyUrl) && (
-                <div className="w-full rounded-[var(--radius-md)] border border-dashed border-[var(--border-default)] bg-[var(--bg-input)]/50 p-3 text-xs text-[var(--text-secondary)] space-y-2">
-                  <p className="font-medium text-[var(--text-primary)]">
-                    🧪 Dev Mode
+            {!pendingVerificationInfo?.userFacingMailError &&
+              pendingVerificationInfo?.mailError &&
+              !emailDelivered && (
+                <p className="text-xs text-amber-400/90 text-center">
+                  {pendingVerificationInfo.mailError}
+                </p>
+              )}
+
+            {showFallbackPanel && (
+              <div
+                className={`w-full rounded-[var(--radius-md)] border bg-[var(--bg-input)]/60 p-3 text-xs text-[var(--text-secondary)] space-y-3 ${
+                  emailDelivered
+                    ? "border-dashed border-[var(--border-default)]"
+                    : "border-amber-500/40 bg-amber-500/5"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <p
+                    className={`font-medium ${
+                      emailDelivered
+                        ? "text-[var(--text-primary)]"
+                        : "text-amber-300"
+                    }`}
+                  >
+                    {emailDelivered
+                      ? providerLabel
+                        ? `🛡️ Email sent via ${providerLabel}`
+                        : "🛡️ Email sent (check Spam folder)"
+                      : "⚠️ Email not delivered — use direct verification below"}
                   </p>
-                  {pendingVerificationInfo.devOtp && (
+                </div>
+
+                {effectiveOtp && (
+                  <div className="space-y-2">
                     <div className="flex items-center justify-between gap-3">
-                      <span>
-                        OTP:{" "}
-                        <span className="font-mono text-[var(--accent)]">
-                          {pendingVerificationInfo.devOtp}
+                      <span className="text-[var(--text-secondary)]">
+                        Your 6-digit code:{" "}
+                        <span className="font-mono text-[var(--accent)] text-sm font-semibold tracking-widest">
+                          {effectiveOtp}
                         </span>
                       </span>
                       <button
                         type="button"
                         onClick={autoFillDevOtp}
-                        className="px-2 py-1 rounded border border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors"
+                        className="px-2.5 py-1 rounded border border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors"
                       >
                         Auto-fill
                       </button>
                     </div>
-                  )}
-                  {pendingVerificationInfo.devVerifyUrl && (
-                    <div className="break-all">
-                      Link:{" "}
-                      <Link
-                        to={pendingVerificationInfo.devVerifyUrl}
-                        className="text-[var(--accent)] hover:underline"
-                      >
-                        Open verify page
-                      </Link>
+                  </div>
+                )}
+
+                {effectiveVerifyUrl && (
+                  <div className="space-y-2 pt-1 border-t border-[var(--border-subtle)]">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="mb-1">Or click this link to verify directly:</p>
+                        <Link
+                          to={effectiveVerifyUrl}
+                          className="block text-[var(--accent)] hover:underline break-all text-[0.7rem] leading-tight pr-2"
+                        >
+                          {effectiveVerifyUrl}
+                        </Link>
+                      </div>
                     </div>
+                    <a
+                      href={effectiveVerifyUrl}
+                      className="block w-full text-center py-2 rounded-[var(--radius-md)] bg-[var(--accent)]/90 hover:bg-[var(--accent)] text-white text-[0.75rem] font-medium transition-colors"
+                    >
+                      Open verify page →
+                    </a>
+                  </div>
+                )}
+
+                {pendingVerificationInfo?.mailError &&
+                  !pendingVerificationInfo?.userFacingMailError && (
+                    <p className="pt-2 border-t border-[var(--border-subtle)] text-[0.7rem] text-[var(--text-secondary)]">
+                      Debug: {pendingVerificationInfo.mailError}
+                    </p>
                   )}
-                </div>
-              )}
+              </div>
+            )}
+
+            {!showFallbackPanel && !emailDelivered && providerLabel && (
+              <p className="text-xs text-[var(--text-secondary)]">
+                Tried sending via {providerLabel}. If nothing arrives in 2 minutes, click Resend.
+              </p>
+            )}
           </div>
 
-          <p className="text-xs text-[var(--text-secondary)] text-center -mt-1">
-            Or click the verification link sent in the email.
-          </p>
+          {emailDelivered && (
+            <p className="text-xs text-[var(--text-secondary)] text-center -mt-1">
+              💡 Check your Spam / Promotions folder and mark the message as Not Spam.
+            </p>
+          )}
         </form>
       </div>
     );

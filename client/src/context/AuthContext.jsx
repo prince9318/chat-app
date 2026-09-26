@@ -79,9 +79,13 @@ export const AuthProvider = ({ children }) => {
           setPendingVerificationEmail(data.email || credentials.email);
           setPendingVerificationInfo({
             emailSent: data.emailSent,
+            otp: data.otp,
+            verifyUrl: data.verifyUrl,
             devOtp: data.devOtp,
             devVerifyUrl: data.devVerifyUrl,
             mailError: data.mailError,
+            userFacingMailError: data.userFacingMailError,
+            mailProvider: data.mailProvider,
           });
           toast.success(data.message);
           return { requiresVerification: true };
@@ -106,9 +110,13 @@ export const AuthProvider = ({ children }) => {
           setPendingVerificationEmail(data.email || credentials.email);
           setPendingVerificationInfo({
             emailSent: data.emailSent,
+            otp: data.otp,
+            verifyUrl: data.verifyUrl,
             devOtp: data.devOtp,
             devVerifyUrl: data.devVerifyUrl,
             mailError: data.mailError,
+            userFacingMailError: data.userFacingMailError,
+            mailProvider: data.mailProvider,
           });
         }
         toast.error(data.message);
@@ -156,9 +164,13 @@ export const AuthProvider = ({ children }) => {
       if (data.success) {
         setPendingVerificationInfo({
           emailSent: data.emailSent,
+          otp: data.otp,
+          verifyUrl: data.verifyUrl,
           devOtp: data.devOtp,
           devVerifyUrl: data.devVerifyUrl,
           mailError: data.mailError,
+          userFacingMailError: data.userFacingMailError,
+          mailProvider: data.mailProvider,
         });
         if (data.alreadyVerified) {
           toast.success(data.message);
