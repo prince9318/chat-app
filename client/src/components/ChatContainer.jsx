@@ -506,6 +506,27 @@ const ChatContainer = () => {
               />
             </svg>
           </button>
+          <button
+            type="button"
+            onClick={() => setShowSharedDocs(true)}
+            className="touch-target p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors"
+            aria-label="Open shared media"
+            title="Media, links and docs"
+          >
+            <svg
+              className="w-5 h-5 text-[var(--text-secondary)]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.8}
+                d="M4 6a2 2 0 012-2h10a2 2 0 012 2v2h2a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"
+              />
+            </svg>
+          </button>
         </div>
       </div>
 
