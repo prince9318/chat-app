@@ -1,9 +1,28 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { AuthContext } from "./AuthContext";
 import toast from "react-hot-toast";
 
 // ✅ Context for managing chat-related state & actions globally
 export const ChatContext = createContext();
+
+const userIdsEqual = (a, b) => {
+  if (a.length !== b.length) return false;
+  const setA = new Set(a);
+  for (const v of b) if (!setA.has(v)) return false;
+  return true;
+};
+
+const publicUserEquals = (a, b) => {
+  if (!a || !b) return a === b;
+  return (
+    a._id === b._id &&
+    a.fullName === b.fullName &&
+    a.email === b.email &&
+    (a.profilePic || "") === (b.profilePic || "") &&
+    (a.bio || "") === (b.bio || "") &&
+    (a.authProvider || "local") === (b.authProvider || "local")
+  );
+};
 
 export const ChatProvider = ({ children }) => {
   // State for messages, users list, selected chat, unseen messages count
@@ -13,20 +32,37 @@ export const ChatProvider = ({ children }) => {
   const [unseenMessages, setUnseenMessages] = useState({});
 
   // Get socket, axios, and authUser from AuthContext
-  const { socket, axios, authUser } = useContext(AuthContext);
+  const { socket, axios, authUser, onlineUsers } = useContext(AuthContext);
 
   // ✅ Fetch all users for sidebar (with unseen messages count)
-  const getUsers = async () => {
+  const getUsers = useCallback(async () => {
     try {
       const { data } = await axios.get("/api/messages/users");
       if (data.success) {
-        setUsers(data.users);
-        setUnseenMessages(data.unseenMessages);
+        setUsers((prev) => {
+          const incoming = data.users || [];
+          if (
+            prev.length === incoming.length &&
+            prev.every((p) => {
+              const q = incoming.find((x) => x._id === p._id);
+              return q && publicUserEquals(p, q);
+            })
+          ) {
+            return prev;
+          }
+          return incoming;
+        });
+        setUnseenMessages(data.unseenMessages || {});
       }
     } catch (error) {
-      toast.error(error.message);
+      if (error?.code !== "ERR_CANCELED") toast.error(error.message);
     }
-  };
+  }, [axios]);
+
+  // ✅ Force-refresh the users list (exposed to consumers)
+  const refreshUsers = useCallback(async () => {
+    await getUsers();
+  }, [getUsers]);
 
   // ✅ Fetch messages for the currently selected user
   const getMessages = async (userId) => {
@@ -228,9 +264,78 @@ export const ChatProvider = ({ children }) => {
     });
 
     return () => {
-      if (socket) socket.off("messageDeleted");
+      if (!socket) return;
+      socket.off("messageDeleted");
     };
   }, [socket]);
+
+  // ✅ Fetch users the moment authentication becomes available (fixes
+  //   "sidebar blank until refresh" when Sidebar mounts before JWT ready)
+  useEffect(() => {
+    if (!authUser?._id) return;
+    getUsers();
+  }, [authUser?._id, getUsers]);
+
+  // ✅ Keep sidebar in sync when online-users gains new IDs we haven't
+  //   cached yet (catches any user who just connected + maybe got missed)
+  useEffect(() => {
+    if (!Array.isArray(onlineUsers) || onlineUsers.length === 0) return;
+    const currentIds = new Set(users.map((u) => String(u._id)));
+    const hasNewUnknown = onlineUsers.some(
+      (id) =>
+        String(id) !== String(authUser?._id || "") && !currentIds.has(String(id)),
+    );
+    if (!hasNewUnknown) return;
+    getUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onlineUsers]);
+
+  // ✅ Real-time user events from backend: signup/profile updates
+  useEffect(() => {
+    if (!socket) return;
+
+    const onNewUser = (newUser) => {
+      if (!newUser || !newUser._id) return;
+      if (String(newUser._id) === String(authUser?._id || "")) return;
+      setUsers((prev) => {
+        const exists = prev.some((u) => String(u._id) === String(newUser._id));
+        if (exists) {
+          return prev.map((u) =>
+            String(u._id) === String(newUser._id) ? { ...u, ...newUser } : u,
+          );
+        }
+        // Prepend newly-registered users to the sidebar so they're visible immediately
+        return [newUser, ...prev];
+      });
+    };
+
+    const onUserUpdated = (updatedUser) => {
+      if (!updatedUser || !updatedUser._id) return;
+      setUsers((prev) =>
+        prev.map((u) =>
+          String(u._id) === String(updatedUser._id)
+            ? { ...u, ...updatedUser }
+            : u,
+        ),
+      );
+      setSelectedUser((prev) => {
+        if (!prev) return prev;
+        if (String(prev._id) === String(updatedUser._id)) {
+          return { ...prev, ...updatedUser };
+        }
+        return prev;
+      });
+    };
+
+    socket.on("newUserRegistered", onNewUser);
+    socket.on("userUpdated", onUserUpdated);
+
+    return () => {
+      if (!socket) return;
+      socket.off("newUserRegistered", onNewUser);
+      socket.off("userUpdated", onUserUpdated);
+    };
+  }, [socket, authUser?._id]);
 
   // ✅ Add a call log message to current chat (used by CallContext after saving)
   const addCallLogMessage = (newMessage) => {
@@ -252,6 +357,7 @@ export const ChatProvider = ({ children }) => {
     users,
     selectedUser,
     getUsers,
+    refreshUsers,
     getMessages,
     sendMessage,
     sendAudioMessage,

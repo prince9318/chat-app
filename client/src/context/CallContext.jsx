@@ -25,6 +25,7 @@ export function CallProvider({ children }) {
   const callStartTimeRef = useRef(null);
   const wasCallerRef = useRef(false);
   const callTypeRef = useRef("audio");
+  const bufferedIceCandidatesRef = useRef([]);
 
   const cleanup = useCallback(() => {
     if (localStreamRef.current) {
@@ -39,6 +40,7 @@ export function CallProvider({ children }) {
     }
     pendingOfferRef.current = null;
     remoteIdRef.current = null;
+    bufferedIceCandidatesRef.current = [];
     setCallState("idle");
     setRemoteUser(null);
     setIncomingCall(null);
@@ -63,7 +65,7 @@ export function CallProvider({ children }) {
       };
 
       pc.onconnectionstatechange = () => {
-        if (pc.connectionState === "failed" || pc.connectionState === "disconnected" || pc.connectionState === "closed") {
+        if (pc.connectionState === "failed" || pc.connectionState === "closed") {
           cleanup();
         }
       };
@@ -73,6 +75,21 @@ export function CallProvider({ children }) {
     },
     [socket, cleanup]
   );
+
+  const flushBufferedIceCandidates = useCallback(async () => {
+    const pc = peerRef.current;
+    if (!pc || !pc.remoteDescription || !pc.remoteDescription.type) return;
+    const buffer = bufferedIceCandidatesRef.current;
+    if (!buffer.length) return;
+    bufferedIceCandidatesRef.current = [];
+    for (const cand of buffer) {
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(cand));
+      } catch (err) {
+        console.warn("Flush ICE candidate error:", err);
+      }
+    }
+  }, []);
 
   const saveCallLog = useCallback(
     async (otherUserId, type, status, duration, wasCaller) => {
@@ -235,9 +252,14 @@ export function CallProvider({ children }) {
               await pc.setLocalDescription(answer);
               socket.emit("webrtc:signal", { to: from, signal: answer });
             }
+            flushBufferedIceCandidates();
           }
-        } else if (signal.candidate && pc) {
-          await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
+        } else if (signal.candidate) {
+          if (pc && pc.remoteDescription && pc.remoteDescription.type) {
+            await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
+          } else {
+            bufferedIceCandidatesRef.current.push(signal.candidate);
+          }
         }
       } catch (err) {
         console.error("Signal error:", err);
@@ -255,7 +277,7 @@ export function CallProvider({ children }) {
       socket.off("call:ended", onEnded);
       socket.off("webrtc:signal", onSignal);
     };
-  }, [socket, cleanup]);
+  }, [socket, cleanup, flushBufferedIceCandidates]);
 
   const value = {
     callState,

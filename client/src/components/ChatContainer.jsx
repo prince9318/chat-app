@@ -506,34 +506,6 @@ const ChatContainer = () => {
               />
             </svg>
           </button>
-          <button
-            type="button"
-            onClick={() => setShowSharedDocs(true)}
-            className="touch-target p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors"
-            aria-label="Open shared media"
-            title="Media, links and docs"
-          >
-            <svg
-              className="w-5 h-5 text-[var(--text-secondary)]"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.8}
-                d="M4 6a2 2 0 012-2h10a2 2 0 012 2v2h2a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"
-              />
-            </svg>
-          </button>
-          <button
-            type="button"
-            className="touch-target p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors lg:flex hidden"
-            aria-label="Info"
-          >
-            <img src={assets.help_icon} alt="" className="w-5 h-5 opacity-80" />
-          </button>
         </div>
       </div>
 
@@ -1137,19 +1109,17 @@ const ChatContainer = () => {
 
       {/* Input area - WhatsApp Web style */}
       <div className="chat-composer shrink-0 px-2 sm:px-4 py-2 sm:py-3 bg-[var(--bg-elevated)] safe-bottom">
-        <div className="flex items-end gap-2 sm:gap-2.5">
-          <div className="flex-1 flex items-center gap-0.5 sm:gap-1.5 bg-[var(--bg-input)] pl-1.5 sm:pl-2.5 pr-1 sm:pr-1.5 py-1 sm:py-1.5 rounded-[1.25rem] min-h-[48px] sm:min-h-[52px] border border-[var(--border-subtle)] shadow-[var(--shadow-card)]">
+        <div className="flex items-end gap-1.5 sm:gap-2.5">
+          <div className="flex-1 flex items-center gap-0 sm:gap-1.5 bg-[var(--bg-input)] pl-1 sm:pl-2.5 pr-1 sm:pr-1.5 py-1 sm:py-1.5 rounded-[1.25rem] min-h-[48px] sm:min-h-[52px] border border-[var(--border-subtle)] shadow-[var(--shadow-card)] overflow-hidden">
             <button
               type="button"
               onClick={() => setShowEmojiPicker((prev) => !prev)}
               className="touch-target w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full hover:bg-[var(--accent-soft)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0"
               aria-label="Emoji"
             >
-              <img
-                src={assets.emoji_icon}
-                alt=""
-                className="w-5 h-5 opacity-80"
-              />
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8zm-3.5-8a1.5 1.5 0 1 1 .001-3.001A1.5 1.5 0 0 1 8.5 12zm7 0a1.5 1.5 0 1 1 .001-3.001A1.5 1.5 0 0 1 15.5 12zm-.194 3.75c.627-.779.944-1.733.944-2.75h-2c0 .572-.146 1.103-.395 1.558-.302.545-.75.996-1.295 1.295-.455.249-.986.395-1.558.395s-1.103-.146-1.558-.395a3.229 3.229 0 0 1-1.295-1.295A3.224 3.224 0 0 1 7.75 13h-2c0 1.017.317 1.971.944 2.75.627.779 1.487 1.379 2.498 1.692 1.011.313 2.099.313 3.11 0 1.011-.313 1.871-.913 2.498-1.692z" />
+              </svg>
             </button>
 
             {showEmojiPicker && (
@@ -1205,6 +1175,8 @@ const ChatContainer = () => {
               type="button"
               onClick={toggleRecording}
               className={`touch-target w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-colors shrink-0 ${
+                hasMessageText && !isRecording ? "hidden" : ""
+              } ${
                 isRecording
                   ? "bg-red-500 text-white"
                   : "bg-[var(--accent-soft)] hover:bg-[var(--accent)] text-[var(--accent)] hover:text-white"
@@ -1218,11 +1190,19 @@ const ChatContainer = () => {
                   : "Record voice message"
               }
             >
-              <img
-                src={assets.mic_icon}
-                alt="Voice"
-                className="w-4 h-4 opacity-85 hover:opacity-100"
-              />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                />
+              </svg>
             </button>
 
             <button
@@ -1230,16 +1210,25 @@ const ChatContainer = () => {
               onClick={handleSendMessage}
               className={`touch-target w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-full transition-all duration-200 shrink-0 shadow-[var(--shadow-card)] ${
                 hasMessageText
-                  ? "bg-[var(--accent)] hover:bg-[var(--accent-hover)] scale-100"
-                  : "bg-[var(--bg-input)] text-[var(--text-muted)] hover:bg-[var(--bg-input)]"
+                  ? "bg-[var(--accent)] hover:bg-[var(--accent-hover)] scale-100 text-white"
+                  : "hidden sm:flex bg-[var(--bg-input)] text-[var(--text-muted)] hover:bg-[var(--bg-input)]"
               }`}
               aria-label="Send"
+              title="Send"
             >
-              <img
-                src={assets.send_button}
-                alt=""
-                className={`w-5 h-5 ${hasMessageText ? "invert" : "opacity-45"}`}
-              />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                />
+              </svg>
             </button>
           </div>
         </div>
