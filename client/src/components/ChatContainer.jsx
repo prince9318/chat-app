@@ -22,6 +22,7 @@ import toast from "react-hot-toast";
 import EmojiPicker from "emoji-picker-react";
 import ProfileImageModal from "./ProfileImageModal";
 import MessageOptions from "./MessageOptions";
+import Avatar from "./Avatar";
 
 const MAX_ATTACHMENT_SIZE_BYTES = 50 * 1024 * 1024;
 
@@ -443,10 +444,12 @@ const ChatContainer = () => {
         >
           <img src={assets.arrow_icon} alt="" className="w-5 h-5 opacity-80" />
         </button>
-        <img
-          src={selectedUser.profilePic || assets.avatar_icon}
-          alt=""
-          className="w-10 h-10 rounded-full object-cover cursor-pointer shrink-0"
+        <Avatar
+          src={selectedUser.profilePic}
+          name={selectedUser.fullName}
+          size="md"
+          online={onlineUsers.includes(selectedUser._id)}
+          ringOnHover
           onClick={() =>
             setProfileModal({
               isOpen: true,

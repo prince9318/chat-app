@@ -4,6 +4,7 @@ import { ChatContext } from "../context/ChatContext";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import ProfileImageModal from "./ProfileImageModal";
+import Avatar from "./Avatar";
 
 const Sidebar = () => {
   // ✅ Chat context: user list, selected user, unseen messages
@@ -131,22 +132,21 @@ const Sidebar = () => {
               }`}
             >
               <div className="relative shrink-0">
-                <img
-                  src={user?.profilePic || assets.avatar_icon}
-                  alt=""
-                  className="w-12 h-12 rounded-full object-cover cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
+                <Avatar
+                  src={user?.profilePic}
+                  name={user?.fullName}
+                  size="lg"
+                  online={onlineUsers.includes(user._id)}
+                  ringOnHover
+                  onClick={() =>
                     setProfileModal({
                       isOpen: true,
                       imageUrl: user?.profilePic || assets.avatar_icon,
                       userName: user.fullName,
-                    });
-                  }}
+                    })
+                  }
+                  lazy
                 />
-                {onlineUsers.includes(user._id) && (
-                  <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[var(--accent)] border-2 border-[var(--bg-panel)]" />
-                )}
               </div>
 
               <div className="flex-1 min-w-0 py-1">

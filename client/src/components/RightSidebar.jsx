@@ -3,6 +3,7 @@ import assets from "../assets/assets";
 import { ChatContext } from "../context/ChatContext";
 import { AuthContext } from "../context/AuthContext";
 import ProfileImageModal from "./ProfileImageModal";
+import Avatar from "./Avatar";
 
 const RightSidebar = () => {
   const { selectedUser, messages } = useContext(ChatContext); // Selected user + chat messages
@@ -121,12 +122,14 @@ const RightSidebar = () => {
                   userName: selectedUser.fullName,
                 })
               }
-              className="rounded-full mb-4 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              className="rounded-full mb-4 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--bg-elevated)]"
             >
-              <img
-                src={selectedUser?.profilePic || assets.avatar_icon}
-                alt=""
-                className="w-28 h-28 rounded-full object-cover"
+              <Avatar
+                src={selectedUser?.profilePic}
+                name={selectedUser.fullName}
+                size="2xl"
+                online={onlineUsers.includes(selectedUser._id)}
+                ring
               />
             </button>
             <h1 className="text-xl font-medium text-[var(--text-primary)] text-center">

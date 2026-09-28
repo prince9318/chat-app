@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import assets from "../assets/assets";
 import { AuthContext } from "../context/AuthContext";
 import ProfilePictureCropModal from "../components/ProfilePictureCropModal";
+import Avatar from "../components/Avatar";
 
 const ProfilePage = () => {
   const { authUser, updateProfile } = useContext(AuthContext);
@@ -74,12 +75,13 @@ const ProfilePage = () => {
       )}
       <div className="w-full max-w-2xl rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)] shadow-[var(--shadow-card)] overflow-hidden">
         <div className="flex flex-col md:flex-row">
-          <div className="w-full md:w-2/5 p-8 flex flex-col items-center justify-center bg-[var(--bg-elevated)] border-b md:border-b-0 md:border-r border-[var(--border-subtle)]">
+          <div className="w-full md:w-2/5 p-6 sm:p-8 flex flex-col items-center justify-center bg-[var(--bg-elevated)] border-b md:border-b-0 md:border-r border-[var(--border-subtle)]">
             <div className="relative group mb-5">
-              <img
-                className="w-36 h-36 object-cover rounded-full ring-4 ring-[var(--border-subtle)] transition-all group-hover:ring-[var(--accent)]"
+              <Avatar
                 src={profilePreviewSrc}
-                alt="Profile"
+                name={authUser.fullName}
+                size="2xl"
+                ring
               />
               <label
                 htmlFor="avatar"
