@@ -37,7 +37,11 @@ const Avatar = ({
   const useInitials = !hasCustomImage && Boolean(name);
 
   const baseShape =
-    shape === "circle" ? "rounded-full" : shape === "square" ? "rounded-[var(--radius-md)]" : "rounded-[var(--radius-lg)]";
+    shape === "circle"
+      ? "rounded-full"
+      : shape === "square"
+        ? "rounded-[var(--radius-md)]"
+        : "rounded-[var(--radius-lg)]";
 
   const ringClasses = ring
     ? "ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--bg-panel)]"
@@ -56,7 +60,9 @@ const Avatar = ({
     : undefined;
 
   return (
-    <div className={`relative shrink-0 inline-block ${containerSizeClass} ${className}`}>
+    <div
+      className={`relative shrink-0 inline-block ${containerSizeClass} ${className}`}
+    >
       <div
         onClick={handleClick}
         className={`w-full h-full flex items-center justify-center overflow-hidden bg-[var(--bg-input)] ${baseShape} ${ringClasses} ${hoverRingClasses} ${
