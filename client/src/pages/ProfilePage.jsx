@@ -71,7 +71,7 @@ const ProfilePage = () => {
     croppedDataUrl || authUser?.profilePic || cropImageUrl || assets.logo_icon;
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 bg-[var(--bg-app)]">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 sm:p-6 py-8 sm:py-12 bg-[var(--bg-app)] overflow-y-auto">
       {fileToCrop && cropImageUrl && (
         <ProfilePictureCropModal
           imageSrc={cropImageUrl}
@@ -79,7 +79,7 @@ const ProfilePage = () => {
           onCancel={handleCropCancel}
         />
       )}
-      <div className="w-full max-w-2xl rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)] shadow-[var(--shadow-card)] overflow-hidden">
+      <div className="w-full max-w-2xl my-auto rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)] shadow-[var(--shadow-card)] overflow-hidden">
         <div className="flex flex-col md:flex-row">
           <div className="w-full md:w-2/5 p-6 sm:p-8 flex flex-col items-center justify-center bg-[var(--bg-elevated)] border-b md:border-b-0 md:border-r border-[var(--border-subtle)]">
             <div className="relative group mb-5">

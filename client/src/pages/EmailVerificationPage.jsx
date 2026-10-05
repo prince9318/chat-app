@@ -3,9 +3,9 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
 const VerificationSuccessView = ({ onGoToChat }) => (
-  <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-    <div className="absolute inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628]" />
-    <div className="relative z-10 w-[min(95vw,460px)] rounded-[var(--radius-2xl)] border border-emerald-500/30 bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 shadow-[var(--shadow-card)] text-center">
+  <div className="min-h-screen w-full relative overflow-y-auto overflow-x-hidden flex flex-col items-center py-8 sm:py-12 px-4">
+    <div className="fixed inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628] pointer-events-none" />
+    <div className="relative z-10 w-[min(95vw,460px)] my-auto rounded-[var(--radius-2xl)] border border-emerald-500/30 bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 shadow-[var(--shadow-card)] text-center">
       <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 text-2xl">
         ✓
       </div>
@@ -27,9 +27,9 @@ const VerificationSuccessView = ({ onGoToChat }) => (
 );
 
 const VerificationProgressView = () => (
-  <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-    <div className="absolute inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628]" />
-    <div className="relative z-10 w-[min(95vw,460px)] rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 shadow-[var(--shadow-card)] text-center">
+  <div className="min-h-screen w-full relative overflow-y-auto overflow-x-hidden flex flex-col items-center py-8 sm:py-12 px-4">
+    <div className="fixed inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628] pointer-events-none" />
+    <div className="relative z-10 w-[min(95vw,460px)] my-auto rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 shadow-[var(--shadow-card)] text-center">
       <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)]/15 text-[var(--accent)] text-2xl animate-pulse">
         ···
       </div>
@@ -161,9 +161,9 @@ const EmailVerificationPage = () => {
   const otpComplete = otpInputs.every((d) => d !== "");
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628]" />
-      <div className="relative z-10 w-[min(95vw,460px)] rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 shadow-[var(--shadow-card)]">
+    <div className="min-h-screen w-full relative overflow-y-auto overflow-x-hidden flex flex-col items-center py-8 sm:py-12 px-4">
+      <div className="fixed inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628] pointer-events-none" />
+      <div className="relative z-10 w-[min(95vw,460px)] my-auto rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 shadow-[var(--shadow-card)]">
         <h2 className="text-xl font-semibold text-[var(--text-primary)]">
           Verify your email
         </h2>

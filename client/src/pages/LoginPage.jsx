@@ -152,31 +152,32 @@ const LoginPage = () => {
     const otpComplete = otpInputs.every((d) => d !== "");
 
     return (
-      <div className="min-h-screen flex items-center justify-center gap-10 sm:justify-evenly max-sm:flex-col p-4 sm:p-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628]" />
+      <div className="min-h-screen w-full relative overflow-y-auto overflow-x-hidden flex flex-col items-center py-8 sm:py-12 px-4">
+        <div className="fixed inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628] pointer-events-none" />
         <div
-          className="absolute inset-0 opacity-[0.4]"
+          className="fixed inset-0 opacity-[0.4] pointer-events-none"
           style={{
             backgroundImage: `radial-gradient(circle at 2px 2px, var(--border-default) 1px, transparent 0)`,
             backgroundSize: "32px 32px",
           }}
         />
 
-        <div className="relative z-10 flex flex-col items-center gap-4">
-          <img
-            src={assets.logo_big}
-            alt="App Logo"
-            className="w-[min(100vw,260px)] drop-shadow-2xl"
-          />
-          <p className="text-[var(--text-secondary)] text-sm max-w-[200px] text-center hidden sm:block">
-            Chat with anyone, anywhere. Simple and private.
-          </p>
-        </div>
+        <div className="relative z-10 w-full max-w-4xl flex items-center justify-center gap-10 sm:justify-evenly max-sm:flex-col my-auto">
+          <div className="flex flex-col items-center gap-4">
+            <img
+              src={assets.logo_big}
+              alt="App Logo"
+              className="w-[min(100vw,260px)] drop-shadow-2xl"
+            />
+            <p className="text-[var(--text-secondary)] text-sm max-w-[200px] text-center hidden sm:block">
+              Chat with anyone, anywhere. Simple and private.
+            </p>
+          </div>
 
-        <form
-          onSubmit={handleOtpSubmit}
-          className="relative z-10 w-[min(95vw,420px)] rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 flex flex-col gap-5 shadow-[var(--shadow-card)]"
-        >
+          <form
+            onSubmit={handleOtpSubmit}
+            className="w-[min(95vw,420px)] rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 flex flex-col gap-5 shadow-[var(--shadow-card)]"
+          >
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold text-[var(--text-primary)]">
               Verify your email
@@ -347,35 +348,37 @@ const LoginPage = () => {
           )}
         </form>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   return (
-    <div className="min-h-screen flex items-center justify-center gap-10 sm:justify-evenly max-sm:flex-col p-4 sm:p-6 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628]" />
+    <div className="min-h-screen w-full relative overflow-y-auto overflow-x-hidden flex flex-col items-center py-8 sm:py-12 px-4">
+      <div className="fixed inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628] pointer-events-none" />
       <div
-        className="absolute inset-0 opacity-[0.4]"
+        className="fixed inset-0 opacity-[0.4] pointer-events-none"
         style={{
           backgroundImage: `radial-gradient(circle at 2px 2px, var(--border-default) 1px, transparent 0)`,
           backgroundSize: "32px 32px",
         }}
       />
 
-      <div className="relative z-10 flex flex-col items-center gap-4">
-        <img
-          src={assets.logo_big}
-          alt="App Logo"
-          className="w-[min(100vw,260px)] drop-shadow-2xl"
-        />
-        <p className="text-[var(--text-secondary)] text-sm max-w-[200px] text-center hidden sm:block">
-          Chat with anyone, anywhere. Simple and private.
-        </p>
-      </div>
+      <div className="relative z-10 w-full max-w-4xl flex items-center justify-center gap-10 sm:justify-evenly max-sm:flex-col my-auto">
+        <div className="flex flex-col items-center gap-4">
+          <img
+            src={assets.logo_big}
+            alt="App Logo"
+            className="w-[min(100vw,260px)] drop-shadow-2xl"
+          />
+          <p className="text-[var(--text-secondary)] text-sm max-w-[200px] text-center hidden sm:block">
+            Chat with anyone, anywhere. Simple and private.
+          </p>
+        </div>
 
-      <form
-        onSubmit={onSubmitHandler}
-        className="relative z-10 w-[min(95vw,400px)] rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 flex flex-col gap-5 shadow-[var(--shadow-card)]"
-      >
+        <form
+          onSubmit={onSubmitHandler}
+          className="w-[min(95vw,400px)] rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 flex flex-col gap-5 shadow-[var(--shadow-card)]"
+        >
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold text-[var(--text-primary)]">
             {currState}
@@ -530,7 +533,8 @@ const LoginPage = () => {
         </p>
       </form>
     </div>
-  );
+  </div>
+);
 };
 
 export default LoginPage;

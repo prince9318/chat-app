@@ -21,9 +21,12 @@ const ChatDeletedBubble = ({
     </p>
     <button
       type="button"
-      className={`absolute top-2 ${isOwn ? "right-2" : "left-2"} w-7 h-7 flex items-center justify-center rounded-full bg-[var(--bg-elevated)] hover:bg-[var(--bg-input)] text-[var(--text-primary)] opacity-0 group-hover:opacity-100 transition-opacity border border-[var(--border-subtle)]`}
+      className={`absolute top-2 ${isOwn ? "right-2" : "left-2"} w-7 h-7 flex items-center justify-center rounded-full bg-[var(--bg-elevated)] hover:bg-[var(--bg-input)] text-[var(--text-primary)] opacity-0 group-hover:opacity-100 max-md:opacity-90 transition-opacity border border-[var(--border-subtle)] cursor-pointer touch-target z-10`}
       aria-label="Message options"
-      onClick={() => onOpenOptions(msg._id, false)}
+      onClick={(e) => {
+        e.stopPropagation();
+        onOpenOptions(msg._id, false);
+      }}
     >
       ⋮
     </button>

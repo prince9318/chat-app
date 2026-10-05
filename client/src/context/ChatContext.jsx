@@ -244,13 +244,11 @@ export const ChatProvider = ({ children }) => {
       });
 
       if (data.success) {
-        const currentUserId = authUser?._id || null;
-
         if (deleteFor === "everyone") {
           setMessages((prev) => {
             let changed = false;
             const next = prev.map((msg) => {
-              if (msg._id === messageId && !msg.isDeleted) {
+              if (String(msg._id) === String(messageId) && !msg.isDeleted) {
                 changed = true;
                 return { ...msg, isDeleted: true };
               }
@@ -259,20 +257,9 @@ export const ChatProvider = ({ children }) => {
             return changed ? next : prev;
           });
         } else {
-          setMessages((prev) => {
-            let changed = false;
-            const next = prev.map((msg) => {
-              if (msg._id !== messageId) return msg;
-              const prevDeleted = Array.isArray(msg.deletedFor) ? msg.deletedFor : [];
-              const newDeleted = currentUserId
-                ? Array.from(new Set([...prevDeleted, currentUserId]))
-                : prevDeleted;
-              if (prevDeleted.length === newDeleted.length) return msg;
-              changed = true;
-              return { ...msg, deletedFor: newDeleted };
-            });
-            return changed ? next : prev;
-          });
+          setMessages((prev) =>
+            prev.filter((msg) => String(msg._id) !== String(messageId)),
+          );
         }
 
         toast.success(data.message);
@@ -280,9 +267,9 @@ export const ChatProvider = ({ children }) => {
         toast.error(data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error?.response?.data?.message || error.message);
     }
-  }, [axios, authUser?._id]);
+  }, [axios]);
 
   useEffect(() => {
     if (!socket) return;
@@ -291,7 +278,7 @@ export const ChatProvider = ({ children }) => {
       setMessages((prev) => {
         let changed = false;
         const next = prev.map((msg) => {
-          if (msg._id === messageId && !msg.isDeleted) {
+          if (String(msg._id) === String(messageId) && !msg.isDeleted) {
             changed = true;
             return { ...msg, isDeleted: true };
           }

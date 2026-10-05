@@ -1,7 +1,7 @@
 import { formatMessageTime } from "../lib/utils";
 
 const optionBtnClass =
-  "absolute top-2 w-7 h-7 flex items-center justify-center rounded-full bg-[var(--bg-elevated)] hover:bg-[var(--bg-input)] text-[var(--text-primary)] opacity-0 group-hover:opacity-100 transition-opacity border border-[var(--border-subtle)]";
+  "absolute top-2 w-7 h-7 flex items-center justify-center rounded-full bg-[var(--bg-elevated)] hover:bg-[var(--bg-input)] text-[var(--text-primary)] opacity-0 group-hover:opacity-100 max-md:opacity-90 cursor-pointer touch-target z-10 transition-opacity border border-[var(--border-subtle)]";
 
 const ChatMediaBubble = ({ msg, isOwn, onOpenOptions, onOpenPreview }) => {
   return (

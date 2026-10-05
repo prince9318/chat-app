@@ -211,9 +211,9 @@ const ForgotPasswordPage = () => {
       : "border-emerald-500/40 bg-emerald-500/10 text-emerald-200";
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628]" />
-      <div className="relative z-10 w-[min(95vw,460px)] rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 shadow-[var(--shadow-card)]">
+    <div className="min-h-screen w-full relative overflow-y-auto overflow-x-hidden flex flex-col items-center py-8 sm:py-12 px-4">
+      <div className="fixed inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628] pointer-events-none" />
+      <div className="relative z-10 w-[min(95vw,460px)] my-auto rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 shadow-[var(--shadow-card)]">
         <h2 className="text-xl font-semibold text-[var(--text-primary)]">
           Forgot password
         </h2>

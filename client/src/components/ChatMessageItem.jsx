@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { extractUrls } from "../lib/utils";
+import MessageOptions from "./MessageOptions";
 import ChatDeletedBubble from "./ChatDeletedBubble";
 import ChatCallBubble from "./ChatCallBubble";
 import ChatMediaBubble from "./ChatMediaBubble";
@@ -22,9 +23,10 @@ const ChatMessageItem = memo(
     onCloseOptions,
     onOpenPreview,
   }) => {
-    const isOwn = msg.senderId === currentUserId;
+    const isOwn = String(msg.senderId) === String(currentUserId);
     const deletedForMe =
-      Array.isArray(msg.deletedFor) && msg.deletedFor.includes(currentUserId);
+      Array.isArray(msg.deletedFor) &&
+      msg.deletedFor.some((id) => String(id) === String(currentUserId));
     if (deletedForMe) return null;
 
     if (msg.isDeleted) {
@@ -47,6 +49,13 @@ const ChatMessageItem = memo(
 
     return (
       <div className="relative inline-block">
+        {isOptionsOpen && (
+          <MessageOptions
+            messageId={msg._id}
+            isOwnMessage={isOwn}
+            onClose={onCloseOptions}
+          />
+        )}
         {msg.image || msg.video || msg.audio ? (
           <ChatMediaBubble
             msg={msg}

@@ -26,6 +26,14 @@ const ChatMessageList = ({
   scrollEndRef,
   currentDateLabel,
 }) => {
+  const visibleMessages = messages.filter((msg) => {
+    if (!msg) return false;
+    const deletedForMe =
+      Array.isArray(msg.deletedFor) &&
+      msg.deletedFor.some((id) => String(id) === String(currentUserId));
+    return !deletedForMe;
+  });
+
   return (
     <div
       ref={messagesRef}
@@ -36,11 +44,11 @@ const ChatMessageList = ({
           <span className="date-chip text-xs">{currentDateLabel}</span>
         )}
       </div>
-      {messages.map((msg, index) => {
+      {visibleMessages.map((msg, index) => {
         const showDate =
           index === 0 ||
-          (messages[index - 1] &&
-            new Date(messages[index - 1].createdAt).toDateString() !==
+          (visibleMessages[index - 1] &&
+            new Date(visibleMessages[index - 1].createdAt).toDateString() !==
               new Date(msg.createdAt).toDateString());
         const label = toLabel(msg.createdAt);
         const fragFallback = `msg-frag-${msg.createdAt}-${(
@@ -62,7 +70,9 @@ const ChatMessageList = ({
             )}
             <div
               className={`w-full flex items-end gap-2 ${
-                msg.senderId === currentUserId ? "justify-end" : "justify-start"
+                String(msg.senderId) === String(currentUserId)
+                  ? "justify-end"
+                  : "justify-start"
               }`}
             >
               <ChatMessageItem

@@ -5,7 +5,7 @@ import {
 } from "../lib/utils";
 
 const optionBtnClass =
-  "absolute top-2 w-7 h-7 flex items-center justify-center rounded-full bg-[var(--bg-elevated)] hover:bg-[var(--bg-input)] text-[var(--text-primary)] opacity-0 group-hover:opacity-100 transition-opacity border border-[var(--border-subtle)]";
+  "absolute top-2 w-7 h-7 flex items-center justify-center rounded-full bg-[var(--bg-elevated)] hover:bg-[var(--bg-input)] text-[var(--text-primary)] opacity-0 group-hover:opacity-100 max-md:opacity-90 cursor-pointer touch-target z-10 transition-opacity border border-[var(--border-subtle)]";
 
 const getPreviewType = (file) => {
   const mimeType = String(file?.mimeType || "").toLowerCase();
@@ -90,7 +90,10 @@ const ChatFileBubble = ({ msg, isOwn, onOpenOptions, onOpenPreview }) => {
         type="button"
         className={`${optionBtnClass} ${isOwn ? "right-2" : "left-2"}`}
         aria-label="Message options"
-        onClick={() => onOpenOptions(msg._id, isOwn)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onOpenOptions(msg._id, isOwn);
+        }}
       >
         ⋮
       </button>
