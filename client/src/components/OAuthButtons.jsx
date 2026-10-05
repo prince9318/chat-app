@@ -66,23 +66,23 @@ const OAuthButtons = () => {
         <span className="h-px flex-1 bg-[var(--border-subtle)]" />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
         <button
           type="button"
           onClick={handleGoogleLogin}
-          className="flex items-center justify-center gap-2.5 w-full min-h-[44px] py-2.5 px-4 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-input)] hover:bg-[var(--bg-elevated)] active:scale-[0.98] text-[var(--text-primary)] text-sm font-medium transition-colors"
+          className="flex items-center justify-center gap-2 w-full min-h-[42px] py-2 px-3 rounded-xl border border-white/10 bg-[#202c33]/70 hover:bg-[#202c33] hover:border-white/20 active:scale-[0.98] text-[var(--text-primary)] text-sm font-medium transition-all shadow-sm"
         >
-          <GoogleIcon />
-          <span>Google</span>
+          <GoogleIcon className="w-4 h-4 shrink-0" />
+          <span className="truncate">Google</span>
         </button>
 
         <button
           type="button"
           onClick={handleGithubLogin}
-          className="flex items-center justify-center gap-2.5 w-full min-h-[44px] py-2.5 px-4 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-input)] hover:bg-[var(--bg-elevated)] active:scale-[0.98] text-[var(--text-primary)] text-sm font-medium transition-colors"
+          className="flex items-center justify-center gap-2 w-full min-h-[42px] py-2 px-3 rounded-xl border border-white/10 bg-[#202c33]/70 hover:bg-[#202c33] hover:border-white/20 active:scale-[0.98] text-[var(--text-primary)] text-sm font-medium transition-all shadow-sm"
         >
-          <GithubIcon />
-          <span>GitHub</span>
+          <GithubIcon className="w-4 h-4 shrink-0" />
+          <span className="truncate">GitHub</span>
         </button>
       </div>
     </div>

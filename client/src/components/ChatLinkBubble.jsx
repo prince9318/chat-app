@@ -1,7 +1,14 @@
 import { formatMessageTime, normalizeUrl } from "../lib/utils";
 
-const optionBtnClass =
-  "absolute top-2 w-7 h-7 flex items-center justify-center rounded-full bg-[var(--bg-elevated)] hover:bg-[var(--bg-input)] text-[var(--text-primary)] opacity-0 group-hover:opacity-100 max-md:opacity-90 cursor-pointer touch-target z-10 transition-opacity border border-[var(--border-subtle)]";
+const ChevronDownIcon = () => (
+  <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+    <path
+      fillRule="evenodd"
+      d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+      clipRule="evenodd"
+    />
+  </svg>
+);
 
 const getLinkHost = (url) => {
   try {
@@ -11,7 +18,7 @@ const getLinkHost = (url) => {
   }
 };
 
-const ChatLinkBubble = ({ msg, link, isOwn, onOpenOptions }) => {
+const ChatLinkBubble = ({ msg, link, isOwn, isActive = false, onOpenOptions }) => {
   return (
     <div
       className={`message-card relative inline-block mb-1 group min-w-[12rem] max-w-[min(90%,28rem)] ${
@@ -62,14 +69,16 @@ const ChatLinkBubble = ({ msg, link, isOwn, onOpenOptions }) => {
       </a>
       <button
         type="button"
-        className={`${optionBtnClass} ${isOwn ? "right-2" : "left-2"}`}
+        className={`absolute top-2 ${isOwn ? "right-2" : "left-2"} w-6 h-6 rounded-full bg-black/45 hover:bg-black/75 text-white/90 backdrop-blur-md flex items-center justify-center text-xs shadow-sm transition-all border-0 cursor-pointer z-10 ${
+          isActive ? "opacity-100 flex" : "opacity-0 md:group-hover:opacity-100 max-md:hidden"
+        }`}
         aria-label="Message options"
         onClick={(e) => {
           e.stopPropagation();
           onOpenOptions(msg._id, isOwn);
         }}
       >
-        ⋮
+        <ChevronDownIcon />
       </button>
       <div
         className={`absolute bottom-2 right-2 text-[11px] leading-none flex items-center gap-0.5 opacity-90 ${isOwn ? "text-white/90" : "text-[var(--text-muted)]"}`}

@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useRef, useState } from "react";
 import { extractUrls } from "../lib/utils";
 import MessageOptions from "./MessageOptions";
 import ChatDeletedBubble from "./ChatDeletedBubble";
@@ -23,21 +23,76 @@ const ChatMessageItem = memo(
     onCloseOptions,
     onOpenPreview,
   }) => {
+    const [isActive, setIsActive] = useState(false);
+    const longPressTimer = useRef(null);
+    const touchStartPos = useRef({ x: 0, y: 0 });
+
     const isOwn = String(msg.senderId) === String(currentUserId);
     const deletedForMe =
       Array.isArray(msg.deletedFor) &&
       msg.deletedFor.some((id) => String(id) === String(currentUserId));
     if (deletedForMe) return null;
 
+    const handleTouchStart = (e) => {
+      if (!e.touches || e.touches.length === 0) return;
+      const touch = e.touches[0];
+      touchStartPos.current = { x: touch.clientX, y: touch.clientY };
+      longPressTimer.current = setTimeout(() => {
+        if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+          navigator.vibrate(35);
+        }
+        onOpenOptions(msg._id, isOwn);
+      }, 450);
+    };
+
+    const handleTouchMove = (e) => {
+      if (!longPressTimer.current || !e.touches || e.touches.length === 0) return;
+      const touch = e.touches[0];
+      const dx = Math.abs(touch.clientX - touchStartPos.current.x);
+      const dy = Math.abs(touch.clientY - touchStartPos.current.y);
+      if (dx > 10 || dy > 10) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+    };
+
+    const handleTouchEnd = () => {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+    };
+
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+      onOpenOptions(msg._id, isOwn);
+    };
+
+    const handleBubbleClick = () => {
+      // Toggle active options button for this specific bubble on mobile
+      setIsActive((prev) => !prev);
+    };
+
     if (msg.isDeleted) {
       return (
-        <ChatDeletedBubble
-          msg={msg}
-          isOwn={isOwn}
-          isOptionsOpen={isOptionsOpen}
-          onOpenOptions={onOpenOptions}
-          onCloseOptions={onCloseOptions}
-        />
+        <div
+          className="relative inline-block select-text"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
+          onContextMenu={handleContextMenu}
+          onClick={handleBubbleClick}
+        >
+          <ChatDeletedBubble
+            msg={msg}
+            isOwn={isOwn}
+            isActive={isActive}
+            isOptionsOpen={isOptionsOpen}
+            onOpenOptions={onOpenOptions}
+            onCloseOptions={onCloseOptions}
+          />
+        </div>
       );
     }
 
@@ -48,7 +103,15 @@ const ChatMessageItem = memo(
     const singleLink = getSingleLink(msg.text);
 
     return (
-      <div className="relative inline-block">
+      <div
+        className="relative inline-block select-text"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
+        onContextMenu={handleContextMenu}
+        onClick={handleBubbleClick}
+      >
         {isOptionsOpen && (
           <MessageOptions
             messageId={msg._id}
@@ -60,6 +123,7 @@ const ChatMessageItem = memo(
           <ChatMediaBubble
             msg={msg}
             isOwn={isOwn}
+            isActive={isActive}
             onOpenOptions={onOpenOptions}
             onOpenPreview={onOpenPreview}
           />
@@ -67,6 +131,7 @@ const ChatMessageItem = memo(
           <ChatFileBubble
             msg={msg}
             isOwn={isOwn}
+            isActive={isActive}
             onOpenOptions={onOpenOptions}
             onOpenPreview={onOpenPreview}
           />
@@ -75,12 +140,14 @@ const ChatMessageItem = memo(
             msg={msg}
             link={singleLink}
             isOwn={isOwn}
+            isActive={isActive}
             onOpenOptions={onOpenOptions}
           />
         ) : (
           <ChatTextBubble
             msg={msg}
             isOwn={isOwn}
+            isActive={isActive}
             onOpenOptions={onOpenOptions}
           />
         )}

@@ -9,6 +9,7 @@ const LoginPage = () => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [bio, setBio] = useState("");
   const [isDataSubmitted, setIsDataSubmitted] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -152,31 +153,63 @@ const LoginPage = () => {
     const otpComplete = otpInputs.every((d) => d !== "");
 
     return (
-      <div className="min-h-screen w-full relative overflow-y-auto overflow-x-hidden flex flex-col items-center py-8 sm:py-12 px-4">
-        <div className="fixed inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628] pointer-events-none" />
+      <div className="min-h-[100dvh] w-full relative overflow-y-auto overflow-x-hidden flex flex-col items-center justify-center py-6 sm:py-12 px-4 sm:px-6">
+        {/* Dynamic ambient atmosphere */}
+        <div className="fixed inset-0 bg-[#090e13] pointer-events-none" />
         <div
-          className="fixed inset-0 opacity-[0.4] pointer-events-none"
+          className="fixed inset-0 pointer-events-none opacity-45"
           style={{
-            backgroundImage: `radial-gradient(circle at 2px 2px, var(--border-default) 1px, transparent 0)`,
-            backgroundSize: "32px 32px",
+            background:
+              "radial-gradient(circle 600px at 15% 30%, rgba(147, 110, 255, 0.16), transparent 70%), radial-gradient(circle 600px at 85% 70%, rgba(0, 168, 132, 0.14), transparent 70%)",
+          }}
+        />
+        <div
+          className="fixed inset-0 opacity-[0.25] pointer-events-none"
+          style={{
+            backgroundImage: `radial-gradient(circle at 1.5px 1.5px, rgba(255, 255, 255, 0.15) 1px, transparent 0)`,
+            backgroundSize: "28px 28px",
           }}
         />
 
-        <div className="relative z-10 w-full max-w-4xl flex items-center justify-center gap-10 sm:justify-evenly max-sm:flex-col my-auto">
-          <div className="flex flex-col items-center gap-4">
-            <img
-              src={assets.logo_big}
-              alt="App Logo"
-              className="w-[min(100vw,260px)] drop-shadow-2xl"
-            />
-            <p className="text-[var(--text-secondary)] text-sm max-w-[200px] text-center hidden sm:block">
-              Chat with anyone, anywhere. Simple and private.
+        <div className="relative z-10 w-full max-w-5xl flex items-center justify-center md:justify-around gap-8 lg:gap-16 max-md:flex-col my-auto">
+          {/* Brand showcase for Laptop / Desktop */}
+          <div className="hidden md:flex flex-col items-start gap-6 max-w-sm lg:max-w-md">
+            <div className="flex items-center gap-3.5">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#7c3aed] to-[#936eff] p-2.5 flex items-center justify-center shadow-xl shadow-purple-500/25 border border-purple-400/20">
+                <img
+                  src={assets.logo_icon}
+                  alt="QuickChat"
+                  className="w-full h-full object-contain drop-shadow"
+                />
+              </div>
+              <div>
+                <span className="text-3xl font-extrabold tracking-tight text-white block">
+                  Quick<span className="text-[var(--accent)]">Chat</span>
+                </span>
+                <span className="text-xs font-medium text-[var(--accent)] tracking-wider uppercase">
+                  Email Verification
+                </span>
+              </div>
+            </div>
+
+            <p className="text-base text-[var(--text-secondary)] leading-relaxed">
+              Verify your email address to complete your account setup and unlock secure messaging.
             </p>
+          </div>
+
+          {/* Compact brand header for Mobile only */}
+          <div className="flex items-center justify-center gap-2.5 md:hidden -mb-2">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#7c3aed] to-[#936eff] p-2 flex items-center justify-center shadow-lg shadow-purple-500/20">
+              <img src={assets.logo_icon} alt="QuickChat" className="w-full h-full object-contain" />
+            </div>
+            <span className="text-2xl font-bold tracking-tight text-white">
+              Quick<span className="text-[var(--accent)]">Chat</span>
+            </span>
           </div>
 
           <form
             onSubmit={handleOtpSubmit}
-            className="w-[min(95vw,420px)] rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 flex flex-col gap-5 shadow-[var(--shadow-card)]"
+            className="w-full max-w-[420px] rounded-3xl border border-white/10 bg-[#111b21]/95 backdrop-blur-2xl p-5 sm:p-8 flex flex-col gap-4 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)]"
           >
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold text-[var(--text-primary)]">
@@ -353,188 +386,287 @@ const LoginPage = () => {
 }
 
   return (
-    <div className="min-h-screen w-full relative overflow-y-auto overflow-x-hidden flex flex-col items-center py-8 sm:py-12 px-4">
-      <div className="fixed inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628] pointer-events-none" />
+    <div className="min-h-[100dvh] w-full relative overflow-y-auto overflow-x-hidden flex flex-col items-center justify-center py-6 sm:py-12 px-4 sm:px-6">
+      {/* Dynamic ambient atmosphere */}
+      <div className="fixed inset-0 bg-[#090e13] pointer-events-none" />
       <div
-        className="fixed inset-0 opacity-[0.4] pointer-events-none"
+        className="fixed inset-0 pointer-events-none opacity-45"
         style={{
-          backgroundImage: `radial-gradient(circle at 2px 2px, var(--border-default) 1px, transparent 0)`,
-          backgroundSize: "32px 32px",
+          background:
+            "radial-gradient(circle 600px at 15% 30%, rgba(147, 110, 255, 0.16), transparent 70%), radial-gradient(circle 600px at 85% 70%, rgba(0, 168, 132, 0.14), transparent 70%)",
+        }}
+      />
+      <div
+        className="fixed inset-0 opacity-[0.25] pointer-events-none"
+        style={{
+          backgroundImage: `radial-gradient(circle at 1.5px 1.5px, rgba(255, 255, 255, 0.15) 1px, transparent 0)`,
+          backgroundSize: "28px 28px",
         }}
       />
 
-      <div className="relative z-10 w-full max-w-4xl flex items-center justify-center gap-10 sm:justify-evenly max-sm:flex-col my-auto">
-        <div className="flex flex-col items-center gap-4">
-          <img
-            src={assets.logo_big}
-            alt="App Logo"
-            className="w-[min(100vw,260px)] drop-shadow-2xl"
-          />
-          <p className="text-[var(--text-secondary)] text-sm max-w-[200px] text-center hidden sm:block">
-            Chat with anyone, anywhere. Simple and private.
+      <div className="relative z-10 w-full max-w-5xl flex items-center justify-center md:justify-around gap-8 lg:gap-16 max-md:flex-col my-auto">
+        {/* Brand showcase for Laptop / Desktop */}
+        <div className="hidden md:flex flex-col items-start gap-6 max-w-sm lg:max-w-md">
+          <div className="flex items-center gap-3.5">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#7c3aed] to-[#936eff] p-2.5 flex items-center justify-center shadow-xl shadow-purple-500/25 border border-purple-400/20">
+              <img
+                src={assets.logo_icon}
+                alt="QuickChat"
+                className="w-full h-full object-contain drop-shadow"
+              />
+            </div>
+            <div>
+              <span className="text-3xl font-extrabold tracking-tight text-white block">
+                Quick<span className="text-[var(--accent)]">Chat</span>
+              </span>
+              <span className="text-xs font-medium text-[var(--accent)] tracking-wider uppercase">
+                Modern Messaging
+              </span>
+            </div>
+          </div>
+
+          <p className="text-base text-[var(--text-secondary)] leading-relaxed">
+            Connect with friends, family, and colleagues in real time. Private, instant, and secure messaging anywhere.
           </p>
+
+          <div className="flex flex-col gap-3 w-full pt-1">
+            <div className="flex items-center gap-3.5 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm">
+              <div className="w-9 h-9 rounded-lg bg-[var(--accent)]/15 text-[var(--accent)] flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">Instant Messaging</p>
+                <p className="text-xs text-[var(--text-muted)]">Real-time sync with typing indicators & read receipts</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3.5 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm">
+              <div className="w-9 h-9 rounded-lg bg-purple-500/15 text-purple-400 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">HD Audio & Video Calls</p>
+                <p className="text-xs text-[var(--text-muted)]">Direct 1-on-1 peer calls right inside your browser</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3.5 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-sm">
+              <div className="w-9 h-9 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">Private & Secure</p>
+                <p className="text-xs text-[var(--text-muted)]">Protected credentials and end-to-end data privacy</p>
+              </div>
+            </div>
+          </div>
         </div>
 
+        {/* Compact brand header for Mobile only */}
+        <div className="flex items-center justify-center gap-2.5 md:hidden -mb-2">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#7c3aed] to-[#936eff] p-2 flex items-center justify-center shadow-lg shadow-purple-500/20">
+            <img src={assets.logo_icon} alt="QuickChat" className="w-full h-full object-contain" />
+          </div>
+          <span className="text-2xl font-bold tracking-tight text-white">
+            Quick<span className="text-[var(--accent)]">Chat</span>
+          </span>
+        </div>
+
+        {/* Form Card */}
         <form
           onSubmit={onSubmitHandler}
-          className="w-[min(95vw,400px)] rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 flex flex-col gap-5 shadow-[var(--shadow-card)]"
+          className="w-full max-w-[420px] rounded-3xl border border-white/10 bg-[#111b21]/95 backdrop-blur-2xl p-5 sm:p-8 flex flex-col gap-3.5 sm:gap-4 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)]"
         >
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-[var(--text-primary)]">
-            {currState}
-          </h2>
-          {isDataSubmitted && (
-            <button
-              type="button"
-              onClick={() => setIsDataSubmitted(false)}
-              className="p-2 rounded-full hover:bg-[var(--bg-input)] text-[var(--text-secondary)] transition-colors"
-              aria-label="Go back"
-            >
-              <img src={assets.arrow_icon} alt="" className="w-5 h-5" />
-            </button>
-          )}
-        </div>
-
-        {isSignup && !isDataSubmitted && (
-          <input
-            onChange={(e) => setFullName(e.target.value)}
-            value={fullName}
-            type="text"
-            name="fullName"
-            aria-label="Full Name"
-            className="input-field"
-            placeholder="Full Name"
-            required
-          />
-        )}
-
-        {!isDataSubmitted && (
-          <>
-            <input
-              onChange={(e) => setEmail(e.target.value)}
-              value={email}
-              type="email"
-              name="email"
-              aria-label="Email"
-              placeholder="Email"
-              required
-              className="input-field"
-            />
-            <input
-              onChange={(e) => setPassword(e.target.value)}
-              value={password}
-              type="password"
-              name="password"
-              aria-label="Password"
-              placeholder="Password (min 6 chars)"
-              minLength={6}
-              required
-              className="input-field"
-            />
-          </>
-        )}
-
-        {isSignup && isDataSubmitted && (
-          <textarea
-            onChange={(e) => setBio(e.target.value)}
-            value={bio}
-            name="bio"
-            aria-label="Bio"
-            rows={4}
-            className="input-field resize-none"
-            placeholder="A short bio..."
-            required
-          />
-        )}
-
-        <button
-          type="submit"
-          className="mt-1 py-3 rounded-[var(--radius-md)] bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-        >
-          {isSignup ? "Create account" : "Log in"}
-        </button>
-
-        {!isDataSubmitted && <OAuthButtons />}
-
-        {currState === "Login" && !isDataSubmitted && (
-          <div className="-mt-2 text-right">
-            <Link
-              to="/forgot-password"
-              className="text-sm text-[var(--accent)] hover:underline"
-            >
-              Forgot password?
-            </Link>
-          </div>
-        )}
-
-        {isSignup && (
-          <>
-            <label className="flex items-start gap-3 text-sm text-[var(--text-secondary)] cursor-pointer">
-              <input
-                type="checkbox"
-                checked={agreed}
-                onChange={(e) => {
-                  setAgreed(e.target.checked);
-                  if (e.target.checked) {
-                    setShowAgreementError(false);
-                  }
-                }}
-                className="mt-0.5 rounded border-[var(--border-default)] text-[var(--accent)] focus:ring-[var(--accent)]"
-              />
-              <span>
-                I agree to the{" "}
-                <Link to="/terms" className="text-[var(--accent)] hover:underline">
-                  Terms
-                </Link>
-                {" "}&{" "}
-                <Link to="/privacy" className="text-[var(--accent)] hover:underline">
-                  Privacy
-                </Link>
-                .
-              </span>
-            </label>
-            {showAgreementError && !agreed && (
-              <p className="text-xs text-red-400 -mt-2">Please agree to continue.</p>
+          <div className="flex justify-between items-center pb-0.5">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                {currState === "Sign up" ? "Create account" : "Welcome back"}
+              </h2>
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                {currState === "Sign up"
+                  ? "Enter your details to get started"
+                  : "Sign in to continue to QuickChat"}
+              </p>
+            </div>
+            {isDataSubmitted && (
+              <button
+                type="button"
+                onClick={() => setIsDataSubmitted(false)}
+                className="p-2 rounded-full hover:bg-[var(--bg-input)] text-[var(--text-secondary)] transition-colors"
+                aria-label="Go back"
+              >
+                <img src={assets.arrow_icon} alt="" className="w-5 h-5" />
+              </button>
             )}
-          </>
-        )}
+          </div>
 
-        <p className="text-sm text-[var(--text-secondary)] text-center pt-1">
-          {isSignup ? (
+          {isSignup && !isDataSubmitted && (
+            <div className="relative">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </span>
+              <input
+                onChange={(e) => setFullName(e.target.value)}
+                value={fullName}
+                type="text"
+                name="fullName"
+                aria-label="Full Name"
+                className="w-full bg-[#1e2a30]/80 border border-white/10 focus:border-[var(--accent)] focus:bg-[#202c33] focus:ring-2 focus:ring-[var(--accent-soft)] rounded-xl py-2.5 sm:py-3 pl-10 pr-4 text-sm text-white placeholder-[var(--text-muted)] transition-all outline-none"
+                placeholder="Full Name"
+                required
+              />
+            </div>
+          )}
+
+          {!isDataSubmitted && (
             <>
-              Already have an account?{" "}
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </span>
+                <input
+                  onChange={(e) => setEmail(e.target.value)}
+                  value={email}
+                  type="email"
+                  name="email"
+                  aria-label="Email"
+                  placeholder="Email address"
+                  required
+                  className="w-full bg-[#1e2a30]/80 border border-white/10 focus:border-[var(--accent)] focus:bg-[#202c33] focus:ring-2 focus:ring-[var(--accent-soft)] rounded-xl py-2.5 sm:py-3 pl-10 pr-4 text-sm text-white placeholder-[var(--text-muted)] transition-all outline-none"
+                />
+              </div>
+
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </span>
+                <input
+                  onChange={(e) => setPassword(e.target.value)}
+                  value={password}
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  aria-label="Password"
+                  placeholder="Password (min 6 chars)"
+                  minLength={6}
+                  required
+                  className="w-full bg-[#1e2a30]/80 border border-white/10 focus:border-[var(--accent)] focus:bg-[#202c33] focus:ring-2 focus:ring-[var(--accent-soft)] rounded-xl py-2.5 sm:py-3 pl-10 pr-11 text-sm text-white placeholder-[var(--text-muted)] transition-all outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-white p-1 transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
+
+          {isSignup && isDataSubmitted && (
+            <textarea
+              onChange={(e) => setBio(e.target.value)}
+              value={bio}
+              name="bio"
+              aria-label="Bio"
+              rows={3}
+              className="w-full bg-[#1e2a30]/80 border border-white/10 focus:border-[var(--accent)] focus:bg-[#202c33] focus:ring-2 focus:ring-[var(--accent-soft)] rounded-xl p-3 text-sm text-white placeholder-[var(--text-muted)] transition-all outline-none resize-none"
+              placeholder="A short bio about yourself..."
+              required
+            />
+          )}
+
+          {currState === "Login" && !isDataSubmitted && (
+            <div className="flex justify-end -mt-1">
+              <Link
+                to="/forgot-password"
+                className="text-xs text-[var(--accent)] hover:text-[#06cf9c] hover:underline transition-colors"
+              >
+                Forgot password?
+              </Link>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="mt-0.5 py-2.5 sm:py-3 px-4 rounded-xl bg-gradient-to-r from-[#00a884] to-[#028e70] hover:from-[#02b992] hover:to-[#00a884] text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-emerald-950/40 active:scale-[0.98] cursor-pointer"
+          >
+            {isSignup ? "Create account" : "Log in"}
+          </button>
+
+          {!isDataSubmitted && <OAuthButtons />}
+
+          {isSignup && (
+            <div className="pt-0.5">
+              <label className="flex items-start gap-2.5 text-xs text-[var(--text-secondary)] cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={(e) => {
+                    setAgreed(e.target.checked);
+                    if (e.target.checked) setShowAgreementError(false);
+                  }}
+                  className="mt-0.5 rounded border-white/20 text-[var(--accent)] focus:ring-[var(--accent)] focus:ring-offset-0 bg-[#202c33] shrink-0"
+                />
+                <span>
+                  I agree to the{" "}
+                  <Link to="/terms" className="text-[var(--accent)] hover:underline font-medium">
+                    Terms
+                  </Link>
+                  {" "}&{" "}
+                  <Link to="/privacy" className="text-[var(--accent)] hover:underline font-medium">
+                    Privacy Policy
+                  </Link>
+                  .
+                </span>
+              </label>
+              {showAgreementError && !agreed && (
+                <p className="text-xs text-red-400 mt-1">Please agree to the terms to continue.</p>
+              )}
+            </div>
+          )}
+
+          <div className="text-center pt-1 border-t border-white/5">
+            <p className="text-xs text-[var(--text-secondary)]">
+              {isSignup ? "Already have an account?" : "New to QuickChat?"}{" "}
               <button
                 type="button"
                 onClick={() => {
-                  setCurrState("Login");
+                  setCurrState(isSignup ? "Login" : "Sign up");
                   setIsDataSubmitted(false);
                   setShowAgreementError(false);
                 }}
-                className="font-medium text-[var(--accent)] hover:underline"
+                className="font-semibold text-[var(--accent)] hover:text-[#06cf9c] transition-colors hover:underline cursor-pointer ml-1"
               >
-                Log in
+                {isSignup ? "Log in" : "Sign up"}
               </button>
-            </>
-          ) : (
-            <>
-              New here?{" "}
-              <button
-                type="button"
-                onClick={() => {
-                  setCurrState("Sign up");
-                  setShowAgreementError(false);
-                }}
-                className="font-medium text-[var(--accent)] hover:underline"
-              >
-                Sign up
-              </button>
-            </>
-          )}
-        </p>
-      </form>
+            </p>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
-);
+  );
 };
 
 export default LoginPage;

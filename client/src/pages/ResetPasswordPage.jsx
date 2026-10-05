@@ -48,10 +48,25 @@ const ResetPasswordPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full relative overflow-y-auto overflow-x-hidden flex flex-col items-center py-8 sm:py-12 px-4">
-      <div className="fixed inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628] pointer-events-none" />
-      <div className="relative z-10 w-[min(95vw,420px)] my-auto rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 shadow-[var(--shadow-card)]">
-        <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+    <div className="min-h-[100dvh] w-full relative overflow-y-auto overflow-x-hidden flex flex-col items-center justify-center py-6 sm:py-12 px-4 sm:px-6">
+      {/* Dynamic ambient atmosphere */}
+      <div className="fixed inset-0 bg-[#090e13] pointer-events-none" />
+      <div
+        className="fixed inset-0 pointer-events-none opacity-45"
+        style={{
+          background:
+            "radial-gradient(circle 600px at 15% 30%, rgba(147, 110, 255, 0.16), transparent 70%), radial-gradient(circle 600px at 85% 70%, rgba(0, 168, 132, 0.14), transparent 70%)",
+        }}
+      />
+      <div
+        className="fixed inset-0 opacity-[0.25] pointer-events-none"
+        style={{
+          backgroundImage: `radial-gradient(circle at 1.5px 1.5px, rgba(255, 255, 255, 0.15) 1px, transparent 0)`,
+          backgroundSize: "28px 28px",
+        }}
+      />
+      <div className="relative z-10 w-full max-w-[420px] my-auto rounded-3xl border border-white/10 bg-[#111b21]/95 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)]">
+        <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
           Reset password
         </h2>
         <p className="mt-2 text-sm text-[var(--text-secondary)]">

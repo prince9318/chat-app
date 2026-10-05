@@ -3,13 +3,28 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
 const VerificationSuccessView = ({ onGoToChat }) => (
-  <div className="min-h-screen w-full relative overflow-y-auto overflow-x-hidden flex flex-col items-center py-8 sm:py-12 px-4">
-    <div className="fixed inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628] pointer-events-none" />
-    <div className="relative z-10 w-[min(95vw,460px)] my-auto rounded-[var(--radius-2xl)] border border-emerald-500/30 bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 shadow-[var(--shadow-card)] text-center">
-      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 text-2xl">
+  <div className="min-h-[100dvh] w-full relative overflow-y-auto overflow-x-hidden flex flex-col items-center justify-center py-6 sm:py-12 px-4 sm:px-6">
+    {/* Dynamic ambient atmosphere */}
+    <div className="fixed inset-0 bg-[#090e13] pointer-events-none" />
+    <div
+      className="fixed inset-0 pointer-events-none opacity-45"
+      style={{
+        background:
+          "radial-gradient(circle 600px at 15% 30%, rgba(147, 110, 255, 0.16), transparent 70%), radial-gradient(circle 600px at 85% 70%, rgba(0, 168, 132, 0.14), transparent 70%)",
+      }}
+    />
+    <div
+      className="fixed inset-0 opacity-[0.25] pointer-events-none"
+      style={{
+        backgroundImage: `radial-gradient(circle at 1.5px 1.5px, rgba(255, 255, 255, 0.15) 1px, transparent 0)`,
+        backgroundSize: "28px 28px",
+      }}
+    />
+    <div className="relative z-10 w-full max-w-[420px] my-auto rounded-3xl border border-emerald-500/30 bg-[#111b21]/95 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] text-center">
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-400 text-2xl border border-emerald-500/20 shadow-lg shadow-emerald-500/10">
         ✓
       </div>
-      <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+      <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
         Email verified
       </h2>
       <p className="mt-2 text-sm text-[var(--text-secondary)]">
@@ -18,7 +33,7 @@ const VerificationSuccessView = ({ onGoToChat }) => (
       <button
         type="button"
         onClick={onGoToChat}
-        className="mt-6 w-full py-3 rounded-[var(--radius-md)] bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium transition-colors"
+        className="mt-6 w-full py-3 rounded-xl bg-gradient-to-r from-[#00a884] to-[#028e70] hover:from-[#02b992] hover:to-[#00a884] text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-emerald-950/40 active:scale-[0.98] cursor-pointer"
       >
         Go to chat
       </button>
@@ -27,13 +42,28 @@ const VerificationSuccessView = ({ onGoToChat }) => (
 );
 
 const VerificationProgressView = () => (
-  <div className="min-h-screen w-full relative overflow-y-auto overflow-x-hidden flex flex-col items-center py-8 sm:py-12 px-4">
-    <div className="fixed inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628] pointer-events-none" />
-    <div className="relative z-10 w-[min(95vw,460px)] my-auto rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 shadow-[var(--shadow-card)] text-center">
-      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)]/15 text-[var(--accent)] text-2xl animate-pulse">
+  <div className="min-h-[100dvh] w-full relative overflow-y-auto overflow-x-hidden flex flex-col items-center justify-center py-6 sm:py-12 px-4 sm:px-6">
+    {/* Dynamic ambient atmosphere */}
+    <div className="fixed inset-0 bg-[#090e13] pointer-events-none" />
+    <div
+      className="fixed inset-0 pointer-events-none opacity-45"
+      style={{
+        background:
+          "radial-gradient(circle 600px at 15% 30%, rgba(147, 110, 255, 0.16), transparent 70%), radial-gradient(circle 600px at 85% 70%, rgba(0, 168, 132, 0.14), transparent 70%)",
+      }}
+    />
+    <div
+      className="fixed inset-0 opacity-[0.25] pointer-events-none"
+      style={{
+        backgroundImage: `radial-gradient(circle at 1.5px 1.5px, rgba(255, 255, 255, 0.15) 1px, transparent 0)`,
+        backgroundSize: "28px 28px",
+      }}
+    />
+    <div className="relative z-10 w-full max-w-[420px] my-auto rounded-3xl border border-white/10 bg-[#111b21]/95 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] text-center">
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--accent)]/15 text-[var(--accent)] text-2xl animate-pulse border border-[var(--accent)]/20 shadow-lg shadow-emerald-500/10">
         ···
       </div>
-      <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+      <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
         Verifying your email...
       </h2>
       <p className="mt-2 text-sm text-[var(--text-secondary)]">
@@ -161,10 +191,25 @@ const EmailVerificationPage = () => {
   const otpComplete = otpInputs.every((d) => d !== "");
 
   return (
-    <div className="min-h-screen w-full relative overflow-y-auto overflow-x-hidden flex flex-col items-center py-8 sm:py-12 px-4">
-      <div className="fixed inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628] pointer-events-none" />
-      <div className="relative z-10 w-[min(95vw,460px)] my-auto rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 shadow-[var(--shadow-card)]">
-        <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+    <div className="min-h-[100dvh] w-full relative overflow-y-auto overflow-x-hidden flex flex-col items-center justify-center py-6 sm:py-12 px-4 sm:px-6">
+      {/* Dynamic ambient atmosphere */}
+      <div className="fixed inset-0 bg-[#090e13] pointer-events-none" />
+      <div
+        className="fixed inset-0 pointer-events-none opacity-45"
+        style={{
+          background:
+            "radial-gradient(circle 600px at 15% 30%, rgba(147, 110, 255, 0.16), transparent 70%), radial-gradient(circle 600px at 85% 70%, rgba(0, 168, 132, 0.14), transparent 70%)",
+        }}
+      />
+      <div
+        className="fixed inset-0 opacity-[0.25] pointer-events-none"
+        style={{
+          backgroundImage: `radial-gradient(circle at 1.5px 1.5px, rgba(255, 255, 255, 0.15) 1px, transparent 0)`,
+          backgroundSize: "28px 28px",
+        }}
+      />
+      <div className="relative z-10 w-full max-w-[420px] my-auto rounded-3xl border border-white/10 bg-[#111b21]/95 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)]">
+        <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
           Verify your email
         </h2>
         <p className="mt-2 text-sm text-[var(--text-secondary)]">
