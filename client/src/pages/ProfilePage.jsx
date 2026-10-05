@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import assets from "../assets/assets";
 import { AuthContext } from "../context/AuthContext";
@@ -9,25 +9,34 @@ const ProfilePage = () => {
   const { authUser, updateProfile } = useContext(AuthContext);
 
   const [fileToCrop, setFileToCrop] = useState(null);
-  const [cropImageUrl, setCropImageUrl] = useState(null); // object URL for crop modal, revoke on close
+  const [cropImageUrl, setCropImageUrl] = useState(null);
   const [croppedDataUrl, setCroppedDataUrl] = useState(null);
   const [name, setName] = useState(authUser.fullName);
   const [bio, setBio] = useState(authUser.bio);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (!fileToCrop) {
+      setCropImageUrl(null);
+      return undefined;
+    }
+    const url = URL.createObjectURL(fileToCrop);
+    setCropImageUrl(url);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [fileToCrop]);
+
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {
       setFileToCrop(file);
-      setCropImageUrl(URL.createObjectURL(file));
     }
     e.target.value = "";
   };
 
   const closeCropModal = () => {
-    if (cropImageUrl) URL.revokeObjectURL(cropImageUrl);
-    setCropImageUrl(null);
     setFileToCrop(null);
   };
 
@@ -59,10 +68,7 @@ const ProfilePage = () => {
   };
 
   const profilePreviewSrc =
-    croppedDataUrl ||
-    authUser?.profilePic ||
-    (fileToCrop ? URL.createObjectURL(fileToCrop) : null) ||
-    assets.logo_icon;
+    croppedDataUrl || authUser?.profilePic || cropImageUrl || assets.logo_icon;
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 bg-[var(--bg-app)]">
@@ -87,11 +93,20 @@ const ProfilePage = () => {
                 htmlFor="avatar"
                 className="absolute bottom-0 right-0 w-10 h-10 flex items-center justify-center rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] cursor-pointer transition-colors shadow-lg"
               >
+                <span className="sr-only">Upload profile photo</span>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <input onChange={handleFileSelect} type="file" id="avatar" accept=".png,.jpg,.jpeg,image/*" hidden />
+                <input
+                  onChange={handleFileSelect}
+                  type="file"
+                  id="avatar"
+                  name="avatar"
+                  aria-label="Upload profile photo"
+                  accept=".png,.jpg,.jpeg,image/*"
+                  hidden
+                />
               </label>
             </div>
             <h2 className="text-lg font-semibold text-[var(--text-primary)] text-center">{authUser.fullName}</h2>

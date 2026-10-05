@@ -16,21 +16,41 @@ export default function InCallScreen() {
   const remoteAudioRef = useRef(null);
 
   useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream;
+    const videoEl = localVideoRef.current;
+    if (videoEl && localStream) {
+      videoEl.srcObject = localStream;
     }
+    return () => {
+      if (videoEl) {
+        videoEl.srcObject = null;
+      }
+    };
   }, [localStream]);
 
   useEffect(() => {
-    if (remoteVideoRef.current && remoteStream) {
-      remoteVideoRef.current.srcObject = remoteStream;
+    const videoEl = remoteVideoRef.current;
+    if (videoEl && remoteStream) {
+      videoEl.srcObject = remoteStream;
+      videoEl.play().catch(() => {});
     }
+    return () => {
+      if (videoEl) {
+        videoEl.srcObject = null;
+      }
+    };
   }, [remoteStream]);
 
   useEffect(() => {
-    if (remoteAudioRef.current && remoteStream && callType === "audio") {
-      remoteAudioRef.current.srcObject = remoteStream;
+    const audioEl = remoteAudioRef.current;
+    if (audioEl && remoteStream && callType === "audio") {
+      audioEl.srcObject = remoteStream;
+      audioEl.play().catch(() => {});
     }
+    return () => {
+      if (audioEl) {
+        audioEl.srcObject = null;
+      }
+    };
   }, [remoteStream, callType]);
 
   if (!remoteUser) return null;
@@ -40,7 +60,11 @@ export default function InCallScreen() {
   return (
     <div className="fixed inset-0 z-[100] flex flex-col bg-[var(--bg-app)]">
       {/* Remote audio: must be in DOM for audio calls so you can hear the other person */}
-      {!isVideo && <audio ref={remoteAudioRef} autoPlay playsInline />}
+      {!isVideo && (
+        <audio ref={remoteAudioRef}>
+          <track kind="captions" />
+        </audio>
+      )}
 
       {/* Remote stream (full screen for video, or just label for audio) */}
       <div className="flex-1 relative min-h-0 flex items-center justify-center bg-[var(--bg-panel)]">
@@ -48,10 +72,11 @@ export default function InCallScreen() {
           <>
             <video
               ref={remoteVideoRef}
-              autoPlay
               playsInline
               className="w-full h-full object-contain"
-            />
+            >
+              <track kind="captions" />
+            </video>
             {!remoteStream && (
               <p className="absolute text-[var(--text-muted)]">Waiting for {remoteUser.fullName}…</p>
             )}
@@ -72,7 +97,9 @@ export default function InCallScreen() {
               playsInline
               muted
               className="w-full h-full object-cover"
-            />
+            >
+              <track kind="captions" />
+            </video>
           </div>
         )}
       </div>
@@ -86,6 +113,7 @@ export default function InCallScreen() {
             isMuted ? "bg-red-500/30 text-red-400" : "bg-[var(--bg-input)] text-[var(--text-primary)] hover:bg-[var(--border-default)]"
           }`}
           title={isMuted ? "Unmute" : "Mute"}
+          aria-label={isMuted ? "Unmute microphone" : "Mute microphone"}
         >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             {isMuted ? (
@@ -100,6 +128,7 @@ export default function InCallScreen() {
           onClick={endCall}
           className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white transition-colors"
           title="End call"
+          aria-label="End call"
         >
           <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M5 3a2 2 0 00-2 2v1c0 8.284 6.716 15 15 15h1a2 2 0 002-2v-3.28a1 1 0 00-.684-.948l-4.493-1.498a1 1 0 00-1.21.502l-1.13 2.257a11.042 11.042 0 01-5.516-5.517l2.257-1.128a1 1 0 00.502-1.21L9.228 3.683A1 1 0 008.279 3H5z" />

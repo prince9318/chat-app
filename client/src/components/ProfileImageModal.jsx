@@ -14,17 +14,16 @@ const ProfileImageModal = ({ imageUrl, onClose, userName }) => {
     };
   }, [onClose]);
 
-  const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) onClose();
-  };
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-6"
-      onClick={handleBackdropClick}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-6">
+      <button
+        type="button"
+        aria-label="Close"
+        onClick={onClose}
+        className="fixed inset-0 w-full h-full bg-black/85 backdrop-blur-sm border-0 cursor-default"
+      />
       <div
-        className="relative w-[95vw] sm:w-full sm:max-w-md flex flex-col rounded-none sm:rounded-[var(--radius-xl)] overflow-hidden border-0 sm:border sm:border-white/10 shadow-2xl bg-[var(--bg-panel)]"
+        className="relative z-10 w-[95vw] sm:w-full sm:max-w-md flex flex-col rounded-none sm:rounded-[var(--radius-xl)] overflow-hidden border-0 sm:border sm:border-white/10 shadow-2xl bg-[var(--bg-panel)]"
         style={{ maxHeight: "100dvh" }}
       >
         <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 sm:py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)]">

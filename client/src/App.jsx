@@ -1,14 +1,5 @@
-import { useContext } from "react";
+import { Suspense, lazy, useContext, useMemo } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import HomePage from "./pages/HomePage";
-import LoginPage from "./pages/LoginPage";
-import ProfilePage from "./pages/ProfilePage";
-import TermsPage from "./pages/TermsPage";
-import PrivacyPage from "./pages/PrivacyPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
-import OAuthCallbackPage from "./pages/OAuthCallbackPage";
-import EmailVerificationPage from "./pages/EmailVerificationPage";
 import { Toaster } from "react-hot-toast";
 import { AuthContext } from "./context/AuthContext";
 import { CallContext } from "./context/CallContext";
@@ -16,49 +7,147 @@ import IncomingCallModal from "./components/IncomingCallModal";
 import OutgoingCallModal from "./components/OutgoingCallModal";
 import InCallScreen from "./components/InCallScreen";
 
+const HomePage = lazy(() => import("./pages/HomePage"));
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const TermsPage = lazy(() => import("./pages/TermsPage"));
+const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const OAuthCallbackPage = lazy(() => import("./pages/OAuthCallbackPage"));
+const EmailVerificationPage = lazy(() => import("./pages/EmailVerificationPage"));
+
+const PageSuspense = ({ children }) => (
+  <Suspense
+    fallback={
+      <div className="min-h-screen bg-[var(--bg-app)] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-[var(--accent-primary)] border-t-transparent rounded-full animate-spin" />
+      </div>
+    }
+  >
+    {children}
+  </Suspense>
+);
+
+const ProtectedRoute = ({ authUser, children, invert = false }) => {
+  const shouldRender = invert ? !authUser : authUser;
+  if (!shouldRender) {
+    return <Navigate to={invert ? "/" : "/login"} replace />;
+  }
+  return children;
+};
+
 const App = () => {
   const { authUser } = useContext(AuthContext);
   const { callState } = useContext(CallContext);
 
-  return (
-    <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)]">
-      <Toaster />
-      {callState === "incoming" && <IncomingCallModal />}
-      {callState === "outgoing" && <OutgoingCallModal />}
-      {callState === "connected" && <InCallScreen />}
-      {/* ✅ Define application routes */}
+  const routes = useMemo(
+    () => (
       <Routes>
-        {/* Home route — accessible only if logged in */}
         <Route
           path="/"
-          element={authUser ? <HomePage /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute authUser={authUser}>
+              <PageSuspense>
+                <HomePage />
+              </PageSuspense>
+            </ProtectedRoute>
+          }
         />
-        {/* Login route — redirect to home if already logged in */}
         <Route
           path="/login"
-          element={!authUser ? <LoginPage /> : <Navigate to="/" />}
+          element={
+            <ProtectedRoute authUser={authUser} invert>
+              <PageSuspense>
+                <LoginPage />
+              </PageSuspense>
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/forgot-password"
-          element={!authUser ? <ForgotPasswordPage /> : <Navigate to="/" />}
+          element={
+            <ProtectedRoute authUser={authUser} invert>
+              <PageSuspense>
+                <ForgotPasswordPage />
+              </PageSuspense>
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/reset-password"
-          element={!authUser ? <ResetPasswordPage /> : <Navigate to="/" />}
+          element={
+            <ProtectedRoute authUser={authUser} invert>
+              <PageSuspense>
+                <ResetPasswordPage />
+              </PageSuspense>
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/verify-email"
-          element={<EmailVerificationPage />}
+          element={
+            <PageSuspense>
+              <EmailVerificationPage />
+            </PageSuspense>
+          }
         />
-        <Route path="/auth/callback" element={<OAuthCallbackPage />} />
-        {/* Profile route — only accessible when authenticated */}
+        <Route
+          path="/auth/callback"
+          element={
+            <PageSuspense>
+              <OAuthCallbackPage />
+            </PageSuspense>
+          }
+        />
         <Route
           path="/profile"
-          element={authUser ? <ProfilePage /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute authUser={authUser}>
+              <PageSuspense>
+                <ProfilePage />
+              </PageSuspense>
+            </ProtectedRoute>
+          }
         />
-        <Route path="/terms" element={<TermsPage />} />
-        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route
+          path="/terms"
+          element={
+            <PageSuspense>
+              <TermsPage />
+            </PageSuspense>
+          }
+        />
+        <Route
+          path="/privacy"
+          element={
+            <PageSuspense>
+              <PrivacyPage />
+            </PageSuspense>
+          }
+        />
       </Routes>
+    ),
+    [authUser],
+  );
+
+  return (
+    <div className="min-h-screen bg-[var(--bg-app)] text-[var(--text-primary)]">
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: "var(--bg-message)",
+            color: "var(--text-primary)",
+            border: "1px solid var(--border-primary)",
+          },
+        }}
+      />
+      {callState === "incoming" && <IncomingCallModal />}
+      {callState === "outgoing" && <OutgoingCallModal />}
+      {callState === "connected" && <InCallScreen />}
+      {routes}
     </div>
   );
 };

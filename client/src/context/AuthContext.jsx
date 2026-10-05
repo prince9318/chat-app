@@ -1,77 +1,117 @@
-import { createContext, useEffect, useState, useRef, useCallback } from "react";
-import axios from "axios";
+import { createContext, useEffect, useState, useRef, useCallback, useMemo } from "react";
+import axiosInstance from "../lib/axiosInstance";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
-// ✅ Set backend URL from environment variable
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
-axios.defaults.baseURL = backendUrl;
+const axios = axiosInstance;
 
-// Create AuthContext for managing authentication globally
+const TOKEN_KEY = "token";
+
+const arraysEqual = (a, b) => {
+  if (a.length !== b.length) return false;
+  const setA = new Set(a);
+  const setB = new Set(b);
+  if (setA.size !== setB.size) return false;
+  for (let val of setA) if (!setB.has(val)) return false;
+  return true;
+};
+
+const readStoredToken = () => {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+};
+
+const saveStoredToken = (token) => {
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    /* noop */
+  }
+};
+
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  // Store authentication state
-  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [, setToken] = useState(null);
   const [authUser, setAuthUser] = useState(null);
-  const [onlineUsers, setOnlineUsers] = useState([]); // list of currently online users
-  const [socket, setSocket] = useState(null); // active socket connection
-  const socketRef = useRef(null); // reference to socket instance (stable across re-renders)
+  const [onlineUsers, setOnlineUsers] = useState([]);
+  const [socket, setSocket] = useState(null);
+  const socketRef = useRef(null);
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState(null);
   const [pendingVerificationInfo, setPendingVerificationInfo] = useState(null);
 
-  // ✅ Helper: compare two arrays to avoid unnecessary re-renders
-  const arraysEqual = (a, b) => {
-    if (a.length !== b.length) return false;
-    const setA = new Set(a);
-    const setB = new Set(b);
-    if (setA.size !== setB.size) return false;
-    for (let val of setA) if (!setB.has(val)) return false;
-    return true;
-  };
-
-  // ✅ Check if user is authenticated (used on page refresh)
-  const checkAuth = async () => {
-    try {
-      const { data } = await axios.get("/api/auth/check");
-      if (data.success) {
-        setAuthUser(data.user); // save logged-in user
-        connectSocket(data.user); // connect to socket server
+  useEffect(() => {
+    const userId = authUser?._id;
+    if (!userId) {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+        setSocket(null);
       }
-    } catch (error) {
-      toast.error(error.message);
+      return undefined;
     }
-  };
 
-  // ✅ Establish socket connection (only once per user)
-  const connectSocket = useCallback((userData) => {
-    if (!userData || socketRef.current?.connected) return;
-
-    socketRef.current = io(backendUrl, {
-      query: { userId: userData._id },
+    const s = io(backendUrl, {
+      query: { userId },
       transports: ["websocket"],
+      withCredentials: true,
     });
+    socketRef.current = s;
 
-    socketRef.current.on("connect", () => {
-      console.log("Socket connected:", socketRef.current.id);
-      setSocket(socketRef.current);
-    });
+    const handleConnect = () => {
+      setSocket(s);
+    };
 
-    socketRef.current.on("getOnlineUsers", (userIds) => {
+    const handleOnlineUsers = (userIds) => {
       setOnlineUsers((prev) => {
         if (arraysEqual(prev, userIds)) return prev;
         return userIds;
       });
-    });
+    };
 
-    socketRef.current.on("disconnect", () => {
-      console.log("Socket disconnected");
+    const handleDisconnect = () => {
       setSocket(null);
-    });
+    };
+
+    s.on("connect", handleConnect);
+    s.on("getOnlineUsers", handleOnlineUsers);
+    s.on("disconnect", handleDisconnect);
+
+    return () => {
+      s.off("connect", handleConnect);
+      s.off("getOnlineUsers", handleOnlineUsers);
+      s.off("disconnect", handleDisconnect);
+      s.disconnect();
+      if (socketRef.current === s) {
+        socketRef.current = null;
+      }
+      setSocket(null);
+    };
+  }, [authUser?._id]);
+
+  const checkAuth = useCallback(async () => {
+    try {
+      const { data } = await axios.get("/api/auth/check");
+      if (data.success) {
+        setAuthUser(data.user);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
   }, []);
 
-  // ✅ Handle login / signup
-  const login = async (state, credentials) => {
+  const applyIncomingToken = useCallback((newToken) => {
+    setToken(newToken);
+    saveStoredToken(newToken);
+    axios.defaults.headers.common["token"] = newToken;
+  }, []);
+
+  const login = useCallback(async (state, credentials) => {
     try {
       const { data } = await axios.post(`/api/auth/${state}`, credentials);
       if (data.success) {
@@ -93,13 +133,10 @@ export const AuthProvider = ({ children }) => {
 
         if (data.userData && data.token) {
           setAuthUser(data.userData);
-          axios.defaults.headers.common["token"] = data.token; // attach token for future requests
-          setToken(data.token);
-          localStorage.setItem("token", data.token);
+          applyIncomingToken(data.token);
           setPendingVerificationEmail(null);
           setPendingVerificationInfo(null);
           toast.success(data.message);
-          connectSocket(data.userData); // connect to socket after login
           return { success: true };
         }
 
@@ -129,21 +166,17 @@ export const AuthProvider = ({ children }) => {
       toast.error(error.message);
       return { success: false };
     }
-  };
+  }, [applyIncomingToken]);
 
-  // ✅ Verify email with OTP or token
-  const verifyEmail = async (payload) => {
+  const verifyEmail = useCallback(async (payload) => {
     try {
       const { data } = await axios.post("/api/auth/verify-email", payload);
       if (data.success) {
         setAuthUser(data.userData);
-        axios.defaults.headers.common["token"] = data.token;
-        setToken(data.token);
-        localStorage.setItem("token", data.token);
+        applyIncomingToken(data.token);
         setPendingVerificationEmail(null);
         setPendingVerificationInfo(null);
         toast.success(data.message);
-        connectSocket(data.userData);
         return { success: true };
       } else {
         toast.error(data.message);
@@ -153,10 +186,9 @@ export const AuthProvider = ({ children }) => {
       toast.error(error.message);
       return { success: false, message: error.message };
     }
-  };
+  }, [applyIncomingToken]);
 
-  // ✅ Resend verification email
-  const resendVerificationEmail = async (email) => {
+  const resendVerificationEmail = useCallback(async (email) => {
     try {
       const { data } = await axios.post("/api/auth/resend-verification-email", {
         email,
@@ -186,95 +218,117 @@ export const AuthProvider = ({ children }) => {
       toast.error(error.message);
       return { success: false };
     }
-  };
+  }, []);
 
-  // ✅ Clear verification state
-  const clearVerificationState = () => {
+  const clearVerificationState = useCallback(() => {
     setPendingVerificationEmail(null);
     setPendingVerificationInfo(null);
-  };
+  }, []);
 
-  // ✅ Complete OAuth login after redirect callback
   const completeOAuthLogin = useCallback(async (oauthToken) => {
-    localStorage.setItem("token", oauthToken);
-    axios.defaults.headers.common["token"] = oauthToken;
-    setToken(oauthToken);
+    applyIncomingToken(oauthToken);
+    try {
+      await axios.post("/api/auth/migrate-token", { token: oauthToken });
+    } catch {
+      /* token may already be set via cookie from redirect */
+    }
 
     const { data } = await axios.get("/api/auth/check");
     if (!data.success) {
-      localStorage.removeItem("token");
-      axios.defaults.headers.common["token"] = null;
+      saveStoredToken(null);
+      delete axios.defaults.headers.common["token"];
       setToken(null);
       throw new Error(data.message || "Authentication failed");
     }
 
     setAuthUser(data.user);
-    connectSocket(data.user);
     toast.success("Signed in successfully");
-  }, [connectSocket]);
+  }, [applyIncomingToken]);
 
-  // ✅ Logout user and clear session
-  const logout = async () => {
-    localStorage.removeItem("token");
+  const logout = useCallback(async () => {
+    try {
+      await axios.post("/api/auth/logout");
+    } catch {
+      /* ignore */
+    }
+    saveStoredToken(null);
+    delete axios.defaults.headers.common["token"];
     setToken(null);
     setAuthUser(null);
     setOnlineUsers([]);
-    axios.defaults.headers.common["token"] = null;
     setPendingVerificationEmail(null);
     setPendingVerificationInfo(null);
     toast.success("Logged out successfully");
 
-    // disconnect socket if exists
     if (socketRef.current) {
       socketRef.current.disconnect();
       socketRef.current = null;
       setSocket(null);
     }
-  };
+  }, []);
 
-  // ✅ Update user profile
-  const updateProfile = async (body) => {
+  const updateProfile = useCallback(async (body) => {
     try {
       const { data } = await axios.put("/api/auth/update-profile", body);
       if (data.success) {
-        setAuthUser(data.user); // update user state
+        setAuthUser(data.user);
         toast.success("Profile updated successfully");
       }
     } catch (error) {
       toast.error(error.message);
     }
-  };
+  }, []);
 
-  // ✅ On mount: check auth if token exists + cleanup socket on unmount
   useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common["token"] = token;
-      checkAuth();
-    }
+    let disposed = false;
+    (async () => {
+      const stored = readStoredToken();
+      if (stored) {
+        applyIncomingToken(stored);
+      }
+      if (disposed) return;
+      await checkAuth();
+    })();
     return () => {
+      disposed = true;
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
       }
     };
-  }, []);
+  }, [applyIncomingToken, checkAuth]);
 
-  // ✅ Values exposed to other components
-  const value = {
-    axios,
-    authUser,
-    onlineUsers,
-    socket,
-    login,
-    verifyEmail,
-    resendVerificationEmail,
-    clearVerificationState,
-    logout,
-    updateProfile,
-    completeOAuthLogin,
-    pendingVerificationEmail,
-    pendingVerificationInfo,
-  };
+  const value = useMemo(
+    () => ({
+      axios,
+      authUser,
+      onlineUsers,
+      socket,
+      login,
+      verifyEmail,
+      resendVerificationEmail,
+      clearVerificationState,
+      logout,
+      updateProfile,
+      completeOAuthLogin,
+      pendingVerificationEmail,
+      pendingVerificationInfo,
+    }),
+    [
+      authUser,
+      onlineUsers,
+      socket,
+      login,
+      verifyEmail,
+      resendVerificationEmail,
+      clearVerificationState,
+      logout,
+      updateProfile,
+      completeOAuthLogin,
+      pendingVerificationEmail,
+      pendingVerificationInfo,
+    ],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

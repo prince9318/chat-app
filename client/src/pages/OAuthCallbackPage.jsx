@@ -15,7 +15,13 @@ const OAuthCallbackPage = () => {
 
     if (error) {
       setStatus("Sign-in failed");
-      toast.error(decodeURIComponent(error));
+      let message = error;
+      try {
+        message = decodeURIComponent(error);
+      } catch {
+        /* fallback to raw error string */
+      }
+      toast.error(message);
       navigate("/login", { replace: true });
       return;
     }

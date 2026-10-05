@@ -2,6 +2,47 @@ import { useCallback, useContext, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
+const VerificationSuccessView = ({ onGoToChat }) => (
+  <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="absolute inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628]" />
+    <div className="relative z-10 w-[min(95vw,460px)] rounded-[var(--radius-2xl)] border border-emerald-500/30 bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 shadow-[var(--shadow-card)] text-center">
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 text-2xl">
+        ✓
+      </div>
+      <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+        Email verified
+      </h2>
+      <p className="mt-2 text-sm text-[var(--text-secondary)]">
+        Your email has been verified successfully. You are now signed in.
+      </p>
+      <button
+        type="button"
+        onClick={onGoToChat}
+        className="mt-6 w-full py-3 rounded-[var(--radius-md)] bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium transition-colors"
+      >
+        Go to chat
+      </button>
+    </div>
+  </div>
+);
+
+const VerificationProgressView = () => (
+  <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="absolute inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628]" />
+    <div className="relative z-10 w-[min(95vw,460px)] rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 shadow-[var(--shadow-card)] text-center">
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)]/15 text-[var(--accent)] text-2xl animate-pulse">
+        ···
+      </div>
+      <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+        Verifying your email...
+      </h2>
+      <p className="mt-2 text-sm text-[var(--text-secondary)]">
+        Please wait a moment while we verify your email address.
+      </p>
+    </div>
+  </div>
+);
+
 const EmailVerificationPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -10,11 +51,12 @@ const EmailVerificationPage = () => {
   const token = searchParams.get("token");
   const emailFromUrl = searchParams.get("email");
 
-  const [status, setStatus] = useState("idle"); // idle | verifying | success | error
+  const [status, setStatus] = useState("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [showManualForm, setShowManualForm] = useState(false);
   const [manualEmail, setManualEmail] = useState("");
   const [manualToken, setManualToken] = useState("");
+  const MV_OTP_SLOTS = ["mv-slot-0", "mv-slot-1", "mv-slot-2", "mv-slot-3", "mv-slot-4", "mv-slot-5"];
   const [otpInputs, setOtpInputs] = useState(["", "", "", "", "", ""]);
   const [useOtp, setUseOtp] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,25 +98,31 @@ const EmailVerificationPage = () => {
     if (!targetEmail) return;
     setIsResending(true);
     setResendMessage("");
-    const result = await resendVerificationEmail(targetEmail);
-    if (result?.success) {
-      setResendMessage("If an account exists for that email, a new verification email was sent.");
+    try {
+      const result = await resendVerificationEmail(targetEmail);
+      if (result?.success) {
+        setResendMessage("If an account exists for that email, a new verification email was sent.");
+      }
+    } finally {
+      setIsResending(false);
     }
-    setIsResending(false);
   };
 
   const handleManualSubmit = async (e) => {
     e.preventDefault();
+    let payload;
     if (useOtp) {
       const otp = otpInputs.join("");
       if (otp.length !== 6 || !manualEmail) return;
-      setIsSubmitting(true);
-      await handleVerify({ email: manualEmail, otp });
-      setIsSubmitting(false);
+      payload = { email: manualEmail, otp };
     } else {
       if (!manualEmail || !manualToken) return;
-      setIsSubmitting(true);
-      await handleVerify({ email: manualEmail, token: manualToken });
+      payload = { email: manualEmail, token: manualToken };
+    }
+    setIsSubmitting(true);
+    try {
+      await handleVerify(payload);
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -100,47 +148,14 @@ const EmailVerificationPage = () => {
 
   if (status === "success") {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628]" />
-        <div className="relative z-10 w-[min(95vw,460px)] rounded-[var(--radius-2xl)] border border-emerald-500/30 bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 shadow-[var(--shadow-card)] text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 text-2xl">
-            ✓
-          </div>
-          <h2 className="text-xl font-semibold text-[var(--text-primary)]">
-            Email verified
-          </h2>
-          <p className="mt-2 text-sm text-[var(--text-secondary)]">
-            Your email has been verified successfully. You are now signed in.
-          </p>
-          <button
-            type="button"
-            onClick={() => navigate("/", { replace: true })}
-            className="mt-6 w-full py-3 rounded-[var(--radius-md)] bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium transition-colors"
-          >
-            Go to chat
-          </button>
-        </div>
-      </div>
+      <VerificationSuccessView
+        onGoToChat={() => navigate("/", { replace: true })}
+      />
     );
   }
 
   if (status === "verifying" && !showManualForm) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[var(--bg-app)] via-[#0d1318] to-[#0a1628]" />
-        <div className="relative z-10 w-[min(95vw,460px)] rounded-[var(--radius-2xl)] border border-[var(--border-subtle)] bg-[var(--bg-panel)]/95 backdrop-blur-xl p-7 sm:p-8 shadow-[var(--shadow-card)] text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)]/15 text-[var(--accent)] text-2xl animate-pulse">
-            ···
-          </div>
-          <h2 className="text-xl font-semibold text-[var(--text-primary)]">
-            Verifying your email...
-          </h2>
-          <p className="mt-2 text-sm text-[var(--text-secondary)]">
-            Please wait a moment while we verify your email address.
-          </p>
-        </div>
-      </div>
-    );
+    return <VerificationProgressView />;
   }
 
   const otpComplete = otpInputs.every((d) => d !== "");
@@ -166,10 +181,13 @@ const EmailVerificationPage = () => {
 
         <form onSubmit={handleManualSubmit} className="mt-6 flex flex-col gap-4">
           <div>
-            <label className="block text-sm mb-1.5 text-[var(--text-secondary)]">
+            <label htmlFor="manual-email" className="block text-sm mb-1.5 text-[var(--text-secondary)]">
               Email address
             </label>
             <input
+              id="manual-email"
+              name="manualEmail"
+              aria-label="Email address"
               value={manualEmail || emailFromUrl || ""}
               onChange={(e) => setManualEmail(e.target.value)}
               type="email"
@@ -212,10 +230,13 @@ const EmailVerificationPage = () => {
 
           {!useOtp ? (
             <div>
-              <label className="block text-sm mb-1.5 text-[var(--text-secondary)]">
+              <label htmlFor="manual-token" className="block text-sm mb-1.5 text-[var(--text-secondary)]">
                 Verification token (from the URL in your email)
               </label>
               <input
+                id="manual-token"
+                name="manualToken"
+                aria-label="Verification token"
                 value={manualToken || token || ""}
                 onChange={(e) => setManualToken(e.target.value)}
                 type="text"
@@ -226,14 +247,15 @@ const EmailVerificationPage = () => {
             </div>
           ) : (
             <div>
-              <label className="block text-sm mb-2 text-[var(--text-secondary)]">
+              <p className="block text-sm mb-2 text-[var(--text-secondary)]">
                 6-digit verification code
-              </label>
+              </p>
               <div className="flex justify-between gap-2 sm:gap-3">
                 {otpInputs.map((d, i) => (
                   <input
-                    key={i}
+                    key={MV_OTP_SLOTS[i]}
                     id={`mv-otp-${i}`}
+                    aria-label={`Digit ${i + 1} of verification code`}
                     type="text"
                     inputMode="numeric"
                     autoComplete="one-time-code"

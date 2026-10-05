@@ -1,3 +1,4 @@
+import React from "react";
 // ✅ Utility function to format a given date into "HH:MM" (24-hour format)
 export function formatMessageTime(date) {
   return new Date(date).toLocaleTimeString("en-US", {
@@ -15,11 +16,11 @@ export function detectAndConvertURLs(text) {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
 
   // Split text by URLs and map each part
-  return text.split(urlRegex).map((part, index) => {
+  return text.split(urlRegex).map((part) => {
     if (urlRegex.test(part)) {
       return (
         <a
-          key={index}
+          key={part}
           href={part}
           target="_blank"
           rel="noopener noreferrer"
@@ -29,6 +30,14 @@ export function detectAndConvertURLs(text) {
         </a>
       );
     }
-    return part;
+    const stableKey =
+      part.length > 0
+        ? `t-${part.length}-${part.slice(0, Math.min(8, part.length)).replace(/\W/g, "x")}-${part.charCodeAt(0) || "x"}`
+        : `t-empty`;
+    return (
+      <span key={stableKey}>
+        {part}
+      </span>
+    );
   });
 }

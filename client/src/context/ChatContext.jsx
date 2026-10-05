@@ -1,16 +1,8 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { AuthContext } from "./AuthContext";
 import toast from "react-hot-toast";
 
-// ✅ Context for managing chat-related state & actions globally
 export const ChatContext = createContext();
-
-const userIdsEqual = (a, b) => {
-  if (a.length !== b.length) return false;
-  const setA = new Set(a);
-  for (const v of b) if (!setA.has(v)) return false;
-  return true;
-};
 
 const publicUserEquals = (a, b) => {
   if (!a || !b) return a === b;
@@ -24,72 +16,95 @@ const publicUserEquals = (a, b) => {
   );
 };
 
+const usersListsEqual = (prev, incoming) => {
+  if (prev.length !== incoming.length) return false;
+  return prev.every((p) => {
+    const q = incoming.find((x) => String(x._id) === String(p._id));
+    return q && publicUserEquals(p, q);
+  });
+};
+
 export const ChatProvider = ({ children }) => {
-  // State for messages, users list, selected chat, unseen messages count
   const [messages, setMessages] = useState([]);
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [unseenMessages, setUnseenMessages] = useState({});
 
-  // Get socket, axios, and authUser from AuthContext
   const { socket, axios, authUser, onlineUsers } = useContext(AuthContext);
+  const selectedUserIdRef = useRef(null);
+  useEffect(() => {
+    selectedUserIdRef.current = selectedUser?._id || null;
+  }, [selectedUser]);
 
-  // ✅ Fetch all users for sidebar (with unseen messages count)
   const getUsers = useCallback(async () => {
     try {
       const { data } = await axios.get("/api/messages/users");
       if (data.success) {
         setUsers((prev) => {
           const incoming = data.users || [];
-          if (
-            prev.length === incoming.length &&
-            prev.every((p) => {
-              const q = incoming.find((x) => x._id === p._id);
-              return q && publicUserEquals(p, q);
-            })
-          ) {
-            return prev;
-          }
+          if (usersListsEqual(prev, incoming)) return prev;
           return incoming;
         });
-        setUnseenMessages(data.unseenMessages || {});
+        setUnseenMessages((prev) => {
+          const next = data.unseenMessages || {};
+          const keys = Object.keys(next);
+          const prevKeys = Object.keys(prev);
+          if (keys.length !== prevKeys.length) return next;
+          for (const k of keys) if (prev[k] !== next[k]) return next;
+          return prev;
+        });
       }
     } catch (error) {
       if (error?.code !== "ERR_CANCELED") toast.error(error.message);
     }
   }, [axios]);
 
-  // ✅ Force-refresh the users list (exposed to consumers)
   const refreshUsers = useCallback(async () => {
     await getUsers();
   }, [getUsers]);
 
-  // ✅ Fetch messages for the currently selected user
-  const getMessages = async (userId) => {
+  const getMessages = useCallback(async (userId) => {
     try {
       const { data } = await axios.get(`/api/messages/${userId}`);
       if (data.success) {
-        setMessages(data.messages);
+        setMessages((prev) => {
+          const next = data.messages;
+          if (prev.length === next.length) {
+            const same = prev.every(
+              (p, i) =>
+                next[i] &&
+                p._id === next[i]._id &&
+                p.seen === next[i].seen &&
+                p.isDeleted === next[i].isDeleted,
+            );
+            if (same) return prev;
+          }
+          return next;
+        });
       }
     } catch (error) {
       toast.error(error.message);
     }
-  };
+  }, [axios]);
 
-  // ✅ Send a new message to the selected user
-  const sendMessage = async (messageData) => {
-    if (!selectedUser?._id) {
+  const sendMessage = useCallback(async (messageData) => {
+    const currentId = selectedUserIdRef.current;
+    if (!currentId) {
       return { success: false, message: "Select a chat first" };
     }
 
     try {
       const { data } = await axios.post(
-        `/api/messages/send/${selectedUser._id}`,
+        `/api/messages/send/${currentId}`,
         messageData,
       );
       if (data.success) {
-        // append new message to local state
-        setMessages((prevMessages) => [...prevMessages, data.newMessage]);
+        setMessages((prevMessages) => {
+          if (prevMessages.some((m) => m._id === data.newMessage?._id)) {
+            return prevMessages;
+          }
+          return [...prevMessages, data.newMessage];
+        });
         return {
           success: true,
           message: data.message,
@@ -103,10 +118,11 @@ export const ChatProvider = ({ children }) => {
       toast.error(error.message);
       return { success: false, message: error.message };
     }
-  };
+  }, [axios]);
 
-  const sendAudioMessage = async (audioBlob) => {
-    if (!selectedUser?._id) {
+  const sendAudioMessage = useCallback(async (audioBlob) => {
+    const currentId = selectedUserIdRef.current;
+    if (!currentId) {
       return { success: false, message: "Select a chat first" };
     }
     if (!audioBlob) {
@@ -118,14 +134,17 @@ export const ChatProvider = ({ children }) => {
       formData.append("audio", audioBlob, `voice-${Date.now()}.webm`);
 
       const { data } = await axios.post(
-        `/api/messages/send-audio/${selectedUser._id}`,
+        `/api/messages/send-audio/${currentId}`,
         formData,
       );
 
       if (data.success) {
         const newMessage = data.newMessage || data.data;
         if (newMessage) {
-          setMessages((prevMessages) => [...prevMessages, newMessage]);
+          setMessages((prevMessages) => {
+            if (prevMessages.some((m) => m._id === newMessage._id)) return prevMessages;
+            return [...prevMessages, newMessage];
+          });
         }
         return { success: true, message: data.message, newMessage };
       }
@@ -136,26 +155,29 @@ export const ChatProvider = ({ children }) => {
       toast.error(error.message);
       return { success: false, message: error.message };
     }
-  };
+  }, [axios]);
 
-  // ✅ Subscribe to new incoming messages (via socket)
-  const subscribeToMessages = () => {
-    if (!socket) return;
+  useEffect(() => {
+    if (!socket) return undefined;
 
-    socket.on("newMessage", (newMessage) => {
+    const handleNewMessage = (newMessage) => {
+      const currentSelectedId = selectedUserIdRef.current;
       const isForSelectedChat =
-        selectedUser &&
-        (newMessage.senderId === selectedUser._id ||
-          newMessage.receiverId === selectedUser._id);
+        currentSelectedId &&
+        (newMessage.senderId === currentSelectedId ||
+          newMessage.receiverId === currentSelectedId);
+
       if (isForSelectedChat) {
+        let normalized = newMessage;
         if (newMessage.messageType !== "call") {
-          newMessage.seen = true;
-          axios.put(`/api/messages/mark/${newMessage._id}`);
+          normalized = { ...newMessage, seen: true };
+          axios.put(`/api/messages/mark/${newMessage._id}`).catch((err) => {
+            toast.error(err.message);
+          });
         }
-        setMessages((prevMessages) => {
-          if (prevMessages.some((m) => m._id === newMessage._id))
-            return prevMessages;
-          return [...prevMessages, newMessage];
+        setMessages((prev) => {
+          if (prev.some((m) => m._id === normalized._id)) return prev;
+          return [...prev, normalized];
         });
       } else if (newMessage.messageType !== "call") {
         setUnseenMessages((prev) => ({
@@ -165,52 +187,57 @@ export const ChatProvider = ({ children }) => {
             : 1,
         }));
       }
-    });
-  };
+    };
 
-  // ✅ Unsubscribe from socket events when cleanup is needed
-  const unsubscribeFromMessages = () => {
-    if (socket) socket.off("newMessage");
-  };
-
-  // Re-subscribe whenever socket or selected user changes
-  useEffect(() => {
-    subscribeToMessages();
-    return () => unsubscribeFromMessages();
-  }, [socket, selectedUser]);
+    socket.on("newMessage", handleNewMessage);
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+    };
+  }, [socket, axios]);
 
   useEffect(() => {
     if (!socket) return;
 
     const handleMessageSeen = ({ messageId }) => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg._id === messageId ? { ...msg, seen: true } : msg,
-        ),
-      );
+      setMessages((prev) => {
+        let changed = false;
+        const next = prev.map((msg) => {
+          if (msg._id === messageId && !msg.seen) {
+            changed = true;
+            return { ...msg, seen: true };
+          }
+          return msg;
+        });
+        return changed ? next : prev;
+      });
     };
 
     const handleMessagesSeen = ({ messageIds }) => {
       if (!Array.isArray(messageIds)) return;
-      setMessages((prev) =>
-        prev.map((msg) =>
-          messageIds.includes(msg._id) ? { ...msg, seen: true } : msg,
-        ),
-      );
+      const idSet = new Set(messageIds);
+      setMessages((prev) => {
+        let changed = false;
+        const next = prev.map((msg) => {
+          if (idSet.has(msg._id) && !msg.seen) {
+            changed = true;
+            return { ...msg, seen: true };
+          }
+          return msg;
+        });
+        return changed ? next : prev;
+      });
     };
 
     socket.on("messageSeen", handleMessageSeen);
     socket.on("messagesSeen", handleMessagesSeen);
 
     return () => {
-      if (!socket) return;
       socket.off("messageSeen", handleMessageSeen);
       socket.off("messagesSeen", handleMessagesSeen);
     };
   }, [socket]);
 
-  // ✅ Delete message (for self or everyone)
-  const deleteMessage = async (messageId, deleteFor) => {
+  const deleteMessage = useCallback(async (messageId, deleteFor) => {
     try {
       const { data } = await axios.delete(`/api/messages/delete/${messageId}`, {
         data: { deleteFor },
@@ -220,26 +247,32 @@ export const ChatProvider = ({ children }) => {
         const currentUserId = authUser?._id || null;
 
         if (deleteFor === "everyone") {
-          // Mark as deleted for all users
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg._id === messageId ? { ...msg, isDeleted: true } : msg,
-            ),
-          );
+          setMessages((prev) => {
+            let changed = false;
+            const next = prev.map((msg) => {
+              if (msg._id === messageId && !msg.isDeleted) {
+                changed = true;
+                return { ...msg, isDeleted: true };
+              }
+              return msg;
+            });
+            return changed ? next : prev;
+          });
         } else {
-          // Delete only for current user (track in deletedFor array)
-          setMessages((prev) =>
-            prev.map((msg) => {
+          setMessages((prev) => {
+            let changed = false;
+            const next = prev.map((msg) => {
               if (msg._id !== messageId) return msg;
-              const prevDeleted = Array.isArray(msg.deletedFor)
-                ? msg.deletedFor
-                : [];
+              const prevDeleted = Array.isArray(msg.deletedFor) ? msg.deletedFor : [];
               const newDeleted = currentUserId
                 ? Array.from(new Set([...prevDeleted, currentUserId]))
                 : prevDeleted;
+              if (prevDeleted.length === newDeleted.length) return msg;
+              changed = true;
               return { ...msg, deletedFor: newDeleted };
-            }),
-          );
+            });
+            return changed ? next : prev;
+          });
         }
 
         toast.success(data.message);
@@ -249,35 +282,37 @@ export const ChatProvider = ({ children }) => {
     } catch (error) {
       toast.error(error.message);
     }
-  };
+  }, [axios, authUser?._id]);
 
-  // ✅ Listen for real-time message deletion events
   useEffect(() => {
     if (!socket) return;
 
-    socket.on("messageDeleted", ({ messageId }) => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg._id === messageId ? { ...msg, isDeleted: true } : msg,
-        ),
-      );
-    });
+    const handleMessageDeleted = ({ messageId }) => {
+      setMessages((prev) => {
+        let changed = false;
+        const next = prev.map((msg) => {
+          if (msg._id === messageId && !msg.isDeleted) {
+            changed = true;
+            return { ...msg, isDeleted: true };
+          }
+          return msg;
+        });
+        return changed ? next : prev;
+      });
+    };
+
+    socket.on("messageDeleted", handleMessageDeleted);
 
     return () => {
-      if (!socket) return;
-      socket.off("messageDeleted");
+      socket.off("messageDeleted", handleMessageDeleted);
     };
   }, [socket]);
 
-  // ✅ Fetch users the moment authentication becomes available (fixes
-  //   "sidebar blank until refresh" when Sidebar mounts before JWT ready)
   useEffect(() => {
     if (!authUser?._id) return;
     getUsers();
   }, [authUser?._id, getUsers]);
 
-  // ✅ Keep sidebar in sync when online-users gains new IDs we haven't
-  //   cached yet (catches any user who just connected + maybe got missed)
   useEffect(() => {
     if (!Array.isArray(onlineUsers) || onlineUsers.length === 0) return;
     const currentIds = new Set(users.map((u) => String(u._id)));
@@ -287,10 +322,8 @@ export const ChatProvider = ({ children }) => {
     );
     if (!hasNewUnknown) return;
     getUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onlineUsers]);
+  }, [onlineUsers, users, authUser?._id, getUsers]);
 
-  // ✅ Real-time user events from backend: signup/profile updates
   useEffect(() => {
     if (!socket) return;
 
@@ -300,27 +333,36 @@ export const ChatProvider = ({ children }) => {
       setUsers((prev) => {
         const exists = prev.some((u) => String(u._id) === String(newUser._id));
         if (exists) {
-          return prev.map((u) =>
-            String(u._id) === String(newUser._id) ? { ...u, ...newUser } : u,
-          );
+          let changed = false;
+          const next = prev.map((u) => {
+            if (String(u._id) === String(newUser._id) && !publicUserEquals(u, newUser)) {
+              changed = true;
+              return { ...u, ...newUser };
+            }
+            return u;
+          });
+          return changed ? next : prev;
         }
-        // Prepend newly-registered users to the sidebar so they're visible immediately
         return [newUser, ...prev];
       });
     };
 
     const onUserUpdated = (updatedUser) => {
       if (!updatedUser || !updatedUser._id) return;
-      setUsers((prev) =>
-        prev.map((u) =>
-          String(u._id) === String(updatedUser._id)
-            ? { ...u, ...updatedUser }
-            : u,
-        ),
-      );
+      setUsers((prev) => {
+        let changed = false;
+        const next = prev.map((u) => {
+          if (String(u._id) === String(updatedUser._id) && !publicUserEquals(u, updatedUser)) {
+            changed = true;
+            return { ...u, ...updatedUser };
+          }
+          return u;
+        });
+        return changed ? next : prev;
+      });
       setSelectedUser((prev) => {
         if (!prev) return prev;
-        if (String(prev._id) === String(updatedUser._id)) {
+        if (String(prev._id) === String(updatedUser._id) && !publicUserEquals(prev, updatedUser)) {
           return { ...prev, ...updatedUser };
         }
         return prev;
@@ -331,42 +373,58 @@ export const ChatProvider = ({ children }) => {
     socket.on("userUpdated", onUserUpdated);
 
     return () => {
-      if (!socket) return;
       socket.off("newUserRegistered", onNewUser);
       socket.off("userUpdated", onUserUpdated);
     };
   }, [socket, authUser?._id]);
 
-  // ✅ Add a call log message to current chat (used by CallContext after saving)
-  const addCallLogMessage = (newMessage) => {
+  const addCallLogMessage = useCallback((newMessage) => {
+    const currentSelectedId = selectedUserIdRef.current;
     if (
-      !selectedUser ||
+      !currentSelectedId ||
       !newMessage ||
-      (newMessage.senderId !== selectedUser._id &&
-        newMessage.receiverId !== selectedUser._id)
+      (newMessage.senderId !== currentSelectedId &&
+        newMessage.receiverId !== currentSelectedId)
     )
       return;
     setMessages((prev) => {
       if (prev.some((m) => m._id === newMessage._id)) return prev;
       return [...prev, newMessage];
     });
-  };
+  }, []);
 
-  const value = {
-    messages,
-    users,
-    selectedUser,
-    getUsers,
-    refreshUsers,
-    getMessages,
-    sendMessage,
-    sendAudioMessage,
-    deleteMessage,
-    setSelectedUser,
-    unseenMessages,
-    setUnseenMessages,
-    addCallLogMessage,
-  };
+  const value = useMemo(
+    () => ({
+      messages,
+      users,
+      selectedUser,
+      getUsers,
+      refreshUsers,
+      getMessages,
+      sendMessage,
+      sendAudioMessage,
+      deleteMessage,
+      setSelectedUser,
+      unseenMessages,
+      setUnseenMessages,
+      addCallLogMessage,
+    }),
+    [
+      messages,
+      users,
+      selectedUser,
+      getUsers,
+      refreshUsers,
+      getMessages,
+      sendMessage,
+      sendAudioMessage,
+      deleteMessage,
+      setSelectedUser,
+      unseenMessages,
+      setUnseenMessages,
+      addCallLogMessage,
+    ],
+  );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 };

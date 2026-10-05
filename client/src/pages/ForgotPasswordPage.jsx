@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { AuthContext } from "../context/AuthContext";
@@ -25,6 +25,95 @@ const copyToClipboard = async (text) => {
   }
 };
 
+const ResponseBanner = ({
+  message,
+  bannerClass,
+  emailSent,
+  recipientHint,
+  mailProvider,
+  usedFallback,
+  mailError,
+  responseType,
+}) => (
+  <div className={`mt-4 rounded-[var(--radius-md)] border p-3 text-sm ${bannerClass}`}>
+    <p>{message}</p>
+    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.8rem] opacity-80">
+      {emailSent && recipientHint && <span>{recipientHint}</span>}
+      {emailSent && mailProvider && <span>Provider: {mailProvider}</span>}
+      {!emailSent && mailProvider && mailProvider !== "none" && (
+        <span>
+          Status: {usedFallback ? "Used fallback link" : "Not sent"}{mailProvider ? ` (${mailProvider})` : ""}
+        </span>
+      )}
+      {usedFallback && mailError && (
+        <span className="text-amber-300/90 block w-full">Reason: {mailError}</span>
+      )}
+      {responseType === "error" && mailError && (
+        <span className="text-red-300/90 block w-full">Detail: {mailError}</span>
+      )}
+    </div>
+    {emailSent && (
+      <p className="mt-2 text-[0.8rem] opacity-80">
+        💡 If the email doesn't arrive within 2–3 minutes, please check your <strong>Spam / Junk / Promotions</strong> folder and mark messages from the sender as <em>Not spam</em>.
+      </p>
+    )}
+  </div>
+);
+
+const ResetUrlCard = ({ resetUrl, usedFallback, onCopy, copied }) => (
+  <div className="mt-5 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-input)] p-3 space-y-2">
+    <p className="text-xs text-[var(--text-secondary)]">
+      {usedFallback
+        ? "Direct reset link (email delivery was skipped or failed):"
+        : "Reset link preview:"}
+    </p>
+    <div className="flex gap-2">
+      <a
+        className="flex-1 text-sm text-[var(--accent)] hover:underline break-all truncate"
+        href={resetUrl}
+        target="_blank"
+        rel="noreferrer"
+      >
+        {resetUrl}
+      </a>
+      <button
+        type="button"
+        onClick={onCopy}
+        className="shrink-0 px-3 py-1.5 text-xs rounded-md border border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors"
+      >
+        {copied ? "Copied" : "Copy"}
+      </button>
+    </div>
+    <a
+      href={resetUrl}
+      className="block w-full text-center mt-2 py-2 rounded-[var(--radius-md)] bg-[var(--accent)]/90 hover:bg-[var(--accent)] text-white text-sm font-medium transition-colors"
+    >
+      Open reset page
+    </a>
+  </div>
+);
+
+const SmtpNotice = () => (
+  <div className="mt-4 text-xs text-[var(--text-secondary)] space-y-1 p-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-input)]/40">
+    <p className="font-medium text-[var(--text-primary)]">📬 Using Gmail SMTP?</p>
+    <ul className="list-disc list-inside space-y-0.5">
+      <li>Emails sometimes go to Spam on the first send.</li>
+      <li>
+        For reliable delivery, consider using{" "}
+        <a
+          className="text-[var(--accent)] hover:underline"
+          href="https://resend.com"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Resend
+        </a>
+        , SendGrid, Mailgun, or a verified domain + SMTP.
+      </li>
+    </ul>
+  </div>
+);
+
 const ForgotPasswordPage = () => {
   const { axios } = useContext(AuthContext);
   const [email, setEmail] = useState("");
@@ -38,6 +127,16 @@ const ForgotPasswordPage = () => {
   const [recipientHint, setRecipientHint] = useState("");
   const [mailError, setMailError] = useState("");
   const [copied, setCopied] = useState(false);
+  const copiedTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimerRef.current) {
+        clearTimeout(copiedTimerRef.current);
+        copiedTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const clearResult = () => {
     setResetUrl("");
@@ -94,7 +193,11 @@ const ForgotPasswordPage = () => {
     if (ok) {
       setCopied(true);
       toast.success("Link copied to clipboard");
-      setTimeout(() => setCopied(false), 2000);
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+      copiedTimerRef.current = setTimeout(() => {
+        copiedTimerRef.current = null;
+        setCopied(false);
+      }, 2000);
     } else {
       toast.error("Could not copy link");
     }
@@ -123,6 +226,8 @@ const ForgotPasswordPage = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             type="email"
+            name="email"
+            aria-label="Email address"
             required
             placeholder="Email"
             className="input-field"
@@ -138,98 +243,28 @@ const ForgotPasswordPage = () => {
         </form>
 
         {responseMessage && (
-          <div
-            className={`mt-4 rounded-[var(--radius-md)] border p-3 text-sm ${bannerClass}`}
-          >
-            <p>{responseMessage}</p>
-            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.8rem] opacity-80">
-              {emailSent && recipientHint && <span>{recipientHint}</span>}
-              {emailSent && mailProvider && (
-                <span>Provider: {mailProvider}</span>
-              )}
-              {!emailSent && mailProvider && mailProvider !== "none" && (
-                <span>
-                  Status: {usedFallback ? "Used fallback link" : "Not sent"}
-                  {mailProvider ? ` (${mailProvider})` : ""}
-                </span>
-              )}
-              {usedFallback && mailError && (
-                <span className="text-amber-300/90 block w-full">
-                  Reason: {mailError}
-                </span>
-              )}
-              {responseType === "error" && mailError && (
-                <span className="text-red-300/90 block w-full">
-                  Detail: {mailError}
-                </span>
-              )}
-            </div>
-            {emailSent && (
-              <p className="mt-2 text-[0.8rem] opacity-80">
-                💡 If the email doesn't arrive within 2–3 minutes, please check
-                your <strong>Spam / Junk / Promotions</strong> folder and mark
-                messages from the sender as <em>Not spam</em>. You can also add
-                the sender address to your contacts to ensure delivery.
-              </p>
-            )}
-          </div>
+          <ResponseBanner
+            message={responseMessage}
+            bannerClass={bannerClass}
+            emailSent={emailSent}
+            recipientHint={recipientHint}
+            mailProvider={mailProvider}
+            usedFallback={usedFallback}
+            mailError={mailError}
+            responseType={responseType}
+          />
         )}
 
         {resetUrl && (
-          <div className="mt-5 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-input)] p-3 space-y-2">
-            <p className="text-xs text-[var(--text-secondary)]">
-              {usedFallback
-                ? "Direct reset link (email delivery was skipped or failed):"
-                : "Reset link preview:"}
-            </p>
-            <div className="flex gap-2">
-              <a
-                className="flex-1 text-sm text-[var(--accent)] hover:underline break-all truncate"
-                href={resetUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {resetUrl}
-              </a>
-              <button
-                type="button"
-                onClick={handleCopy}
-                className="shrink-0 px-3 py-1.5 text-xs rounded-md border border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors"
-              >
-                {copied ? "Copied" : "Copy"}
-              </button>
-            </div>
-            <a
-              href={resetUrl}
-              className="block w-full text-center mt-2 py-2 rounded-[var(--radius-md)] bg-[var(--accent)]/90 hover:bg-[var(--accent)] text-white text-sm font-medium transition-colors"
-            >
-              Open reset page
-            </a>
-          </div>
+          <ResetUrlCard
+            resetUrl={resetUrl}
+            usedFallback={usedFallback}
+            onCopy={handleCopy}
+            copied={copied}
+          />
         )}
 
-        {mailProvider && emailSent && mailProvider === "smtp" && (
-          <div className="mt-4 text-xs text-[var(--text-secondary)] space-y-1 p-3 rounded-[var(--radius-md)] border border-[var(--border-subtle)] bg-[var(--bg-input)]/40">
-            <p className="font-medium text-[var(--text-primary)]">
-              📬 Using Gmail SMTP?
-            </p>
-            <ul className="list-disc list-inside space-y-0.5">
-              <li>Emails sometimes go to Spam on the first send.</li>
-              <li>
-                For reliable delivery, consider using{" "}
-                <a
-                  className="text-[var(--accent)] hover:underline"
-                  href="https://resend.com"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Resend
-                </a>
-                , SendGrid, Mailgun, or a verified domain + SMTP.
-              </li>
-            </ul>
-          </div>
-        )}
+        {mailProvider && emailSent && mailProvider === "smtp" && <SmtpNotice />}
 
         <div className="mt-6 text-sm text-[var(--text-secondary)]">
           <Link to="/login" className="text-[var(--accent)] hover:underline">

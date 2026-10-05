@@ -2,8 +2,8 @@ import toast from "react-hot-toast";
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL?.replace(/\/$/, "") || "";
 
-export const getGoogleAuthUrl = () => `${backendUrl}/api/auth/google`;
-export const getGithubAuthUrl = () => `${backendUrl}/api/auth/github`;
+const getGoogleAuthUrl = () => `${backendUrl}/api/auth/google`;
+const getGithubAuthUrl = () => `${backendUrl}/api/auth/github`;
 
 const GoogleIcon = ({ className = "w-5 h-5" }) => (
   <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
@@ -70,7 +70,7 @@ const OAuthButtons = () => {
         <button
           type="button"
           onClick={handleGoogleLogin}
-          className="flex items-center justify-center gap-2.5 w-full min-h-[44px] py-2.5 px-4 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-input)] hover:bg-[var(--bg-elevated)] active:scale-[0.98] text-[var(--text-primary)] text-sm font-medium transition-all"
+          className="flex items-center justify-center gap-2.5 w-full min-h-[44px] py-2.5 px-4 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-input)] hover:bg-[var(--bg-elevated)] active:scale-[0.98] text-[var(--text-primary)] text-sm font-medium transition-colors"
         >
           <GoogleIcon />
           <span>Google</span>
@@ -79,7 +79,7 @@ const OAuthButtons = () => {
         <button
           type="button"
           onClick={handleGithubLogin}
-          className="flex items-center justify-center gap-2.5 w-full min-h-[44px] py-2.5 px-4 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-input)] hover:bg-[var(--bg-elevated)] active:scale-[0.98] text-[var(--text-primary)] text-sm font-medium transition-all"
+          className="flex items-center justify-center gap-2.5 w-full min-h-[44px] py-2.5 px-4 rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-input)] hover:bg-[var(--bg-elevated)] active:scale-[0.98] text-[var(--text-primary)] text-sm font-medium transition-colors"
         >
           <GithubIcon />
           <span>GitHub</span>

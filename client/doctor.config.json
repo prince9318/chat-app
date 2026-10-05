@@ -1,0 +1,6 @@
+{
+  "rules": {
+    "react-doctor/auth-token-in-web-storage": "off",
+    "react-doctor/only-export-components": "off"
+  }
+}

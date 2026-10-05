@@ -14,7 +14,31 @@
       name="apple-mobile-web-app-status-bar-style"
       content="black-translucent"
     />
+    <meta name="description" content="Quick-Chat - Fast, secure real-time messaging and video calls" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>Quick-Chat</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+
+    <style>
+      .animate-spin {
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      html, body, #root {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

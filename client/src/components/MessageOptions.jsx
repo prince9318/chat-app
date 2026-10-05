@@ -23,11 +23,14 @@ const MessageOptions = ({ messageId, isOwnMessage, onClose }) => {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div className="w-full max-w-sm rounded-[var(--radius-xl)] bg-[var(--bg-panel)] border border-[var(--border-subtle)] p-6 text-[var(--text-primary)] shadow-[var(--shadow-modal)]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button
+        type="button"
+        aria-label="Close"
+        onClick={onClose}
+        className="fixed inset-0 w-full h-full bg-black/60 backdrop-blur-sm border-0 cursor-default"
+      />
+      <div className="relative z-10 w-full max-w-sm rounded-[var(--radius-xl)] bg-[var(--bg-panel)] border border-[var(--border-subtle)] p-6 text-[var(--text-primary)] shadow-[var(--shadow-modal)]">
         <p className="text-base font-medium mb-4">Delete message?</p>
         <div className="flex flex-col gap-2">
           {isOwnMessage && (

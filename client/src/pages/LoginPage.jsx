@@ -14,6 +14,7 @@ const LoginPage = () => {
   const [agreed, setAgreed] = useState(false);
   const [showAgreementError, setShowAgreementError] = useState(false);
   const [verificationStep, setVerificationStep] = useState(false);
+  const OTP_SLOTS = ["slot-0", "slot-1", "slot-2", "slot-3", "slot-4", "slot-5"];
   const [otpInputs, setOtpInputs] = useState(["", "", "", "", "", ""]);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -116,21 +117,27 @@ const LoginPage = () => {
     const otp = otpInputs.join("");
     if (otp.length !== 6) return;
     setIsVerifying(true);
-    await verifyEmail({ email: effectiveEmail, otp });
-    setIsVerifying(false);
+    try {
+      await verifyEmail({ email: effectiveEmail, otp });
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   const handleResend = async () => {
     if (resendCooldown > 0) return;
     setIsResending(true);
-    const result = await resendVerificationEmail(effectiveEmail);
-    if (result?.alreadyVerified) {
-      resetToForm();
-      setCurrState("Login");
-    } else if (result?.success) {
-      setResendCooldown(60);
+    try {
+      const result = await resendVerificationEmail(effectiveEmail);
+      if (result?.alreadyVerified) {
+        resetToForm();
+        setCurrState("Login");
+      } else if (result?.success) {
+        setResendCooldown(60);
+      }
+    } finally {
+      setIsResending(false);
     }
-    setIsResending(false);
   };
 
   const autoFillDevOtp = () => {
@@ -196,8 +203,9 @@ const LoginPage = () => {
           <div className="flex justify-between gap-2 sm:gap-3 mt-1">
             {otpInputs.map((d, i) => (
               <input
-                key={i}
+                key={OTP_SLOTS[i]}
                 id={`otp-${i}`}
+                aria-label={`Digit ${i + 1} of verification code`}
                 type="text"
                 inputMode="numeric"
                 autoComplete="one-time-code"
@@ -389,6 +397,8 @@ const LoginPage = () => {
             onChange={(e) => setFullName(e.target.value)}
             value={fullName}
             type="text"
+            name="fullName"
+            aria-label="Full Name"
             className="input-field"
             placeholder="Full Name"
             required
@@ -401,6 +411,8 @@ const LoginPage = () => {
               onChange={(e) => setEmail(e.target.value)}
               value={email}
               type="email"
+              name="email"
+              aria-label="Email"
               placeholder="Email"
               required
               className="input-field"
@@ -409,6 +421,8 @@ const LoginPage = () => {
               onChange={(e) => setPassword(e.target.value)}
               value={password}
               type="password"
+              name="password"
+              aria-label="Password"
               placeholder="Password (min 6 chars)"
               minLength={6}
               required
@@ -421,6 +435,8 @@ const LoginPage = () => {
           <textarea
             onChange={(e) => setBio(e.target.value)}
             value={bio}
+            name="bio"
+            aria-label="Bio"
             rows={4}
             className="input-field resize-none"
             placeholder="A short bio..."

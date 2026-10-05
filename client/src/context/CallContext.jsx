@@ -1,4 +1,4 @@
-import { createContext, useContext, useRef, useState, useCallback, useEffect } from "react";
+import { createContext, useContext, useRef, useState, useCallback, useEffect, useMemo } from "react";
 import { AuthContext } from "./AuthContext";
 import { ChatContext } from "./ChatContext";
 
@@ -26,6 +26,8 @@ export function CallProvider({ children }) {
   const wasCallerRef = useRef(false);
   const callTypeRef = useRef("audio");
   const bufferedIceCandidatesRef = useRef([]);
+  const socketRef = useRef(null);
+  useEffect(() => { socketRef.current = socket; }, [socket]);
 
   const cleanup = useCallback(() => {
     if (localStreamRef.current) {
@@ -59,8 +61,8 @@ export function CallProvider({ children }) {
       };
 
       pc.onicecandidate = (e) => {
-        if (e.candidate && socket) {
-          socket.emit("webrtc:signal", { to: remoteId, signal: { candidate: e.candidate } });
+        if (e.candidate && socketRef.current) {
+          socketRef.current.emit("webrtc:signal", { to: remoteId, signal: { candidate: e.candidate } });
         }
       };
 
@@ -73,7 +75,7 @@ export function CallProvider({ children }) {
       peerRef.current = pc;
       return pc;
     },
-    [socket, cleanup]
+    [cleanup]
   );
 
   const flushBufferedIceCandidates = useCallback(async () => {
@@ -82,13 +84,12 @@ export function CallProvider({ children }) {
     const buffer = bufferedIceCandidatesRef.current;
     if (!buffer.length) return;
     bufferedIceCandidatesRef.current = [];
-    for (const cand of buffer) {
-      try {
-        await pc.addIceCandidate(new RTCIceCandidate(cand));
-      } catch (err) {
+    const promises = buffer.map((cand) =>
+      pc.addIceCandidate(new RTCIceCandidate(cand)).catch((err) => {
         console.warn("Flush ICE candidate error:", err);
-      }
-    }
+      })
+    );
+    await Promise.all(promises);
   }, []);
 
   const saveCallLog = useCallback(
@@ -224,20 +225,16 @@ export function CallProvider({ children }) {
       setCallState((s) => (s === "idle" ? "incoming" : s));
     };
     const onAccepted = ({ from }) => {
-      setCallState((s) => {
-        if (s !== "outgoing" || !pendingOfferRef.current) return s;
-        callStartTimeRef.current = Date.now();
-        socket.emit("webrtc:signal", { to: from, signal: pendingOfferRef.current });
-        pendingOfferRef.current = null;
-        return "connected";
-      });
+      if (callState !== "outgoing" || !pendingOfferRef.current) return;
+      callStartTimeRef.current = Date.now();
+      socket.emit("webrtc:signal", { to: from, signal: pendingOfferRef.current });
+      pendingOfferRef.current = null;
+      setCallState("connected");
     };
     const onRejected = () => {
-      // Only the callee (who clicked Decline) saves "missed" — do not save again here
       cleanup();
     };
     const onEnded = () => {
-      // Only the person who clicked End call saves — do not save again here to avoid duplicates
       cleanup();
     };
     const onSignal = async ({ from, signal }) => {
@@ -277,22 +274,38 @@ export function CallProvider({ children }) {
       socket.off("call:ended", onEnded);
       socket.off("webrtc:signal", onSignal);
     };
-  }, [socket, cleanup, flushBufferedIceCandidates]);
+  }, [socket, cleanup, flushBufferedIceCandidates, callState]);
 
-  const value = {
-    callState,
-    callType,
-    remoteUser,
-    incomingCall,
-    localStream,
-    remoteStream,
-    isMuted,
-    startCall,
-    acceptCall,
-    rejectCall,
-    endCall,
-    toggleMute,
-  };
+  const value = useMemo(
+    () => ({
+      callState,
+      callType,
+      remoteUser,
+      incomingCall,
+      localStream,
+      remoteStream,
+      isMuted,
+      startCall,
+      acceptCall,
+      rejectCall,
+      endCall,
+      toggleMute,
+    }),
+    [
+      callState,
+      callType,
+      remoteUser,
+      incomingCall,
+      localStream,
+      remoteStream,
+      isMuted,
+      startCall,
+      acceptCall,
+      rejectCall,
+      endCall,
+      toggleMute,
+    ],
+  );
 
   return <CallContext.Provider value={value}>{children}</CallContext.Provider>;
 }

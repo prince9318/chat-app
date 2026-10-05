@@ -8,17 +8,19 @@ const PrivacyPage = () => {
           <h1 className="text-xl font-semibold">Privacy policy</h1>
           <Link to="/login" className="text-sm text-[var(--accent)] hover:underline">Back to login</Link>
         </div>
-        <p className="text-[var(--text-secondary)] leading-relaxed">
-          We store your account details and messages as required to operate the
-          service. Media may be processed by third-party providers. We do not
-          sell personal data. You can request profile updates or deletion from
-          within the app.
-        </p>
-        <p className="text-[var(--text-secondary)] leading-relaxed">
-          Data is transmitted over the internet and cannot be guaranteed to be
-          completely secure. Use QuickChat at your discretion and avoid sharing
-          sensitive information.
-        </p>
+        <div className="space-y-4 text-[var(--text-secondary)] leading-relaxed">
+          <p>
+            We store your account details and messages as required to operate the
+            service. Media may be processed by third-party providers. We do not
+            sell personal data. You can request profile updates or deletion from
+            within the app.
+          </p>
+          <p>
+            Data is transmitted over the internet and cannot be guaranteed to be
+            completely secure. Use QuickChat at your discretion and avoid sharing
+            sensitive information.
+          </p>
+        </div>
       </div>
     </div>
   );

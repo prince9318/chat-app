@@ -63,6 +63,8 @@ const ResetPasswordPage = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             type="email"
+            name="email"
+            aria-label="Email address"
             required
             placeholder="Email"
             className="input-field"
@@ -71,6 +73,8 @@ const ResetPasswordPage = () => {
             value={token}
             onChange={(e) => setToken(e.target.value)}
             type="text"
+            name="token"
+            aria-label="Reset token"
             required
             placeholder="Reset token"
             className="input-field"
@@ -79,6 +83,8 @@ const ResetPasswordPage = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             type="password"
+            name="password"
+            aria-label="New password"
             required
             minLength={6}
             placeholder="New password (min 6 chars)"
@@ -88,6 +94,8 @@ const ResetPasswordPage = () => {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             type="password"
+            name="confirmPassword"
+            aria-label="Confirm new password"
             required
             minLength={6}
             placeholder="Confirm new password"

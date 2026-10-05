@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Cropper from "react-easy-crop";
 
 function createImage(url) {
@@ -36,29 +36,51 @@ async function getCroppedImg(imageSrc, pixelCrop) {
 export default function ProfilePictureCropModal({ imageSrc, onConfirm, onCancel }) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const croppedAreaPixelsRef = useRef(null);
   const [loading, setLoading] = useState(false);
+  const fileReaderRef = useRef(null);
 
-  const onCropComplete = useCallback((_, croppedAreaPixels) => {
-    setCroppedAreaPixels(croppedAreaPixels);
+  useEffect(() => {
+    return () => {
+      if (fileReaderRef.current) {
+        try {
+          fileReaderRef.current.abort();
+        } catch {
+          // ignore abort error on unmount
+        }
+        fileReaderRef.current.onloadend = null;
+        fileReaderRef.current.onerror = null;
+        fileReaderRef.current = null;
+      }
+    };
+  }, []);
+
+  const onCropComplete = useCallback((_, pixels) => {
+    croppedAreaPixelsRef.current = pixels;
   }, []);
 
   const handleConfirm = useCallback(async () => {
-    if (!croppedAreaPixels) return;
+    if (!croppedAreaPixelsRef.current) return;
     setLoading(true);
     try {
-      const blob = await getCroppedImg(imageSrc, croppedAreaPixels);
+      const blob = await getCroppedImg(imageSrc, croppedAreaPixelsRef.current);
       const reader = new FileReader();
+      fileReaderRef.current = reader;
       reader.readAsDataURL(blob);
       reader.onloadend = () => {
+        fileReaderRef.current = null;
+        setLoading(false);
         onConfirm(reader.result);
+      };
+      reader.onerror = () => {
+        fileReaderRef.current = null;
+        setLoading(false);
       };
     } catch (err) {
       console.error(err);
-    } finally {
       setLoading(false);
     }
-  }, [imageSrc, croppedAreaPixels, onConfirm]);
+  }, [imageSrc, onConfirm]);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/90 p-4">
@@ -87,6 +109,7 @@ export default function ProfilePictureCropModal({ imageSrc, onConfirm, onCancel 
               max={3}
               step={0.1}
               value={zoom}
+              aria-label="Zoom level"
               onChange={(e) => setZoom(Number(e.target.value))}
               className="w-24 accent-[var(--accent)]"
             />
