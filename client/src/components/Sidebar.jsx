@@ -129,7 +129,7 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`h-full flex flex-col text-[var(--text-primary)] bg-[var(--bg-panel)] panel-divider ${
+      className={`h-full min-h-0 flex flex-col text-[var(--text-primary)] bg-[var(--bg-panel)] panel-divider overflow-hidden ${
         selectedUser ? "max-md:hidden" : ""
       }`}
     >
@@ -141,7 +141,7 @@ const Sidebar = () => {
         />
       )}
 
-      <div className="sidebar-header sticky top-0 z-20 px-3 sm:px-4 py-3 bg-[var(--bg-elevated)] safe-top">
+      <div className="sidebar-header shrink-0 px-3 sm:px-4 py-3 bg-[var(--bg-elevated)] safe-top">
         <div className="flex justify-between items-center gap-2">
           <img src={assets.logo} alt="QuickChat" className="h-7 sm:h-8" />
           <div className="relative">
@@ -187,7 +187,7 @@ const Sidebar = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto border-t border-[var(--border-subtle)]">
+      <div className="flex-1 min-h-0 overflow-y-auto border-t border-[var(--border-subtle)] messages-scroll overscroll-contain">
         {filteredUsers.length === 0 && (
           <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
             <p className="text-[var(--text-secondary)] text-sm">
