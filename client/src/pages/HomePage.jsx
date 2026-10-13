@@ -11,8 +11,8 @@ const HomePage = () => {
       <div
         className={`h-full w-full min-h-0 grid grid-cols-1 grid-rows-1 min-w-0 ${
           selectedUser
-            ? "md:grid-cols-[minmax(260px,36%)_1fr] lg:grid-cols-[minmax(280px,32%)_1fr] xl:grid-cols-[minmax(320px,30%)_1fr]"
-            : "md:grid-cols-[minmax(280px,38%)_1fr] lg:grid-cols-[minmax(320px,35%)_1fr]"
+            ? "md:grid-cols-[minmax(280px,34%)_1fr] lg:grid-cols-[minmax(320px,28%)_1fr] xl:grid-cols-[minmax(360px,25%)_1fr]"
+            : "md:grid-cols-[minmax(300px,36%)_1fr] lg:grid-cols-[minmax(340px,30%)_1fr] xl:grid-cols-[minmax(380px,26%)_1fr]"
         }`}
       >
         <Sidebar />

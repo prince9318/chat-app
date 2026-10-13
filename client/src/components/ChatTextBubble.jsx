@@ -49,7 +49,7 @@ const ChatTextBubble = ({ msg, isOwn, isActive = false, onOpenOptions }) => {
       </p>
       <button
         type="button"
-        className={`absolute top-1.5 ${isOwn ? "right-1.5" : "left-1.5"} w-6 h-6 rounded-full bg-black/45 hover:bg-black/75 text-white/90 backdrop-blur-md flex items-center justify-center text-xs shadow-sm transition-all border-0 cursor-pointer z-10 ${
+        className={`absolute top-1.5 ${isOwn ? "right-1.5" : "left-1.5"} w-6 h-6 rounded-full bg-black/45 hover:bg-black/75 text-white/90 backdrop-blur-md flex items-center justify-center text-xs shadow-sm transition-opacity transition-colors border-0 cursor-pointer z-10 ${
           isActive ? "opacity-100 flex" : "opacity-0 md:group-hover:opacity-100 max-md:hidden"
         }`}
         aria-label="Message options"

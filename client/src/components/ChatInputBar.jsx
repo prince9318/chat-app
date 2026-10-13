@@ -15,13 +15,14 @@ const ChatInputBar = ({
   const hasMessageText = input.trim().length > 0;
 
   return (
-    <div className="chat-composer shrink-0 px-2 sm:px-4 py-2 sm:py-3 bg-[var(--bg-elevated)] safe-bottom">
-      <div className="flex items-end gap-1.5 sm:gap-2.5">
-        <div className="flex-1 flex items-center gap-0 sm:gap-1.5 bg-[var(--bg-input)] pl-1 sm:pl-2.5 pr-1 sm:pr-1.5 py-1 sm:py-1.5 rounded-[1.25rem] min-h-[48px] sm:min-h-[52px] border border-[var(--border-subtle)] shadow-[var(--shadow-card)] overflow-hidden">
+    <div className="chat-composer shrink-0 px-2.5 sm:px-4 py-2 sm:py-3 bg-[var(--bg-elevated)] border-t border-white/[0.06] safe-bottom">
+      <div className="flex items-center gap-2 sm:gap-2.5 max-w-5xl mx-auto">
+        {/* Main input capsule */}
+        <div className="flex-1 flex items-center gap-1 sm:gap-2 bg-[var(--bg-input)]/90 px-2 sm:px-3 py-1 sm:py-1.5 rounded-[1.35rem] min-h-[46px] sm:min-h-[50px] border border-white/5 shadow-sm focus-within:border-[var(--accent)]/40 transition-colors">
           <button
             type="button"
             onClick={() => setShowEmojiPicker((prev) => !prev)}
-            className="touch-target w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full hover:bg-[var(--accent-soft)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0"
+            className="touch-target w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full hover:bg-white/10 text-[var(--text-secondary)] hover:text-amber-300 transition-colors shrink-0"
             aria-label="Emoji"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -30,12 +31,12 @@ const ChatInputBar = ({
           </button>
 
           {showEmojiPicker && (
-            <div className="fixed sm:absolute bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-20 left-2 right-2 sm:left-4 sm:right-auto z-50 rounded-[var(--radius-lg)] overflow-hidden border border-[var(--border-subtle)] shadow-[var(--shadow-modal)] max-w-[min(100vw-1rem,320px)] mx-auto sm:mx-0">
+            <div className="fixed sm:absolute bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-20 left-2 right-2 sm:left-4 sm:right-auto z-50 rounded-2xl overflow-hidden border border-white/10 shadow-2xl backdrop-blur-xl max-w-[min(100vw-1rem,340px)] mx-auto sm:mx-0">
               <EmojiPicker
                 onEmojiClick={onEmojiClick}
                 theme="dark"
                 width="100%"
-                height={320}
+                height={330}
               />
             </div>
           )}
@@ -48,8 +49,8 @@ const ChatInputBar = ({
             }
             type="text"
             aria-label="Type a message or paste a link"
-            placeholder="Type a message or paste a link"
-            className="flex-1 min-w-0 text-sm px-2 py-2 bg-transparent text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none"
+            placeholder="Type a message..."
+            className="flex-1 min-w-0 text-sm sm:text-[15px] px-1 py-2 bg-transparent text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none"
           />
 
           <input
@@ -63,7 +64,7 @@ const ChatInputBar = ({
           />
           <label
             htmlFor="attachment"
-            className="touch-target w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full hover:bg-[var(--bg-elevated)] cursor-pointer transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] shrink-0"
+            className="touch-target w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full hover:bg-white/10 cursor-pointer transition-colors text-[var(--text-secondary)] hover:text-white shrink-0"
             title="Attach file"
           >
             <span className="sr-only">Attach file</span>
@@ -81,16 +82,40 @@ const ChatInputBar = ({
               />
             </svg>
           </label>
+        </div>
 
+        {/* Dedicated circular action button */}
+        {hasMessageText ? (
+          <button
+            type="button"
+            onClick={onSendMessage}
+            disabled={isSending}
+            className="touch-target w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-gradient-to-tr from-[#00a884] to-[#029676] hover:from-[#02b992] hover:to-[#00a884] text-white shadow-lg shadow-emerald-950/40 active:scale-95 transition-colors shrink-0 cursor-pointer disabled:opacity-60"
+            aria-label="Send message"
+            title="Send"
+          >
+            <svg
+              className="w-5 h-5 translate-x-0.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2.2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 19l9-2-9-18-9 18 9-2zm0 0v-8"
+              />
+            </svg>
+          </button>
+        ) : (
           <button
             type="button"
             onClick={onToggleRecording}
-            className={`touch-target w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-colors shrink-0 ${
-              hasMessageText && !isRecording ? "hidden" : ""
-            } ${
+            className={`touch-target w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-full transition-colors shrink-0 cursor-pointer shadow-md ${
               isRecording
-                ? "bg-red-500 text-white"
-                : "bg-[var(--accent-soft)] hover:bg-[var(--accent)] text-[var(--accent)] hover:text-white"
+                ? "bg-red-500 text-white animate-pulse"
+                : "bg-[var(--accent)]/15 hover:bg-[var(--accent)] text-[var(--accent)] hover:text-white"
             }`}
             aria-label={
               isRecording ? "Stop recording" : "Record voice message"
@@ -102,7 +127,7 @@ const ChatInputBar = ({
             }
           >
             <svg
-              className="w-4 h-4"
+              className="w-5 h-5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -115,34 +140,7 @@ const ChatInputBar = ({
               />
             </svg>
           </button>
-
-          <button
-            type="button"
-            onClick={onSendMessage}
-            disabled={isSending}
-            className={`touch-target w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-full transition-all duration-200 shrink-0 shadow-[var(--shadow-card)] ${
-              hasMessageText
-                ? "bg-[var(--accent)] hover:bg-[var(--accent-hover)] scale-100 text-white"
-                : "hidden sm:flex bg-[var(--bg-input)] text-[var(--text-muted)] hover:bg-[var(--bg-input)]"
-            }`}
-            aria-label="Send"
-            title="Send"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-              />
-            </svg>
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );

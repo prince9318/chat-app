@@ -42,7 +42,7 @@ const ChatMediaBubble = ({ msg, isOwn, isActive = false, onOpenOptions, onOpenPr
 
       <button
         type="button"
-        className={`absolute top-2 ${isOwn ? "right-2" : "left-2"} w-6 h-6 rounded-full bg-black/55 hover:bg-black/80 text-white/95 backdrop-blur-md flex items-center justify-center text-xs shadow-md transition-all border-0 cursor-pointer z-10 ${
+        className={`absolute top-2 ${isOwn ? "right-2" : "left-2"} w-6 h-6 rounded-full bg-black/55 hover:bg-black/80 text-white/95 backdrop-blur-md flex items-center justify-center text-xs shadow-md transition-opacity transition-colors border-0 cursor-pointer z-10 ${
           isActive ? "opacity-100 flex" : "opacity-0 md:group-hover:opacity-100 max-md:hidden"
         }`}
         aria-label="Message options"

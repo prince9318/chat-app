@@ -11,14 +11,14 @@ const ChatHeader = ({
   onOpenSharedMedia,
 }) => {
   return (
-    <div className="chat-header sticky top-0 z-20 flex items-center gap-2 sm:gap-3 py-2 px-2 sm:px-4 bg-[var(--bg-elevated)] border-b border-[var(--border-subtle)] min-h-[56px] sm:min-h-[59px] safe-top">
+    <div className="chat-header sticky top-0 z-20 flex items-center gap-2.5 sm:gap-3 py-2.5 px-3 sm:px-4 bg-[var(--bg-elevated)]/95 backdrop-blur-md border-b border-white/[0.06] min-h-[58px] sm:min-h-[64px] safe-top">
       <button
         type="button"
         onClick={onBack}
-        className="md:hidden touch-target p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors shrink-0 -ml-1"
+        className="md:hidden touch-target p-2 -ml-1 rounded-full hover:bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-white transition-colors shrink-0"
         aria-label="Back to chats"
       >
-        <img src={assets.arrow_icon} alt="" className="w-5 h-5 opacity-80" />
+        <img src={assets.arrow_icon} alt="" className="w-5 h-5 opacity-90" />
       </button>
       <Avatar
         src={selectedUser.profilePic}
@@ -29,23 +29,30 @@ const ChatHeader = ({
         onClick={onAvatarClick}
       />
       <div className="flex-1 min-w-0">
-        <p className="text-[var(--text-primary)] font-medium truncate text-[15px] sm:text-base">
+        <p className="text-[var(--text-primary)] font-semibold truncate text-[15px] sm:text-base leading-tight">
           {selectedUser.fullName}
         </p>
-        <p className="text-xs text-[var(--text-secondary)]">
-          {isOnline ? "online" : "offline"}
-        </p>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          {isOnline ? (
+            <>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse" />
+              <p className="text-xs font-medium text-emerald-400/90 leading-tight">Online</p>
+            </>
+          ) : (
+            <p className="text-xs text-[var(--text-muted)] leading-tight">Offline</p>
+          )}
+        </div>
       </div>
-      <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+      <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
         <button
           type="button"
           onClick={onStartAudioCall}
-          className="touch-target p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors"
+          className="touch-target p-2 rounded-full hover:bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
           aria-label="Voice call"
           title="Voice call"
         >
           <svg
-            className="w-5 h-5 text-[var(--text-secondary)]"
+            className="w-5 h-5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -61,12 +68,12 @@ const ChatHeader = ({
         <button
           type="button"
           onClick={onStartVideoCall}
-          className="touch-target p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors flex max-[380px]:hidden"
+          className="touch-target p-2 rounded-full hover:bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-purple-400 hover:bg-purple-500/10 transition-colors flex max-[380px]:hidden"
           aria-label="Video call"
           title="Video call"
         >
           <svg
-            className="w-5 h-5 text-[var(--text-secondary)]"
+            className="w-5 h-5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -82,12 +89,12 @@ const ChatHeader = ({
         <button
           type="button"
           onClick={onOpenSharedMedia}
-          className="touch-target p-2 rounded-full hover:bg-[var(--bg-input)] transition-colors"
+          className="touch-target p-2 rounded-full hover:bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-white transition-colors"
           aria-label="Open shared media"
           title="Media, links and docs"
         >
           <svg
-            className="w-5 h-5 text-[var(--text-secondary)]"
+            className="w-5 h-5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
