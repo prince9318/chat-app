@@ -34,10 +34,6 @@ export function detectAndConvertURLs(text) {
       part.length > 0
         ? `t-${part.length}-${part.slice(0, Math.min(8, part.length)).replace(/\W/g, "x")}-${part.charCodeAt(0) || "x"}`
         : `t-empty`;
-    return (
-      <span key={stableKey}>
-        {part}
-      </span>
-    );
+    return <span key={stableKey}>{part}</span>;
   });
 }

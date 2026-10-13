@@ -24,7 +24,7 @@ const usersListsEqual = (prev, incoming) => {
   });
 };
 
-export const ChatProvider = ({ children }) => {
+export const useChatManager = () => {
   const [messages, setMessages] = useState([]);
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -413,5 +413,10 @@ export const ChatProvider = ({ children }) => {
     ],
   );
 
+  return value;
+};
+
+export const ChatProvider = ({ children }) => {
+  const value = useChatManager();
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 };

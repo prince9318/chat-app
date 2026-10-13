@@ -60,17 +60,14 @@ const ChatMessageItem = memo(
       if (longPressTimer.current) {
         clearTimeout(longPressTimer.current);
         longPressTimer.current = null;
+        // Quick tap on touch devices toggles active options button
+        setIsActive((prev) => !prev);
       }
     };
 
     const handleContextMenu = (e) => {
       e.preventDefault();
       onOpenOptions(msg._id, isOwn);
-    };
-
-    const handleBubbleClick = () => {
-      // Toggle active options button for this specific bubble on mobile
-      setIsActive((prev) => !prev);
     };
 
     if (msg.isDeleted) {
@@ -82,7 +79,6 @@ const ChatMessageItem = memo(
           onTouchEnd={handleTouchEnd}
           onTouchCancel={handleTouchEnd}
           onContextMenu={handleContextMenu}
-          onClick={handleBubbleClick}
         >
           <ChatDeletedBubble
             msg={msg}
@@ -110,7 +106,6 @@ const ChatMessageItem = memo(
         onTouchEnd={handleTouchEnd}
         onTouchCancel={handleTouchEnd}
         onContextMenu={handleContextMenu}
-        onClick={handleBubbleClick}
       >
         {isOptionsOpen && (
           <MessageOptions

@@ -70,7 +70,7 @@ const OAuthButtons = () => {
         <button
           type="button"
           onClick={handleGoogleLogin}
-          className="flex items-center justify-center gap-2 w-full min-h-[42px] py-2 px-3 rounded-xl border border-white/10 bg-[#202c33]/70 hover:bg-[#202c33] hover:border-white/20 active:scale-[0.98] text-[var(--text-primary)] text-sm font-medium transition-all shadow-sm"
+          className="flex items-center justify-center gap-2 w-full min-h-[42px] py-2 px-3 rounded-xl border border-white/10 bg-[#202c33]/70 hover:bg-[#202c33] hover:border-white/20 active:scale-[0.98] text-[var(--text-primary)] text-sm font-medium transition-colors shadow-sm"
         >
           <GoogleIcon className="w-4 h-4 shrink-0" />
           <span className="truncate">Google</span>
@@ -79,7 +79,7 @@ const OAuthButtons = () => {
         <button
           type="button"
           onClick={handleGithubLogin}
-          className="flex items-center justify-center gap-2 w-full min-h-[42px] py-2 px-3 rounded-xl border border-white/10 bg-[#202c33]/70 hover:bg-[#202c33] hover:border-white/20 active:scale-[0.98] text-[var(--text-primary)] text-sm font-medium transition-all shadow-sm"
+          className="flex items-center justify-center gap-2 w-full min-h-[42px] py-2 px-3 rounded-xl border border-white/10 bg-[#202c33]/70 hover:bg-[#202c33] hover:border-white/20 active:scale-[0.98] text-[var(--text-primary)] text-sm font-medium transition-colors shadow-sm"
         >
           <GithubIcon className="w-4 h-4 shrink-0" />
           <span className="truncate">GitHub</span>

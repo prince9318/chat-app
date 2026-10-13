@@ -33,7 +33,7 @@ const VerificationSuccessView = ({ onGoToChat }) => (
       <button
         type="button"
         onClick={onGoToChat}
-        className="mt-6 w-full py-3 rounded-xl bg-gradient-to-r from-[#00a884] to-[#028e70] hover:from-[#02b992] hover:to-[#00a884] text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-emerald-950/40 active:scale-[0.98] cursor-pointer"
+        className="mt-6 w-full py-3 rounded-xl bg-gradient-to-r from-[#00a884] to-[#028e70] hover:from-[#02b992] hover:to-[#00a884] text-white font-semibold text-sm transition-colors duration-200 shadow-lg shadow-emerald-950/40 active:scale-[0.98] cursor-pointer"
       >
         Go to chat
       </button>
@@ -73,89 +73,10 @@ const VerificationProgressView = () => (
   </div>
 );
 
-const EmailVerificationPage = () => {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { authUser, verifyEmail, resendVerificationEmail } = useContext(AuthContext);
+const MV_OTP_SLOTS = ["mv-slot-0", "mv-slot-1", "mv-slot-2", "mv-slot-3", "mv-slot-4", "mv-slot-5"];
 
-  const token = searchParams.get("token");
-  const emailFromUrl = searchParams.get("email");
-
-  const [status, setStatus] = useState("idle");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [showManualForm, setShowManualForm] = useState(false);
-  const [manualEmail, setManualEmail] = useState("");
-  const [manualToken, setManualToken] = useState("");
-  const MV_OTP_SLOTS = ["mv-slot-0", "mv-slot-1", "mv-slot-2", "mv-slot-3", "mv-slot-4", "mv-slot-5"];
+const useManualOtp = () => {
   const [otpInputs, setOtpInputs] = useState(["", "", "", "", "", ""]);
-  const [useOtp, setUseOtp] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isResending, setIsResending] = useState(false);
-  const [resendMessage, setResendMessage] = useState("");
-
-  const handleVerify = useCallback(
-    async (payload) => {
-      setStatus("verifying");
-      setErrorMessage("");
-      const result = await verifyEmail(payload);
-      if (result?.success) {
-        setStatus("success");
-      } else {
-        setStatus("error");
-        setErrorMessage(
-          result?.message || "Verification failed. Please try again."
-        );
-        setShowManualForm(true);
-      }
-    },
-    [verifyEmail]
-  );
-
-  useEffect(() => {
-    if (authUser) {
-      navigate("/", { replace: true });
-      return;
-    }
-    if (token && emailFromUrl) {
-      handleVerify({ email: emailFromUrl, token });
-    } else {
-      setShowManualForm(true);
-    }
-  }, [token, emailFromUrl, authUser, handleVerify, navigate]);
-
-  const handleResend = async () => {
-    const targetEmail = manualEmail || emailFromUrl;
-    if (!targetEmail) return;
-    setIsResending(true);
-    setResendMessage("");
-    try {
-      const result = await resendVerificationEmail(targetEmail);
-      if (result?.success) {
-        setResendMessage("If an account exists for that email, a new verification email was sent.");
-      }
-    } finally {
-      setIsResending(false);
-    }
-  };
-
-  const handleManualSubmit = async (e) => {
-    e.preventDefault();
-    let payload;
-    if (useOtp) {
-      const otp = otpInputs.join("");
-      if (otp.length !== 6 || !manualEmail) return;
-      payload = { email: manualEmail, otp };
-    } else {
-      if (!manualEmail || !manualToken) return;
-      payload = { email: manualEmail, token: manualToken };
-    }
-    setIsSubmitting(true);
-    try {
-      await handleVerify(payload);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleOtpChange = (index, value) => {
     if (value.length > 1) value = value.slice(-1);
@@ -176,19 +97,230 @@ const EmailVerificationPage = () => {
     }
   };
 
-  if (status === "success") {
-    return (
-      <VerificationSuccessView
-        onGoToChat={() => navigate("/", { replace: true })}
-      />
-    );
-  }
-
-  if (status === "verifying" && !showManualForm) {
-    return <VerificationProgressView />;
-  }
-
+  const resetOtp = () => setOtpInputs(["", "", "", "", "", ""]);
   const otpComplete = otpInputs.every((d) => d !== "");
+  const otpString = otpInputs.join("");
+
+  return {
+    otpInputs,
+    handleOtpChange,
+    handleOtpKeyDown,
+    resetOtp,
+    otpComplete,
+    otpString,
+  };
+};
+
+const ManualVerificationOtpInputs = ({ otpInputs, onOtpChange, onOtpKeyDown }) => (
+  <div>
+    <p className="block text-sm mb-2 text-[var(--text-secondary)]">
+      6-digit verification code
+    </p>
+    <div className="flex justify-between gap-2 sm:gap-3">
+      {otpInputs.map((d, i) => (
+        <input
+          key={MV_OTP_SLOTS[i]}
+          id={`mv-otp-${i}`}
+          aria-label={`Digit ${i + 1} of verification code`}
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          maxLength={1}
+          value={d}
+          onChange={(e) => onOtpChange(i, e.target.value)}
+          onKeyDown={(e) => onOtpKeyDown(i, e)}
+          className="w-full aspect-square text-center text-xl font-semibold rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-input)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-colors"
+        />
+      ))}
+    </div>
+  </div>
+);
+
+const ManualVerificationTokenInput = ({ tokenValue, onChange }) => (
+  <div>
+    <label htmlFor="manual-token" className="block text-sm mb-1.5 text-[var(--text-secondary)]">
+      Verification token (from the URL in your email)
+    </label>
+    <input
+      id="manual-token"
+      name="manualToken"
+      aria-label="Verification token"
+      value={tokenValue}
+      onChange={onChange}
+      type="text"
+      required
+      placeholder="Paste the long token here..."
+      className="input-field font-mono text-xs"
+    />
+  </div>
+);
+
+const useManualVerificationForm = (emailFromUrl, onVerify, resendVerificationEmail) => {
+  const [manualEmail, setManualEmail] = useState("");
+  const [manualToken, setManualToken] = useState("");
+  const [useOtp, setUseOtp] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState("");
+
+  const {
+    otpInputs,
+    handleOtpChange,
+    handleOtpKeyDown,
+    resetOtp,
+    otpComplete,
+    otpString,
+  } = useManualOtp();
+
+  const handleResend = async () => {
+    const targetEmail = manualEmail || emailFromUrl;
+    if (!targetEmail) return;
+    setIsResending(true);
+    setResendMessage("");
+    try {
+      const result = await resendVerificationEmail(targetEmail);
+      if (result?.success) {
+        setResendMessage("If an account exists for that email, a new verification email was sent.");
+      }
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  const handleManualSubmit = async (e) => {
+    e.preventDefault();
+    let payload;
+    if (useOtp) {
+      if (otpString.length !== 6 || !manualEmail) return;
+      payload = { email: manualEmail, otp: otpString };
+    } else {
+      if (!manualEmail || !manualToken) return;
+      payload = { email: manualEmail, token: manualToken };
+    }
+    setIsSubmitting(true);
+    try {
+      await onVerify(payload);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const selectTokenMode = () => {
+    setUseOtp(false);
+    resetOtp();
+  };
+
+  const selectOtpMode = () => {
+    setUseOtp(true);
+    setManualToken("");
+  };
+
+  return {
+    manualEmail,
+    setManualEmail,
+    manualToken,
+    setManualToken,
+    useOtp,
+    isSubmitting,
+    isResending,
+    resendMessage,
+    otpInputs,
+    handleOtpChange,
+    handleOtpKeyDown,
+    otpComplete,
+    handleResend,
+    handleManualSubmit,
+    selectTokenMode,
+    selectOtpMode,
+  };
+};
+
+const ManualVerificationModeTabs = ({ useOtp, onSelectToken, onSelectOtp }) => (
+  <div className="flex items-center gap-2 text-sm">
+    <button
+      type="button"
+      onClick={onSelectToken}
+      className={`px-3 py-1.5 rounded-full border transition-colors ${
+        !useOtp
+          ? "bg-[var(--accent)] border-[var(--accent)] text-white"
+          : "border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+      }`}
+    >
+      Use link token
+    </button>
+    <button
+      type="button"
+      onClick={onSelectOtp}
+      className={`px-3 py-1.5 rounded-full border transition-colors ${
+        useOtp
+          ? "bg-[var(--accent)] border-[var(--accent)] text-white"
+          : "border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+      }`}
+    >
+      Use 6-digit code
+    </button>
+  </div>
+);
+
+const ManualVerificationResendFooter = ({
+  handleResend,
+  isResending,
+  canResend,
+  resendMessage,
+}) => (
+  <div className="mt-5 pt-5 border-t border-[var(--border-subtle)] flex flex-col gap-3">
+    <button
+      type="button"
+      onClick={handleResend}
+      disabled={isResending || !canResend}
+      className="text-sm text-[var(--accent)] hover:underline disabled:opacity-60 disabled:no-underline disabled:cursor-not-allowed"
+    >
+      {isResending ? "Sending new code..." : "Resend verification email"}
+    </button>
+    {resendMessage && (
+      <p className="text-xs text-emerald-400/90">{resendMessage}</p>
+    )}
+    <Link
+      to="/login"
+      className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+    >
+      ← Back to login
+    </Link>
+  </div>
+);
+
+const ManualVerificationCard = ({
+  emailFromUrl,
+  token,
+  showManualForm,
+  status,
+  errorMessage,
+  onVerify,
+  resendVerificationEmail,
+}) => {
+  const {
+    manualEmail,
+    setManualEmail,
+    manualToken,
+    setManualToken,
+    useOtp,
+    isSubmitting,
+    isResending,
+    resendMessage,
+    otpInputs,
+    handleOtpChange,
+    handleOtpKeyDown,
+    otpComplete,
+    handleResend,
+    handleManualSubmit,
+    selectTokenMode,
+    selectOtpMode,
+  } = useManualVerificationForm(emailFromUrl, onVerify, resendVerificationEmail);
+
+  const effectiveEmail = manualEmail || emailFromUrl || "";
+  const effectiveToken = manualToken || token || "";
+  const isSubmitDisabled =
+    isSubmitting || !effectiveEmail || (!useOtp ? !effectiveToken : !otpComplete);
 
   return (
     <div className="min-h-[100dvh] w-full relative overflow-y-auto overflow-x-hidden flex flex-col items-center justify-center py-6 sm:py-12 px-4 sm:px-6">
@@ -233,7 +365,7 @@ const EmailVerificationPage = () => {
               id="manual-email"
               name="manualEmail"
               aria-label="Email address"
-              value={manualEmail || emailFromUrl || ""}
+              value={effectiveEmail}
               onChange={(e) => setManualEmail(e.target.value)}
               type="email"
               required
@@ -242,113 +374,109 @@ const EmailVerificationPage = () => {
             />
           </div>
 
-          <div className="flex items-center gap-2 text-sm">
-            <button
-              type="button"
-              onClick={() => {
-                setUseOtp(false);
-                setOtpInputs(["", "", "", "", "", ""]);
-              }}
-              className={`px-3 py-1.5 rounded-full border transition-colors ${
-                !useOtp
-                  ? "bg-[var(--accent)] border-[var(--accent)] text-white"
-                  : "border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              }`}
-            >
-              Use link token
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setUseOtp(true);
-                setManualToken("");
-              }}
-              className={`px-3 py-1.5 rounded-full border transition-colors ${
-                useOtp
-                  ? "bg-[var(--accent)] border-[var(--accent)] text-white"
-                  : "border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-              }`}
-            >
-              Use 6-digit code
-            </button>
-          </div>
+          <ManualVerificationModeTabs
+            useOtp={useOtp}
+            onSelectToken={selectTokenMode}
+            onSelectOtp={selectOtpMode}
+          />
 
           {!useOtp ? (
-            <div>
-              <label htmlFor="manual-token" className="block text-sm mb-1.5 text-[var(--text-secondary)]">
-                Verification token (from the URL in your email)
-              </label>
-              <input
-                id="manual-token"
-                name="manualToken"
-                aria-label="Verification token"
-                value={manualToken || token || ""}
-                onChange={(e) => setManualToken(e.target.value)}
-                type="text"
-                required
-                placeholder="Paste the long token here..."
-                className="input-field font-mono text-xs"
-              />
-            </div>
+            <ManualVerificationTokenInput
+              tokenValue={effectiveToken}
+              onChange={(e) => setManualToken(e.target.value)}
+            />
           ) : (
-            <div>
-              <p className="block text-sm mb-2 text-[var(--text-secondary)]">
-                6-digit verification code
-              </p>
-              <div className="flex justify-between gap-2 sm:gap-3">
-                {otpInputs.map((d, i) => (
-                  <input
-                    key={MV_OTP_SLOTS[i]}
-                    id={`mv-otp-${i}`}
-                    aria-label={`Digit ${i + 1} of verification code`}
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    maxLength={1}
-                    value={d}
-                    onChange={(e) => handleOtpChange(i, e.target.value)}
-                    onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                    className="w-full aspect-square text-center text-xl font-semibold rounded-[var(--radius-md)] border border-[var(--border-default)] bg-[var(--bg-input)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-colors"
-                  />
-                ))}
-              </div>
-            </div>
+            <ManualVerificationOtpInputs
+              otpInputs={otpInputs}
+              onOtpChange={handleOtpChange}
+              onOtpKeyDown={handleOtpKeyDown}
+            />
           )}
 
           <button
             type="submit"
-            disabled={
-              isSubmitting ||
-              !manualEmail ||
-              (!useOtp ? !manualToken : !otpComplete)
-            }
+            disabled={isSubmitDisabled}
             className="mt-1 py-3 rounded-[var(--radius-md)] bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isSubmitting ? "Verifying..." : "Verify email"}
           </button>
         </form>
 
-        <div className="mt-5 pt-5 border-t border-[var(--border-subtle)] flex flex-col gap-3">
-          <button
-            type="button"
-            onClick={handleResend}
-            disabled={isResending || !(manualEmail || emailFromUrl)}
-            className="text-sm text-[var(--accent)] hover:underline disabled:opacity-60 disabled:no-underline disabled:cursor-not-allowed"
-          >
-            {isResending ? "Sending new code..." : "Resend verification email"}
-          </button>
-          {resendMessage && (
-            <p className="text-xs text-emerald-400/90">{resendMessage}</p>
-          )}
-          <Link
-            to="/login"
-            className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-          >
-            ← Back to login
-          </Link>
-        </div>
+        <ManualVerificationResendFooter
+          handleResend={handleResend}
+          isResending={isResending}
+          canResend={Boolean(effectiveEmail)}
+          resendMessage={resendMessage}
+        />
       </div>
     </div>
+  );
+};
+
+const EmailVerificationPage = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { authUser, verifyEmail, resendVerificationEmail } = useContext(AuthContext);
+
+  const token = searchParams.get("token");
+  const emailFromUrl = searchParams.get("email");
+
+  const [status, setStatus] = useState("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [showManualForm, setShowManualForm] = useState(false);
+
+  const handleVerify = useCallback(
+    async (payload) => {
+      setStatus("verifying");
+      setErrorMessage("");
+      const result = await verifyEmail(payload);
+      if (result?.success) {
+        setStatus("success");
+      } else {
+        setStatus("error");
+        setErrorMessage(
+          result?.message || "Verification failed. Please try again."
+        );
+        setShowManualForm(true);
+      }
+    },
+    [verifyEmail]
+  );
+
+  useEffect(() => {
+    if (authUser) {
+      navigate("/", { replace: true });
+      return;
+    }
+    if (token && emailFromUrl) {
+      handleVerify({ email: emailFromUrl, token });
+    } else {
+      setShowManualForm(true);
+    }
+  }, [token, emailFromUrl, authUser, handleVerify, navigate]);
+
+  if (status === "success") {
+    return (
+      <VerificationSuccessView
+        onGoToChat={() => navigate("/", { replace: true })}
+      />
+    );
+  }
+
+  if (status === "verifying" && !showManualForm) {
+    return <VerificationProgressView />;
+  }
+
+  return (
+    <ManualVerificationCard
+      emailFromUrl={emailFromUrl}
+      token={token}
+      showManualForm={showManualForm}
+      status={status}
+      errorMessage={errorMessage}
+      onVerify={handleVerify}
+      resendVerificationEmail={resendVerificationEmail}
+    />
   );
 };
 

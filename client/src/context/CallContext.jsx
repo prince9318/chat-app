@@ -7,7 +7,7 @@ export const CallContext = createContext();
 const defaultConstraints = { audio: true, video: true };
 const audioOnlyConstraints = { audio: true, video: false };
 
-export function CallProvider({ children }) {
+export function useCallManager() {
   const { authUser, socket, axios } = useContext(AuthContext);
   const { addCallLogMessage } = useContext(ChatContext);
   const [callState, setCallState] = useState("idle");
@@ -307,5 +307,10 @@ export function CallProvider({ children }) {
     ],
   );
 
+  return value;
+}
+
+export function CallProvider({ children }) {
+  const value = useCallManager();
   return <CallContext.Provider value={value}>{children}</CallContext.Provider>;
 }
